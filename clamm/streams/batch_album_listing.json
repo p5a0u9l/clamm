@@ -1,0 +1,50 @@
+{
+    "A1": {
+        "artist": "Alexandre Tharaud",
+        "album": "J.S. Bach Goldberg Variations"
+    },
+    "A9": {
+        "artist": "Andrew Manze & Academy of Ancient Music",
+        "album": "Bach: Solo & Double Violin Concertos"
+    },
+    "A12": {
+        "artist": "John Williams",
+        "album": "The Great Guitar Concertos"
+    },
+    "A13": {
+        "artist": "Daniel Barenboim",
+        "album": "Beethoven: Piano Sonatas (Moonlight, Pathétique & Appassionata)"
+    },
+    "A14": {
+        "artist": "John Williams & Itzhak Perlman",
+        "album": "Paganini & Giuliani: Duos for Violin and Guitar"
+    },
+    "A15": {
+        "artist": "Kazuhito Yamashita",
+        "album": "Mario Castelnuovo-Tedesco Works for Guitar Solo Vol 2"
+    },
+    "A16": {
+        "artist": "Zoran Dukic",
+        "album": "Castelnuovo-Tedesco: 24 Caprichos de Goya"
+    },
+    "A17": {
+        "artist": "Pavel Steidl",
+        "album": "J. K. Mertz: Barden-Klänge"
+    },
+    "A18": {
+        "artist": "Collegium Vocale Gent & Philippe Herreweghe",
+        "album": "J.S. Bach: St. Matthew Passion, BWV 244"
+    },
+    "A19": {
+        "artist": "Philippe Herreweghe",
+        "album": "Mahler: Symphony No. 4"
+    },
+    "A20": {
+        "artist": "Philippe Herreweghe",
+        "album": "J.S. Bach: Trauerode"
+    },
+    "A21": {
+        "artist": "Philippe Herreweghe & Collegium Vocale Gent",
+        "album": "Bach: Missa in h-moll, BWV 232"
+    }
+}

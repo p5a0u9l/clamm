@@ -1,0 +1,61 @@
+{
+    "path": {
+        "pcm": "/tmp/pcm/",
+        "wav": "/tmp/wav/",
+        "playlist": "/Users/paul/music/playlists",
+        "library": "/Users/paul/music/classical",
+        "streams": "/Users/paul/code/python/clamm/streams",
+        "config": "/Users/paul/code/python/clamm/config.json",
+        "database": "/Users/paul/code/python/clamm/library/json/tags.json",
+        "troubled_tracks": "/Users/paul/code/python/clamm/library/json/troubled_tracks.json"
+    },
+
+    "library": {
+        "keep_wavs_once_flacs_made": false,
+        "tags": {
+            "keep_artist": ["ARTIST", "ALBUMARTIST"],
+
+            "prune_artist": ["ARTISTSORT", "ALBUMARTIST_CREDIT", "ALBUM ARTIST", "SORT_ARTIST", "ALBUMARTISTSORT",
+                "SORT_ALBUM_ARTIST", "ARTIST_CREDIT", "ALBUM ARTIST", "ALBUMARTIST_CREDIT", "ARTISTSORT"],
+
+                "junk": ["ASIN", "CATALOGNUMBER", "LANGUAGE", "MEDIA", "MUSICBRAINZ_ALBUMARTISTID", "MUSICBRAINZ_ALBUMID",
+                    "MUSICBRAINZ_ALBUMSTATUS", "MUSICBRAINZ_ALBUMTYPE", "MUSICBRAINZ_ARTISTID",
+                    "MUSICBRAINZ_RELEASEGROUPID", "MUSICBRAINZ_TRACKID", "RELEASECOUNTRY", "SCRIPT",
+                    "ACOUSTID FINGERPRINT", "ITUNNORM", "COMPATIBLE_BRANDS", "ITUNSMPB", "MAJOR_BRAND",
+                    "MEDIA_TYPE", "MINOR_VERSION", "MUSICBRAINZ ALBUM ARTIST ID"]
+        },
+        "playlist": {
+            "tag_keys": ["ARRANGEMENT", "COMPOSER", "ARTIST", "ALBUMARTIST", "LABEL"],
+            "relations": ["contains", "is", "is not", "does not contain"],
+            "operators": ["AND", "OR", "XOR"]
+        }
+    },
+
+    "database": {
+        "sync_to_library": true,
+        "skip_existing_arrangements": true,
+        "require_prompt_when_committing": false
+    },
+
+    "file": {
+        "known_types": [".flac", ".m4a", ".mp3", ".wma", ".wav"],
+        "preferred_type": ".flac"
+    },
+
+    "opt":{
+        "ffmpeg": ["-hide-banner", "-y"],
+        "shairport-sync": "-o=stdout",
+        "cmus-remote": "-C"
+    },
+
+    "bin":{
+        "ffmpeg": "/usr/local/bin/ffmpeg",
+        "shairport-sync": "/usr/local/bin/shairport-sync",
+        "metaflac": "/usr/local/bin/metaflac",
+        "cmus-remote": "/usr/local/bin/cmus-remote"
+    },
+
+    "streams": {
+        "downsample_factor": 1000
+    }
+}

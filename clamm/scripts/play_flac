@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "playing $1"
+flac --decode --stdout --totally-silent "$1" | paplay 2>/dev/null
