@@ -12,9 +12,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-# local
-import util
-
 class AlbumStream():
     """
         given a wav file object, an itunes Album query, and a target directory,
@@ -146,7 +143,7 @@ class AlbumStream():
 
     def power_envelope(self):
         """ power_envelope """
-        ds = util.config["stream2tracks"]["downsample_factor"]
+        ds = config["stream2tracks"]["downsample_factor"]
         print("computing audio envelope of file at {} downsample rate...".format(ds))
         self.wav.rewind()
         n_window = int(np.floor(self.wav.getnframes()/ds)) - 1
@@ -154,7 +151,7 @@ class AlbumStream():
         return np.asarray(x)
 
 def plot_envelope_splits(x, splits, fname):
-    ds = util.config["stream2tracks"]["downsample_factor"]
+    ds = config["stream2tracks"]["downsample_factor"]
     efr = 44100/ds
     starts = [split[0]/ds for split in splits]
     stops = [starts[i] + split[1]/ds for i, split in enumerate(splits)]
@@ -166,5 +163,5 @@ def plot_envelope_splits(x, splits, fname):
     plt.plot(x, marker=".", linestyle='', markersize=0.2)
     [plt.axvline(x=start, color="b", linestyle="--", linewidth=0.3) for start in starts]
     [plt.axvline(x=stop, color="r", linestyle="--", linewidth=0.3) for stop in stops]
-    plt.savefig(join(util.config["path"]["streams"], "envelopes", fname + ".png"), bbox_inches='tight')
+    plt.savefig(join(config["path"]["streams"], "envelopes", fname + ".png"), bbox_inches='tight')
 

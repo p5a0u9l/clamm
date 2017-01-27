@@ -5,12 +5,47 @@
 # built-ins
 import sys
 import re
+from os import walk
+from os.path import join
+
+# external
+import taglib
 
 # local
+from clamm import util, config
 import tags
-import util
-
 persist_composer = ""
+
+def walker(root, func, tagfile=True):
+    """ iterate over every audio file under the target directory and apply action to each """
+
+    for folder, _, files in walk(root, topdown=False):
+        if not files: continue
+
+        print("walked into {}...".format(folder.replace(config["path"]["library"], "$LIBRARY")))
+        if tagfile:
+            [func(taglib.File(join(folder, name))) for name in files if util.is_audio_file(name)]
+        else:
+            [func(folder, name) for name in files if util.is_audio_file(name)]
+
+class AudioLib():
+    def __init__(self, args):
+        self.root = args.target
+        self.act = AtomicAction(args)
+
+    def synchronize(self):
+        """ special hook for ensuring the tag database and the library file tags are sync'd """
+        walker(self.root, self.act.synchronize_composer)
+        walker(self.root, self.act.synchronize_artist)
+
+    def consume(self):
+        """ special hook for consuming new music into library"""
+        walker(self.root, util.audio2flac, tagfile=False)
+        walker(self.root, self.act.synchronize_composer)
+        walker(self.root, self.act.prune_artist_tags)
+        walker(self.root, self.act.remove_junk_tags)
+        walker(self.root, self.act.handle_composer_as_artist)
+        walker(self.root, self.act.synchronize_artist)
 
 class AtomicAction():
     def __init__(self, args):
@@ -49,10 +84,11 @@ class AtomicAction():
         tags = tagfile.tags
 
         # make sure we have at least the basics
-        if not set(util.config["keep_artist_tags"]).intersection(set(tags)): return
+        if not set(config["library"]["tags"]["keep_artist"]).intersection(set(tags)): return
 
         # apply deletion
-        tagfile.tags = {key: val for key, val in tags.items() if key not in util.config["prune_artist_tags"]}
+        tagfile.tags = {key: val for key, val in tags.items() \
+                if key not in config["library"]["tags"]["prune_artist"]}
 
         # write to file
         util.commit_to_tagfile(tagfile)
@@ -61,7 +97,8 @@ class AtomicAction():
         tags = tagfile.tags
 
         # apply deletion
-        tagfile.tags = {key: val for key, val in tags.items() if key not in util.config["junk_tags"]}
+        tagfile.tags = {key: val for key, val in tags.items() \
+                if key not in config["library"]["tags"]["junk"]}
 
         # write to file
         util.commit_to_tagfile(tagfile)
@@ -138,10 +175,11 @@ class AtomicAction():
             Sync files to library.
         """
         [self.tagdb.verify_artist(name) for name in util.get_artist_tagset(tagfile)]
-        arrange = self.tagdb.verify_arrangement(tagfile, skipflag=util.config["skip_existing_arrangements"])
+        arrange = self.tagdb.verify_arrangement(tagfile, \
+                skipflag=config["database"]["skip_existing_arrangements"])
 
         if not arrange: return
-        if util.config["database"]["sync_to_library"]: arrange.apply(tagfile);
+        if config["database"]["sync_to_library"]: arrange.apply(tagfile);
 
     def synchronize_composer(self, tagfile):
         """
@@ -161,7 +199,7 @@ class AtomicAction():
         ckey = self.tagdb.verify_composer(cname)
         citem = self.tagdb.composer[ckey]
 
-        if util.config["sync_database_to_library"]:
+        if config["database"]["sync_to_library"]:
             # sync the values and commit to file
             util.commit_on_delta(tagfile, "COMPOSER", citem["full_name"])
             util.commit_on_delta(tagfile, "COMPOSER_ABBREVIATED", citem["abbreviated"])

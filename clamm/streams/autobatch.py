@@ -24,6 +24,9 @@ import json
 import time
 import sys
 
+# local
+from clamm import config
+
 ssync = "shairport-sync"
 global seconds
 

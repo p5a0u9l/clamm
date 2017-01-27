@@ -1,13 +1,13 @@
 {
     "path": {
-        "pcm": "/tmp/pcm/",
-        "wav": "/tmp/wav/",
+        "pcm": "/tmp/clamm/pcm/",
+        "wav": "/tmp/clamm/wav/",
         "playlist": "/Users/paul/music/playlists",
         "library": "/Users/paul/music/classical",
-        "streams": "/Users/paul/code/python/clamm/streams",
-        "config": "/Users/paul/code/python/clamm/config.json",
-        "database": "/Users/paul/code/python/clamm/library/json/tags.json",
-        "troubled_tracks": "/Users/paul/code/python/clamm/library/json/troubled_tracks.json"
+        "streams": "/Users/paul/code/python/clamm/clamm/streams",
+        "config": "/Users/paul/.config/clamm/config.json",
+        "database": "/Users/paul/code/python/clamm/clamm/library/json/tags.json",
+        "troubled_tracks": "/Users/paul/code/python/clamm/clamm/library/json/troubled_tracks.json"
     },
 
     "library": {
@@ -50,6 +50,8 @@
 
     "bin":{
         "ffmpeg": "/usr/local/bin/ffmpeg",
+        "sed": "/usr/bin/sed",
+        "osascript": "/usr/bin/osascript",
         "shairport-sync": "/usr/local/bin/shairport-sync",
         "metaflac": "/usr/local/bin/metaflac",
         "cmus-remote": "/usr/local/bin/cmus-remote"

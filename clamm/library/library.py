@@ -3,48 +3,12 @@
 # __author__ Paul Adams
 
 # built-ins
-from os import walk
-from os.path import join
 import sys
 import argparse
 
-# external
-import taglib
-
 # local
-import util
-from action import AtomicAction
-
-def libwalker(root, func, tagfile=True):
-    """ iterate over every audio file under the target directory and apply action to each """
-
-    for folder, _, files in walk(root, topdown=False):
-        if not files: continue
-
-        print("walked into {}...".format(folder.replace(util.config["path"]["library"], "$LIBRARY")))
-        if tagfile:
-            [func(taglib.File(join(folder, name))) for name in files if util.is_audio_file(name)]
-        else:
-            [func(folder, name) for name in files if util.is_audio_file(name)]
-
-class AudioLib():
-    def __init__(self, args):
-        self.root = args.target
-        self.act = AtomicAction(args)
-
-    def synchronize(self):
-        """ special hook for ensuring the tag database and the library file tags are sync'd """
-        libwalker(self.root, self.act.synchronize_composer)
-        libwalker(self.root, self.act.synchronize_artist)
-
-    def consume(self):
-        """ special hook for consuming new music into library"""
-        libwalker(self.root, util.audio2flac, tagfile=False)
-        libwalker(self.root, self.act.synchronize_composer)
-        libwalker(self.root, self.act.prune_artist_tags)
-        libwalker(self.root, self.act.remove_junk_tags)
-        libwalker(self.root, self.act.handle_composer_as_artist)
-        libwalker(self.root, self.act.synchronize_artist)
+from clamm import util
+import audiolib
 
 def parse_input_args():
     parser = argparse.ArgumentParser()
@@ -56,12 +20,12 @@ def parse_input_args():
 
 def main():
     args = parse_input_args().parse_args()
-    alib = AudioLib(args)
+    alib = audiolib.AudioLib(args)
 
     # front-end action
     if args.action == "consume": alib.consume()
     elif args.action == "synchronize": alib.synchronize()
-    else: libwalker(alib.act.func[args.action])
+    else: audiolib.walker(alib.act.func[args.action])
 
     # define follow-up actions
     if util.COUNT > 0: print("\n{} tagfiles updated.".format(util.COUNT))

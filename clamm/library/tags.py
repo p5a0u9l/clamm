@@ -10,8 +10,23 @@ from collections import OrderedDict
 from nltk import distance
 
 # local
-import util
-import autotag
+import taghelpers
+
+class StructuredQuery():
+    def __init__(self, querystr):
+        self.query = querystr
+        self.keys = [key for key in self.query if key in config["playlist"]["tag_keys"]]
+        relations = [key for key in self.query if key in config["playlist"]["relations"]]
+        self.operators = [key for key in self.query if key in config["playlist"]["operators"]]
+        self.tag_vals = [key for key in self.query if \
+                key not in self.keys and \
+                key not in relations and \
+                key not in self.operators]
+
+        self.filters = [{self.keys[i]: self.tag_vals[i], "rel": relations[i]} for i in range(len(self.operators) + 1)]
+        if not self.operators: self.operators.append("AND")
+
+    def __repr__(self): return str(["{}".format(filt) for filt in self.filters])
 
 class TagDatabase:
     """ a class for interfacing with a music library's tag database """
@@ -65,12 +80,12 @@ class TagDatabase:
 
         print("Searching for information on %s..." % (item))
 
-        page = autotag.wiki_query(item)
+        page = taghelpers.wiki_query(item)
 
         if page:
-            new = autotag.item_fields_from_wiki(item, page, self.sets, category=category)
+            new = taghelpers.item_fields_from_wiki(item, page, self.sets, category=category)
         else:
-            if category == "artist": new = autotag.artist_fields_from_manual(item)
+            if category == "artist": new = taghelpers.artist_fields_from_manual(item)
 
         print("proposed item for database:")
         [print("\t{}: {}".format(key, val)) for key, val in new.items()]

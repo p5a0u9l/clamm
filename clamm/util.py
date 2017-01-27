@@ -15,7 +15,7 @@ COUNT = 0
 
 def wav2flac(wav_name):
     """ use ffmpeg to convert a wav file to a flac file """
-    call(["ffmpeg", "-hide_banner", "-y", "-i", wav_name, wav_name.replace("wav", "flac")])
+    call([config["bins"]["ffmpeg"], config["opts"]["ffmpeg"], "-i", wav_name, wav_name.replace("wav", "flac")])
     if not config["library"]["keep_wavs_once_flacs_made"]: os.remove(wav_name)
 
 def is_audio_file(name): return splitext(name)[1] in config["file"]["known_types"]
@@ -27,7 +27,11 @@ def audio2flac(fpath, fname):
     src = join(fpath, fname)
     dst = join(fpath, fname.replace(fext, config["file"]["preferred_type"]))
     with open("/dev/null", "w") as redirect:
-        call(["ffmpeg", "-hide_banner", "-y", "-i", src, dst], stdout=redirect)
+        call([config["bins"]["ffmpeg"], config["opts"]["ffmpeg"], "-i", src, dst], stdout=redirect)
+
+def make_flacs(target):
+    """ convert wav files in target to flac files, clean up wav files"""
+    [util.wav2flac(wav) for wav in glob(join(target, "*wav"))]
 
 def messylist2tagstr(alist):
     s, delim = "", "; "
@@ -104,7 +108,7 @@ def commit_on_delta(tagfile, tag_key, lib_val):
 def commit_to_tagfile(tagfile, glob=""):
     global COUNT
     COUNT += 1
-    if config["use_safety_when_committing"]:
+    if config["database"]["require_prompt_when_committing"]:
         print("Proposed: ")
         [print("\t%s: %s" % (k, v)) for k, v in sorted(tagfile.tags.items()) if glob in k]
         if not input("Accept? [y]/n: "): tagfile.save()

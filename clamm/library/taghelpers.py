@@ -15,6 +15,23 @@ import nltk
 
 tk = nltk.tokenize.WordPunctTokenizer();
 
+def metastize(query, target):
+    for i, track in enumerate(query.get_tracks()):
+        tracknum = "%0.2d" % (i+1)
+        globber = glob(join(target, tracknum + "*flac"))
+        flac = taglib.File(globber[0])
+        flac.tags["ALBUM"] = [query.collection_name]
+        flac.tags["ALBUMARTIST"] = [query.artist_name]
+        flac.tags["ARTIST"] = [track.artist_name]
+        flac.tags["TRACKNUMBER"] = [str(track.track_number)]
+        flac.tags["DATE"] = [query.release_date]
+        flac.tags["LABEL"] = [query.copyright]
+        flac.tags["GENRE"] = [query.primary_genre_name]
+        flac.tags["TITLE"] = [track.track_name]
+        flac.tags["COMPILATION"] = ["0"]
+        flac.save()
+        flac.close()
+
 def get_translation(search_string):
     """ occasionally artist name will be in non-Latin characters """
 
