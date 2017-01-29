@@ -6,18 +6,6 @@
 import sys
 import argparse
 
-# local
-from clamm import util
-import audiolib
-
-def parse_input_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("target", type=str, help="The target operating directory")
-    parser.add_argument("action", type=str, help="The action to enact on the target")
-    parser.add_argument("-t", "--tag", default="", help="a tag field upon which to act")
-    parser.add_argument("-v", "--value", default="", help="the value to apply to tags")
-    return parser
-
 def main():
     args = parse_input_args().parse_args()
     alib = audiolib.AudioLib(args)

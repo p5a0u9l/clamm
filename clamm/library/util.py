@@ -3,11 +3,15 @@
 # __author__ Paul Adams
 
 # built-ins
-import json
 import re
-from os.path import join, splitext
+from os.path import join, splitext, expanduser
 from subprocess import call
 import sys
+import json
+
+# bootstrap config file
+cfg_path = join(expanduser('~'), '.config', 'clamm', 'config.json')
+with open(cfg_path) as f: config = json.load(f)
 
 SPLIT_REGEX = '&\s*|,\s*|;\s*| - |:\s*|/\s*| feat. | and '
 artist_tag_names = ["ALBUMARTIST_CREDIT", "ALBUM ARTIST", "ARTIST", "ARTIST_CREDIT", "ALBUMARTIST"]
@@ -20,14 +24,8 @@ def wav2flac(wav_name):
 
 def is_audio_file(name): return splitext(name)[1] in config["file"]["known_types"]
 
-def audio2flac(fpath, fname):
-    fext = splitext(fname)[1]
-    if fext == config["file"]["preferred_type"]: return
-    print("converting {} to flac...".format(fname))
-    src = join(fpath, fname)
-    dst = join(fpath, fname.replace(fext, config["file"]["preferred_type"]))
-    with open("/dev/null", "w") as redirect:
-        call([config["bins"]["ffmpeg"], config["opts"]["ffmpeg"], "-i", src, dst], stdout=redirect)
+def pretty_dict(d, glob=""):
+    for k, v in d: print("\t{}: {}".format(k, v))
 
 def make_flacs(target):
     """ convert wav files in target to flac files, clean up wav files"""
@@ -109,9 +107,10 @@ def commit_to_tagfile(tagfile, glob=""):
     global COUNT
     COUNT += 1
     if config["database"]["require_prompt_when_committing"]:
-        print("Proposed: ")
-        [print("\t%s: %s" % (k, v)) for k, v in sorted(tagfile.tags.items()) if glob in k]
-        if not input("Accept? [y]/n: "): tagfile.save()
+        print("Proposed: "); pretty_dict(sorted(tagfile.tags.items()), glob=glob)
+
+        if not input("Accept? [y]/n: "):
+            tagfile.save()
 
     else:
         sys.stdout.write("."); sys.stdout.flush()

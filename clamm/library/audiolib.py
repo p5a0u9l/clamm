@@ -7,80 +7,134 @@ import sys
 import re
 from os import walk
 from os.path import join
-
-# external
-import taglib
+import os
 
 # local
-from clamm import util, config
-import tags
+from clamm.library import tags, util
+config = util.config
+from clamm.tags import walker
+
 persist_composer = ""
 
-def walker(root, func, tagfile=True):
-    """ iterate over every audio file under the target directory and apply action to each """
-
-    for folder, _, files in walk(root, topdown=False):
-        if not files: continue
-
-        print("walked into {}...".format(folder.replace(config["path"]["library"], "$LIBRARY")))
-        if tagfile:
-            [func(taglib.File(join(folder, name))) for name in files if util.is_audio_file(name)]
-        else:
-            [func(folder, name) for name in files if util.is_audio_file(name)]
-
 class AudioLib():
+    """ external interface to audiolib module
+    """
     def __init__(self, args):
-        self.root = args.target
-        self.act = AtomicAction(args)
+        import pdb; pdb.set_trace()
+        self.root = args.dir
+        self.ltfa = LibTagFileAction(args)
+        return self
 
     def synchronize(self):
-        """ special hook for ensuring the tag database and the library file tags are sync'd """
-        walker(self.root, self.act.synchronize_composer)
-        walker(self.root, self.act.synchronize_artist)
+        """ special hook for ensuring the tag database and the library file tags are sync'd
+        """
+        walker(self.root, self.ltfa.synchronize_composer)
+        walker(self.root, self.ltfa.synchronize_artist)
 
-    def consume(self):
+    def initialize(self):
         """ special hook for consuming new music into library"""
-        walker(self.root, util.audio2flac, tagfile=False)
-        walker(self.root, self.act.synchronize_composer)
-        walker(self.root, self.act.prune_artist_tags)
-        walker(self.root, self.act.remove_junk_tags)
-        walker(self.root, self.act.handle_composer_as_artist)
-        walker(self.root, self.act.synchronize_artist)
+        walker(self.root, self.ltfa.audio2preferred_format)
+        walker(self.root, self.ltfa.synchronize_composer)
+        walker(self.root, self.ltfa.prune_artist_tags)
+        walker(self.root, self.ltfa.remove_junk_tags)
+        walker(self.root, self.ltfa.handle_composer_as_artist)
+        walker(self.root, self.ltfa.synchronize_artist)
 
-class AtomicAction():
+class LibTagFile():
     def __init__(self, args):
-        self.tagdb = tags.TagDatabase()
-        self.tagdb.update_sets()
-
-        # persistent containers to hold results over a libwalk
-        self.found_tags = []
-        self.instrument_groupings = {}
+        """ super class for tagfile action classes """
 
         # arg unpack
-        self.action = args.action
-        self.tag_key = args.tag
-        self.tag_val = args.value
+        self.args = args
+        self.tagdb = tags.TagDatabase()
+        self.action = self.args.sub_cmd
+        self.tagdb.update_sets()
 
-        # wrap action methods in dictionary for programmatic lookup
+class LibTagFileAction(LibTagFile):
+    def __init__(self, args):
+        """
+        LibTagFileAction is a collection of library tagfile action methods
+
+        each action method should follow a methodical implementation
+            1. each recieves a tagfile as an input
+            2. each has access to argparser tui args and must use consistent Namespace references
+            3. each has the option/necessity to create a persistent result
+            4. each should define a follow-up action upon completion of tags.walker
+        """
+
+        LibTagFile.__init__(self, args)
+
+        # wrap methods in dictionary for dynamic access
         self.func = {}
         for attr in dir(self):
             fobject = eval('self.{}'.format(attr))
             if hasattr(fobject, '__func__'):
                 self.func[attr] = fobject
 
-    def show_tag_usage(self, tagfile):
+    def audio2preferred_format(self, tagfile, **kwargs):
+        """ using ffmpeg, convert arbitrary audio file to preferred_type, flac by default
+
+        """
+        # unpack
+        (fpath, fname), fext = os.path.split(tagfile.path), os.path.splitext(tagfile.path)
+
+        # short-circuit if file is already preferred_type
+        if fext == config["file"]["preferred_type"]: return
+
+        # otherwise, proceed
+        print("converting {} to {}...".format(fname, fext))
+        src = tagfile.path
+        dst = join(fpath, fname.replace(fext, config["file"]["preferred_type"]))
+
+        # and the conversion itself
+        with open("/dev/null", "w") as redirect:
+            call([config["bins"]["ffmpeg"], \
+                    config["opts"]["ffmpeg"], "-i", src, dst], stdout=redirect)
+
+    def playlist(self, tagfile, **kwargs):
+        """ playlist filter """
+
+        # unpack
+        tags = tagfile.tags
+        sq = kwargs["sq"]
+
+        try:
+            if tags["COMPILATION"][0] == "1": return
+        except KeyError:
+            util.log_missing_tag("COMPILATION", tagfile)
+
+        if sq.operators[0] == "AND":
+            include = True
+            for i, filt in enumerate(sq.filters):
+                key = sq.keys[i]
+                try:
+                    if filt[key] not in tags[key]: include = False
+                except KeyError:
+                    include = False
+                    util.log_missing_tag(key, tagfile)
+
+        elif sq.operators[0] == "OR":
+            include = False
+
+            for i, filt in enumerate(sq.filters):
+                key = sq.keys[i]
+                if filt[key] in tags[key]: include = True
+
+        if include: self.playlist.append(tagfile.path)
+
+    def show_tag_usage(self, tagfile, **kwargs):
         """Find (and print) all values (usages) of the input tag field.
         $ ./library.py show_tag_usage TCM
         """
         self.found_tags.extend([val for key, val in tagfile.tags.items() if key == self.tag_key])
 
-    def get_tag_sets(self, tagfile):
+    def get_tag_sets(self, tagfile, **kwargs):
         """Find (and print) all occurences of tag fields that contain the input string.
         $ ./library.py get_tag_sets ASIN
         """
         self.found_tags.extend([key.upper() for key, val in tagfile.tags.items() if key.find(self.tag_key) > -1])
 
-    def prune_artist_tags(self, tagfile):
+    def prune_artist_tags(self, tagfile, **kwargs):
         tags = tagfile.tags
 
         # make sure we have at least the basics
@@ -93,7 +147,7 @@ class AtomicAction():
         # write to file
         util.commit_to_tagfile(tagfile)
 
-    def remove_junk_tags(self, tagfile):
+    def remove_junk_tags(self, tagfile, **kwargs):
         tags = tagfile.tags
 
         # apply deletion
@@ -103,7 +157,7 @@ class AtomicAction():
         # write to file
         util.commit_to_tagfile(tagfile)
 
-    def delete_tag_by_name(self, tagfile):
+    def delete_tag_by_name(self, tagfile, **kwargs):
         """Remove (with optional safety check) all occurences of input tag from library
         $ ./library.py /path/containing/unwanted/tracks delete_tag_by_name -t ASIN
         """
@@ -122,7 +176,7 @@ class AtomicAction():
 
         util.commit_to_tagfile(tagfile)
 
-    def change_tag_by_name(self, tagfile):
+    def change_tag_by_name(self, tagfile, **kwargs):
         """
         manually update a single tag field
         $ ./library.py /path/containing/target/tracks change_tag_by_name -t ARTIST -v "Bob Hope"
@@ -143,7 +197,7 @@ class AtomicAction():
         # commit the change to the file
         util.commit_to_tagfile(tagfile)
 
-    def handle_composer_as_artist(self, tagfile):
+    def handle_composer_as_artist(self, tagfile, **kwargs):
         """
         test for and handle composer in artist fields
         $ ./library.py /path/containing/target/tracks handle_composer_as_artist
@@ -168,7 +222,7 @@ class AtomicAction():
 
         util.commit_to_tagfile(tagfile)
 
-    def synchronize_artist(self, tagfile):
+    def synchronize_artist(self, tagfile, **kwargs):
         """
             Verify there is an artist entry in tags.json for each artist found in tagfile.
             Find arrangement that is best fit for a given file.
@@ -181,13 +235,13 @@ class AtomicAction():
         if not arrange: return
         if config["database"]["sync_to_library"]: arrange.apply(tagfile);
 
-    def synchronize_composer(self, tagfile):
+    def synchronize_composer(self, tagfile, **kwargs):
         """
             Synchronize the tags database fields to the given file fields
         """
         global persist_composer
         if not "COMPOSER" in tagfile.tags.keys():
-            [print("{}: {}".format(key, val)) for key, val in tagfile.tags.items()]
+            util.pretty_dict(tagfile.tags.items())
             if not input("Accept last input: {} ? [CR]".format(persist_composer)):
                 cname = persist_composer
             else:
@@ -207,17 +261,16 @@ class AtomicAction():
             util.commit_on_delta(tagfile, "COMPOSER_PERIOD", citem["period"])
             util.commit_on_delta(tagfile, "COMPOSER_SORT", citem["sort"])
 
-    def find_multi_instrumentalists(self, tagfile):
+    def find_multi_instrumentalists(self, tagfile, **kwargs):
         """ find/inspect input artists who have > 1 instrument fields """
         aset = util.get_artist_tagset(tagfile)
         for aname in aset:
             artistname = self.tagdb.match_from_perms(aname)
             if artistname == self.tag_key:
-                tags = tagfile.tags;
-                [print("{}: {}".format(key, val)) for key,val in tags.items()]
+                util.pretty_dict(tagfile.tags.items())
                 sys.exit()
 
-    def get_artist_counts(self, tagfile):
+    def get_artist_counts(self, tagfile, **kwargs):
         """ count/record artist occurences (to use as ranking) """
         aset = util.get_artist_tagset(tagfile)
         for aname in aset:
@@ -227,7 +280,7 @@ class AtomicAction():
             else:
                 self.instrument_groupings[artistname] = 1
 
-    def get_arrangement_set(self, tagfile):
+    def get_arrangement_set(self, tagfile, **kwargs):
         """ instrumental groupings via artist db """
         sar = self.tagdb.get_sorted_arrangement(tagfile).values()
 
@@ -238,3 +291,67 @@ class AtomicAction():
                 self.instrument_groupings[key] += 1
 
         if not found: self.instrument_groupings[sar] = 1
+
+class LibTagFileFollowUp(LibTagFile):
+    def __init__(self, args):
+        """ collection of library tagfile follow-up methods """
+
+        LibTagFile.__init__(self, args)
+
+        # persistent containers to hold results over a libwalk
+        self.found_tags = []
+        self.instrument_groupings = {}
+        self.playlist = []
+
+        # define follow-up actions
+        if util.COUNT > 0: print("\n{} tagfiles updated.".format(util.COUNT))
+
+        # wrap action methods in dictionary for programmatic lookup
+        self.func = {}
+        for attr in dir(self):
+            fobject = eval('self.{}'.format(attr))
+            if hasattr(fobject, '__func__'):
+                self.func[attr] = fobject
+
+    def audio2preferred_format(self, tagfile, **kwargs):
+        pass
+
+    def playlist(self, tagfile, **kwargs):
+        pass
+
+    def show_tag_usage(self, tagfile, **kwargs):
+        pass
+
+    def get_tag_sets(self, tagfile, **kwargs):
+        pass
+
+    def prune_artist_tags(self, tagfile, **kwargs):
+        pass
+
+    def remove_junk_tags(self, tagfile, **kwargs):
+        pass
+
+    def delete_tag_by_name(self, tagfile, **kwargs):
+        pass
+
+    def change_tag_by_name(self, tagfile, **kwargs):
+        pass
+
+    def handle_composer_as_artist(self, tagfile, **kwargs):
+        pass
+
+    def synchronize_artist(self, tagfile, **kwargs):
+        pass
+
+    def synchronize_composer(self, tagfile, **kwargs):
+        pass
+
+    def find_multi_instrumentalists(self, tagfile, **kwargs):
+        pass
+
+    def get_artist_counts(self, tagfile, **kwargs):
+        pass
+
+    def get_arrangement_set(self, tagfile, **kwargs):
+        pass
+

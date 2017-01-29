@@ -9,8 +9,19 @@ from collections import OrderedDict
 # external
 from nltk import distance
 
-# local
-import taghelpers
+# external
+import taglib
+
+def walker(root, func, **kwargs):
+    """ iterate over every audio file under the target directory
+        pass the tagfile and apply action to each
+    """
+
+    for folder, _, files in walk(root, topdown=False):
+        if not files: continue
+
+        print("walked into {}...".format(folder.replace(config["path"]["library"], "$LIBRARY")))
+        [func(taglib.File(join(folder, name)), **kwargs) for name in files if util.is_audio_file(name)]
 
 class StructuredQuery():
     def __init__(self, querystr):

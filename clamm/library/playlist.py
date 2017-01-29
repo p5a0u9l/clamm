@@ -11,9 +11,6 @@ from subprocess import call
 # external
 import taglib
 
-# local
-import tags
-
 def parse_input_args():
     parser = argparse.ArgumentParser(description=\
     """ use sql-like relational patterns to quickly build
@@ -39,46 +36,16 @@ def parse_input_args():
     return args.query
 
 # append matches to global list
-playlist = []
 
 # create query
 querystring = parse_input_args()
 sq = tags.StructuredQuery(querystring)
 
-def playfilt(tagfile):
-    tags = tagfile.tags
-
-    # not sure how to (or if I want to) deal with compilations yet, particularly since they are missing
-    # ARRANGMENT tags
-    try:
-        if tags["COMPILATION"][0] == "1": return
-    except KeyError:
-        util.log_missing_tag("COMPILATION", tagfile)
-
-    if sq.operators[0] == "AND":
-        include = True
-        for i, filt in enumerate(sq.filters):
-            key = sq.keys[i]
-            try:
-                if filt[key] not in tags[key]: include = False
-            except KeyError:
-                include = False
-                util.log_missing_tag(key, tagfile)
-
-    elif sq.operators[0] == "OR":
-        include = False
-
-        for i, filt in enumerate(sq.filters):
-            key = sq.keys[i]
-            if filt[key] in tags[key]: include = True
-
-    if include: playlist.append(tagfile.path)
-
 def main():
     """ use sql-like relational patterns to quickly build complex playlists using cmus playlist format """
 
     # apply playfilt to each file in library
-    audiolib.walker(config["path"]["library"], playfilt)
+    audiolib.walker(config["path"]["library"], playlist)
 
     # now, write the accumulated list to a simple pls file format
     pl_name = "-".join(sq.tag_vals).lower()
