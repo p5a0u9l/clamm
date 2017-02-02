@@ -12,6 +12,45 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+class Stream():
+    def __init__(self, streampath):
+        """ """
+        self.path = streampath
+        self.decode_stream_path()
+
+    def decode_stream_path(self):
+        """ artist/album names from stream name """
+        [artist, album] = self.path.replace(".wav", "").split(";")
+        artist = os.path.split(artist)[-1]
+        album = album.strip()
+        printr("Found and Parsed {} --> {} as target...".format(self.artist, self.album))
+        return (artist, album)
+
+    def itunes_lookup(artist, album):
+        query = []
+        for aquery in itunespy.search_album(artist):
+            d = distance.edit_distance(aquery.collection_name, album)
+            # print("{} --> distance: {}".format(aquery.collection_name, d))
+            if d < 5:
+                query = itunespy.lookup(id=aquery.collection_id)[0]
+                break
+
+        if not query:
+            print("album search failed...")
+            sys.exit()
+
+        return query
+
+    def prep_album_target_dir(query):
+        artist_dir = join(config["path"]["library"], query.artist_name)
+        target = join(artist_dir, query.collection_name)
+
+        if not os.path.exists(artist_dir): os.mkdir(artist_dir)
+        if not os.path.exists(target): os.mkdir(target)
+
+        return target
+
+
 class AlbumStream():
     """
         given a wav file object, an itunes Album query, and a target directory,

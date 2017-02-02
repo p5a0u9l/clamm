@@ -30,20 +30,6 @@ from clamm import config
 ssync = "shairport-sync"
 global seconds
 
-def generate_playlist(artist, album):
-    sed_program = 's/SEARCHTERM/"{} {}"/g'.format(artist, album).replace(":", "").replace("&", "")
-    with open("osa-program.js", "w") as osa:
-        Popen(['/usr/bin/sed', sed_program, 'osa-template.js'], stdout=osa)
-
-    Popen(['/usr/bin/osascript', 'osa-program.js'])
-
-def dial_itunes(artist, album):
-    """ run apple script and attempt to uniquely locate the artist/album pair """
-
-    generate_playlist(artist, album)
-    time.sleep(2) # time to build playlist
-    Popen(['/usr/bin/osascript', 'osa-play'])
-
 def start_shairport(pcm):
     """ make sure no doubles, start up shairport-sync """
     Popen(['killall', ssync]);

@@ -1,42 +1,11 @@
-#!/usr/bin/env python
+#/usr/bin/env python
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-# built-ins
-from subprocess import call
-import re
-
 # external
-import itunespy
-from nltk import distance
 import wikipedia
-from translate import Translator
 import nltk
-
 tk = nltk.tokenize.WordPunctTokenizer();
-
-def metastize(query, target):
-    for i, track in enumerate(query.get_tracks()):
-        tracknum = "%0.2d" % (i+1)
-        globber = glob(join(target, tracknum + "*flac"))
-        flac = taglib.File(globber[0])
-        flac.tags["ALBUM"] = [query.collection_name]
-        flac.tags["ALBUMARTIST"] = [query.artist_name]
-        flac.tags["ARTIST"] = [track.artist_name]
-        flac.tags["TRACKNUMBER"] = [str(track.track_number)]
-        flac.tags["DATE"] = [query.release_date]
-        flac.tags["LABEL"] = [query.copyright]
-        flac.tags["GENRE"] = [query.primary_genre_name]
-        flac.tags["TITLE"] = [track.track_name]
-        flac.tags["COMPILATION"] = ["0"]
-        flac.save()
-        flac.close()
-
-def get_translation(search_string):
-    """ occasionally artist name will be in non-Latin characters """
-
-    tr = Translator(input("Enter from language: "), 'en')
-    return tr.translate(search_string)
 
 def get_field(summary, known_set, name):
     guess = [word for word in tk.tokenize(summary) if word in known_set]
@@ -175,19 +144,4 @@ def artist_fields_from_manual(artist):
     new_a["nationality"] = input("Enter nationality: ")
     new_a["instrument"] = input("Enter instrument: ")
     return new_a
-
-def itunes_lookup(artist, album):
-    query = []
-    for aquery in itunespy.search_album(artist):
-        d = distance.edit_distance(aquery.collection_name, album)
-        # print("{} --> distance: {}".format(aquery.collection_name, d))
-        if d < 5:
-            query = itunespy.lookup(id=aquery.collection_id)[0]
-            break
-
-    if not query:
-        print("album search failed...")
-        sys.exit()
-
-    return query
 

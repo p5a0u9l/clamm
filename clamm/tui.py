@@ -13,10 +13,7 @@ import json
 
 # local
 import clamm.library
-
-# bootstrap config file
-cfg_path = os.path.join(os.path.expanduser('~'), '.config', 'clamm', 'config.json')
-with open(cfg_path) as f: config = json.load(f)
+from clamm.util import config
 
 def parse_inputs():
     """ create heirarchical argument parser """
@@ -74,6 +71,7 @@ def initialize_library(args):
 def synchronize_library(args):
     clamm.library.audiolib.AudioLib(args).synchronize()
 
+# apply the tui parsed function
 functers = {
             "configshow": show_config, \
             "configedit": edit_config, \

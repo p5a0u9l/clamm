@@ -3,5 +3,5 @@
 # __author__ Paul Adams
 
 import clamm
-if __name__ == "__main__": clamm.main()
+if __name__ == "__main__": clamm.clamm()
 

@@ -5,23 +5,24 @@
 # built-ins
 import json
 from collections import OrderedDict
+from os.path import join
+import copy
 
 # external
 from nltk import distance
-
-# external
 import taglib
 
-def walker(root, func, **kwargs):
-    """ iterate over every audio file under the target directory
-        pass the tagfile and apply action to each
-    """
+# local
+from clamm.library import util as libutil
+from clamm import util
+from clamm.util import config
+from clamm.tag import util as tagutil
+from clamm.tag import autotag
 
-    for folder, _, files in walk(root, topdown=False):
-        if not files: continue
-
-        print("walked into {}...".format(folder.replace(config["path"]["library"], "$LIBRARY")))
-        [func(taglib.File(join(folder, name)), **kwargs) for name in files if util.is_audio_file(name)]
+class SafeTagFile(taglib.File):
+    def __init__(self, filepath):
+        taglib.File.__init__(self, filepath)
+        self.tag_copy = copy.deepcopy(self.tags)
 
 class StructuredQuery():
     def __init__(self, querystr):
@@ -42,7 +43,7 @@ class StructuredQuery():
 class TagDatabase:
     """ a class for interfacing with a music library's tag database """
     def __init__(self):
-        self.path = util.config["path"]["database"]
+        self.path = config["path"]["database"]
         self.load()
         self.arange = Arrangement()
 
@@ -86,41 +87,48 @@ class TagDatabase:
         self.refresh()
 
     def add_item_to_db(self, item, category="artist"):
-        """ executive for mapping a new artist/composer into the database, including calls
+        """ map a new artist/composer into the database, including calls
         to functions which attempt to automate the process and fall back on manual methods.  """
 
         print("Searching for information on %s..." % (item))
 
-        page = taghelpers.wiki_query(item)
+        # attempt to match the item to a wiki entry
+        page = autotag.wiki_query(item)
 
         if page:
-            new = taghelpers.item_fields_from_wiki(item, page, self.sets, category=category)
+            # if match is found, autotag with verification
+            new_artist = autotag.item_fields_from_wiki(item, page, self.sets, category=category)
         else:
-            if category == "artist": new = taghelpers.artist_fields_from_manual(item)
+            # otherwise, fall back on manual entry
+            if category == "artist": new_artist = autotag.artist_fields_from_manual(item)
 
-        print("proposed item for database:")
-        [print("\t{}: {}".format(key, val)) for key, val in new.items()]
-
+        # on approval, add the new artist/composer to the database
+        print("proposed item for database:"); cutil.pretty_dict(new_artist)
         if not input("Accept? [y]/n: "):
-            return new
+            new_key = new_artist["full_name"]
+            self.artist[new_key] = new_artist
+            self.artist[new_key]["count"] = 1; # needs an initial value
+            # be sure to
+            self.refresh();
+            return new_key
         else:
             raise TagDatabaseError("add_item_to_db: proposed item rejected")
 
     def update_sets(self):
-        art_set = util.perms2set(self.artist)
+        art_set = tagutil.perms2set(self.artist)
 
         # update nationalities
         alist = [self.artist[aname]["nationality"] for aname in self.artist.keys()]
         clist = [self.composer[cname]["nationality"] for cname in self.composer.keys()]
         alist.extend(clist)
-        nat_set = util.messylist2set(alist)
+        nat_set = tagutil.messylist2set(alist)
 
         # update composer set
-        comp_set = util.perms2set(self.composer)
+        comp_set = tagutil.perms2set(self.composer)
 
         # instrument set
         alist = [self.artist[artist]["instrument"] for artist in self.artist.keys()]
-        inst_set = util.messylist2set(alist)
+        inst_set = tagutil.messylist2set(alist)
 
         # compile and write to disk
         self.sets = {"artist": art_set, "composer": comp_set, "nationality": nat_set, "instrument": inst_set}
@@ -165,60 +173,69 @@ class TagDatabase:
             self.add_new_perm(key, qname, category="composer")
             return self.match_from_perms(mname, category="composer")
 
-    def verify_artist(self, qname):
+    def verify_artist(self, query_name):
         """ verify that the artist query name (qname) has an entry in the tag database
             if it doesn't, propose a series of steps to remedy.  """
 
-        if qname in self._db["exceptions"]["artists_to_ignore"]: return []
+        # first, deal with the misfits by bailing out
+        if query_name in self._db["exceptions"]["artists_to_ignore"]: return []
 
-        if qname in self.sets["artist"]: return self.match_from_perms(qname)
-
-        # try to find an existing match
-        mname = self.closest_from_existing_set(qname, category="artist")
-
-        if not input("Accept %s as matching %s? " % (mname, qname)):
-            # fetch actual key and update perms
-            key = self.match_from_perms(mname)
-            self.add_new_perm(key, qname)
+        # if we already know this artist, job done
+        if query_name in self.sets["artist"]:
+            key = self.match_from_perms(query_name)
             return key
 
+        # if above fails, possibly nearest neighbor is correct?
+        nearest = self.closest_from_existing_set(query_name, category="artist")
+
+        if not input("Accept {} as matching {}? ".format(nearest, query_name)):
+            # fetch actual key and update perms
+            key = self.match_from_perms(nearest)
+            self.add_new_perm(key, query_name)
+            return key
+
+        # Hook in the new artist process if reach this point
         if not input("Add new artist? [<CR>]/n: "):
-            self.artist[qname] = self.add_item_to_db(qname)
-            self.artist[qname]["count"] = 1; # needs an initial value
-            self.refresh();
-            return qname
+            new_key = self.add_item_to_db(query_name)
+            return new_key
 
+        # It's also possible that the artist is really a composer
         if not input("Is Composer Permutation? [<CR>]/n: "):
-            cname = self.closest_from_existing_set(qname, category="composer")
+            cname = self.closest_from_existing_set(query_name, category="composer")
 
-            if not input("Accept %s as matching %s? " % (cname, qname)):
+            if not input("Accept %s as matching %s? " % (cname, query_name)):
                 ckey = self.match_from_perms(cname, category="composer")
             else:
                 ckey = input("Manually enter composer key lookup... ")
 
-            self.add_new_perm(ckey, qname, category="composer")
+            self.add_new_perm(ckey, query_name, category="composer")
             return
 
+        # Maybe there's an error in the database and we can enter the key manually
         if not input("Manually enter key lookup? [<CR>]/n: "):
-            key = input("aight, go 'head: ")
-            self.add_new_perm(key, qname)
-            return self.match_from_perms(qname)
+            man_key = input("aight, go 'head: ")
+            # add as a new permutation
+            self.add_new_perm(man_key, query_name)
+            #
+            actual_key = self.match_from_perms(query_name)
+            return actual_key
 
+        # One more chance to add a new artist
         if not input("Add new artist? [<CR>]/n: "):
-            self.artist[qname] = self.add_item_to_db(qname)
-            self.refresh()
-            return qname
+            new_key = self.add_item_to_db(qname)
+            return new_key
 
-        if not input("debug? [<CR>]/n: "):
-            import pdb; pdb.set_trace()
+        # Allow some introspection before dying
+        if not input("debug? [<CR>]/n: "): import pdb; pdb.set_trace()
 
+        # Declare a misfit and walk away in disgust
         else:
             self._db["exceptions"]["artists_to_ignore"].append(qname)
             self.refresh()
             return
 
     def get_sorted_arrangement(self, tagfile):
-        aset = get_artist_tagset(tagfile)
+        aset = tagutil.get_artist_tagset(tagfile)
         sar = {}
         for aname in aset:
             akey = self.match_from_perms(aname)
@@ -266,8 +283,9 @@ class Arrangement:
             tagfile.tags["ARRANGEMENT"] = self.arrangement
             tagfile.tags["ALBUMARTIST"] = self.albumartist
             tagfile.tags["ARTIST"] = self.artist
-            tagfile.tags = {key: val for key, val in tagfile.tags.items() if key not in util.config["prune_artist_tags"]}
-            util.commit_to_tagfile(tagfile)
+            tagfile.tags = {key: val for key, val in \
+                    tagfile.tags.items() if key not in config["prune_artist_tags"]}
+            libutil.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):
         return tagfile.tags["ALBUM"] != self.album_name or str(self.sar) != str(sar)
@@ -275,11 +293,10 @@ class Arrangement:
     def unpack(self):
         alist = [item for item in self.sar.keys()]
         self.albumartist = str(alist[self.prima])
-        self.artist = messylist2tagstr(alist)
-        self.arrangement = messylist2tagstr([item[0] for item in self.sar.values()])
+        self.artist = tagutil.messylist2tagstr(alist)
+        self.arrangement = tagutil.messylist2tagstr([item[0] for item in self.sar.values()])
 
 class TagDatabaseError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
-
