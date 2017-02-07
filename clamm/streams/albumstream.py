@@ -5,12 +5,21 @@
 # built-ins
 from os.path import join
 import wave
+import os
 
 # external
 import numpy as np
 import matplotlib
+import itunespy
+
+# locals
+import clamm.util as cutil
+from clamm.util import config
+
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 
 class Stream():
     def __init__(self, streampath):
@@ -21,9 +30,9 @@ class Stream():
     def decode_stream_path(self):
         """ artist/album names from stream name """
         [artist, album] = self.path.replace(".wav", "").split(";")
-        artist = os.path.split(artist)[-1]
-        album = album.strip()
-        printr("Found and Parsed {} --> {} as target...".format(self.artist, self.album))
+        artist, album = os.path.split(artist)[-1], album.strip()
+        cutil.printr("Found and Parsed {} --> {} as target...".format(
+            self.artist, self.album))
         return (artist, album)
 
     def itunes_lookup(artist, album):
@@ -45,8 +54,10 @@ class Stream():
         artist_dir = join(config["path"]["library"], query.artist_name)
         target = join(artist_dir, query.collection_name)
 
-        if not os.path.exists(artist_dir): os.mkdir(artist_dir)
-        if not os.path.exists(target): os.mkdir(target)
+        if not os.path.exists(artist_dir):
+            os.mkdir(artist_dir)
+        if not os.path.exists(target):
+            os.mkdir(target)
 
         return target
 
@@ -54,8 +65,8 @@ class Stream():
 class AlbumStream():
     """
         given a wav file object, an itunes Album query, and a target directory,
-        locate the tracks within the stream, create new flac tracks, and populate
-        with metadata
+        locate the tracks within the stream, create new flac tracks,
+        and populate with metadata
     """
 
     def __init__(self, wav, query, tgt):
@@ -136,7 +147,8 @@ class AlbumStream():
         self.find_start_frame()
 
         # find end of track (find local min)
-        reference = self.start_frame + int(track.track_time/1000*self.framerate)
+        reference = self.start_frame + int(
+                track.track_time/1000*self.framerate)
         self.find_end_frame(reference)
 
         # update track split parameters
@@ -148,22 +160,27 @@ class AlbumStream():
 
     def consume(self, i):
         trackname = self.curtrack.track_name.strip().replace("/", ";")
-        self.curtrackpath = join(self.target, "%0.2d %s.wav" % (i+1, trackname))
+        self.curtrackpath = join(
+                self.target, "%0.2d %s.wav" % (i+1, trackname))
 
         # status prints
         SAMP2MIN = 1/self.framerate/60
         MS2MIN = 1/1000/60
         print("{}".format(trackname))
-        self.err["dur"].append(self.n_frame*SAMP2MIN - self.curtrack.track_time*MS2MIN)
-        self.err["pos"].append(self.start_frame*SAMP2MIN - self.cumtime)
-        print("\tESTIMATED duration: %.2f min         --> position: %.2f min" %\
-                (self.n_frame*SAMP2MIN, self.start_frame*SAMP2MIN))
-        print("\tEXPECTED            %.2f min         -->           %.2f min" %\
-                (self.curtrack.track_time*MS2MIN, self.cumtime))
-        print("\tERROR               (%.2f, %.2f) sec -->           (%.2f, %.2f) sec"
-                 % (60*np.mean(self.err["dur"]),
-                    60*np.std(self.err["dur"]),
-                    60*np.mean(self.err["pos"]), 60*np.std(self.err["pos"])))
+        self.err["dur"].append(
+                self.n_frame*SAMP2MIN - self.curtrack.track_time*MS2MIN)
+        self.err["pos"].append(
+                self.start_frame*SAMP2MIN - self.cumtime)
+        print("\tESTIMATED duration: %.2f min         --> position: %.2f min" %
+              (self.n_frame*SAMP2MIN, self.start_frame*SAMP2MIN))
+        print("\tEXPECTED            %.2f min         -->           %.2f min" %
+              (self.curtrack.track_time*MS2MIN, self.cumtime))
+        print("\tERROR               (%.2f, %.2f) sec -->           "
+              + "(%.2f, %.2f) sec" %
+              (60*np.mean(self.err["dur"]),
+               60*np.std(self.err["dur"]),
+               60*np.mean(self.err["pos"]),
+               60*np.std(self.err["pos"])))
 
         self.cumtime += self.curtrack.track_time*MS2MIN
 
@@ -172,7 +189,8 @@ class AlbumStream():
     def finalize(self):
         with wave.open(self.curtrackpath, 'w') as wavfile:
             self.wav.setpos(self.start_frame)
-            y = np.fromstring(self.wav.readframes(self.n_frame), dtype=np.int16)
+            y = np.fromstring(
+                    self.wav.readframes(self.n_frame), dtype=np.int16)
             y = np.reshape(y, (int(y.shape[0]/2), 2))
             wavfile.setnchannels(2)
             wavfile.setsampwidth(2)
@@ -183,11 +201,13 @@ class AlbumStream():
     def power_envelope(self):
         """ power_envelope """
         ds = config["stream2tracks"]["downsample_factor"]
-        print("computing audio envelope of file at {} downsample rate...".format(ds))
+        print("computing audio envelope of file at {} downsample rate..."
+              .format(ds))
         self.wav.rewind()
         n_window = int(np.floor(self.wav.getnframes()/ds)) - 1
         x = [np.std(self.read_wav_mono(ds))**2 for i in range(n_window)]
         return np.asarray(x)
+
 
 def plot_envelope_splits(x, splits, fname):
     ds = config["stream2tracks"]["downsample_factor"]
@@ -195,12 +215,14 @@ def plot_envelope_splits(x, splits, fname):
     starts = [split[0]/ds for split in splits]
     stops = [starts[i] + split[1]/ds for i, split in enumerate(splits)]
     n = np.shape(x)[0]
-    n_min = int(n/efr/60);
+    n_min = int(n/efr/60)
 
     # create figure (one inch per minute of audio)
     plt.figure(figsize=(n_min, 10))
     plt.plot(x, marker=".", linestyle='', markersize=0.2)
-    [plt.axvline(x=start, color="b", linestyle="--", linewidth=0.3) for start in starts]
-    [plt.axvline(x=stop, color="r", linestyle="--", linewidth=0.3) for stop in stops]
-    plt.savefig(join(config["path"]["streams"], "envelopes", fname + ".png"), bbox_inches='tight')
-
+    [plt.axvline(x=start, color="b", linestyle="--", linewidth=0.3)
+        for start in starts]
+    [plt.axvline(x=stop, color="r", linestyle="--", linewidth=0.3)
+        for stop in stops]
+    plt.savefig(join(config["path"]["streams"], "envelopes", fname + ".png"),
+                bbox_inches='tight')

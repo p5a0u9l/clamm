@@ -1,11 +1,13 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
 # external
 import wikipedia
 import nltk
-tk = nltk.tokenize.WordPunctTokenizer();
+
+tk = nltk.tokenize.WordPunctTokenizer()
+
 
 def get_field(summary, known_set, name):
     guess = [word for word in tk.tokenize(summary) if word in known_set]
@@ -33,6 +35,7 @@ def get_field(summary, known_set, name):
         else:
             return resp
 
+
 def get_borndied(summary):
     """ extract artist/composer vital date(s) from a wikipedia summary string """
 
@@ -55,6 +58,7 @@ def get_borndied(summary):
 
     else:
         return input("Enter Dates: ")
+
 
 def item_fields_from_wiki(item, page, sets, category="artist"):
     """ extract database tags/fields from a successful wikipedia query """
@@ -85,6 +89,7 @@ def item_fields_from_wiki(item, page, sets, category="artist"):
 
     return new
 
+
 def wiki_query(search_string):
     """ featch a query result from wikipedia and determine its relevance """
 
@@ -107,11 +112,17 @@ def wiki_query(search_string):
 
     # handle cases
     idx = int(idx)
-    if (idx) >= 0: return wikipedia.page(query[idx])
-    elif (idx) == -1: return []
-    elif (idx) == -2: return wiki_query(input("Try a new search string: "))
-    elif (idx) == -3: wiki_query(get_translation(search_string))
-    else: return []
+    if (idx) >= 0:
+        return wikipedia.page(query[idx])
+    elif (idx) == -1:
+        return []
+    elif (idx) == -2:
+        return wiki_query(input("Try a new search string: "))
+    elif (idx) == -3:
+        wiki_query(get_translation(search_string))
+    else:
+        return []
+
 
 def artist_fields_from_manual(artist):
     new_a = {}

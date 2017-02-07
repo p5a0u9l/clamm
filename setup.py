@@ -8,6 +8,4 @@ setup(name='clamm',
       description='CLAssical Music Manager',
       author='Paul Adams',
       author_email='p5a0u9l@gmail.com',
-      packages=['clamm', 'clamm.library', 'clamm.streams'],
-     )
-
+      packages=['clamm', 'clamm.library', 'clamm.streams'])

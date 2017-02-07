@@ -98,6 +98,9 @@ class LibTagFileAction(LibTagFile):
         # helper attrs
         self.last_composer = "" # persistent storage for last composer
 
+        # auto_suggest
+        self.suggest = tags.TagSuggestion(self.tagdb, category="composer")
+
         # wrap methods in dictionary for dynamic access
         self.func = {}
         for attr in dir(self):
@@ -280,7 +283,7 @@ class LibTagFileAction(LibTagFile):
             if not input("Accept last input: {} ? [CR]".format(self.last_composer)):
                 cname = self.last_composer
             else:
-                cname = input("Enter composer name: ")
+                cname = self.suggest.prompt("Enter composer name: ")
         else:
             cname = tagfile.tags["COMPOSER"]
 
@@ -299,7 +302,7 @@ class LibTagFileAction(LibTagFile):
         tagfile.tags["COMPOSER_DATE"] = composer["borndied"]
         tagfile.tags["COMPOSER_PERIOD"] = composer["period"]
         tagfile.tags["COMPOSER_SORT"] = composer["sort"]
-        tagfile.tags["COMPOSER_NATIONALITY"] = composer["nationality"]
+        tagfile.tags["COMPOSER_NATION"] = composer["nationality"]
 
         # ensure the files are sync'd to database
         self.write2tagfile(tagfile)

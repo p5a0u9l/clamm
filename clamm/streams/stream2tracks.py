@@ -4,17 +4,13 @@
 
 # built-ins
 import wave
-from glob import glob
-import os
 from os.path import join
-import sys
-
-# external
-import taglib
+from glob import glob
 
 # local
-from clamm.library import util, config
-from clamm.stream import helpers, albumstream
+from clamm.util import config
+from clamm.streams import util, albumstream
+
 
 def main():
     """ batch process wav streams to flac album tracks with metadata """
@@ -23,9 +19,9 @@ def main():
     for stream_path in glob(join(config["path"]["streams"], "wav", "*wav")):
 
         # prepare processing
-        (artist, album) = helpers.decode_stream_path(stream_path)
-        query = helpers.itunes_lookup(artist, album)
-        target = helpers.prep_album_target_dir(query)
+        (artist, album) = util.decode_stream_path(stream_path)
+        query = util.itunes_lookup(artist, album)
+        target = util.prep_album_target_dir(query)
 
         # process a stream
         with wave.open(stream_path) as wav:
@@ -37,10 +33,14 @@ def main():
 
             # compute track-splitting validation image
             x = stream.power_envelope()
-            albumstream.plot_envelope_splits(x, stream.splits, artist + ";" + album)
+            albumstream.plot_envelope_splits(
+                    x, stream.splits, artist + ";" + album)
 
-        # finalize the stream into flac files with tags derived from itunes query
+        # finalize the stream into flac files with tags
+        # derived from itunes query
         util.make_flacs(target)
-        helpers.metastize(query, target)
+        util.metastize(query, target)
 
-if __name__ == '__main__': main()
+
+if __name__ == '__main__':
+    main()
