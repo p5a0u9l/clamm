@@ -15,17 +15,26 @@ import taglib
 
 # constants, globals
 from clamm.util import config
-SSYNC = "shairport-sync"
 global seconds
+TMPSTREAM = os.path.join(config["path"]["pcm"], "temp.pcm")
 
 
 def start_shairport(filepath):
-    """ make sure no duplicate processes and start up shairport-sync """
-    Popen(['killall', SSYNC])
+    """
+    make sure no duplicate processes and start up shairport-sync
+    """
+
+    Popen(['killall', config['bin']['shairport-sync']])
     time.sleep(10)
-    Popen(['{} -o=stdout > "{}"'.format(SSYNC, filepath)], shell=True)
+
+    Popen(['{} {} > "{}"'.format(
+        config['bin']['shairport-sync'],
+        config['opt']['shairport-sync'],
+        filepath)], shell=True)
+
     time.sleep(1)
-    print("INFO: {} up and running.".format(SSYNC))
+
+    print("INFO: shairport up and running.")
 
 
 def size_sampler(filepath):
@@ -33,6 +42,7 @@ def size_sampler(filepath):
     return the file size, sampled with a 1 second gap to determine
     if the file is being written to and thus growing
     """
+
     s0 = os.path.getsize(filepath)
     time.sleep(1)
     s1 = os.path.getsize(filepath)
@@ -40,7 +50,9 @@ def size_sampler(filepath):
 
 
 def is_started(filepath):
-    """ test to see if recording has started """
+    """
+    test to see if recording has started
+    """
 
     # reset seconds counter
     global seconds
@@ -85,9 +97,9 @@ def generate_playlist(artist, album):
     osa_prog = join(config["path"]["streams"], "scripts", "osa-program.js")
     osa_temp = join(config["path"]["streams"], "scripts", "osa-template.js")
     with open(osa_prog, "w") as osa:
-        Popen(['/usr/bin/sed', sed_program, osa_temp], stdout=osa)
+        Popen([config['bin']['sed'], sed_program, osa_temp], stdout=osa)
 
-    Popen(['/usr/bin/osascript', osa_prog])
+    Popen([config['bin']['osascript'], osa_prog])
 
 
 def dial_itunes(artist, album):
@@ -98,4 +110,4 @@ def dial_itunes(artist, album):
     generate_playlist(artist, album)
     time.sleep(2)   # allow time to build playlist
     osa_prog = join(config["path"]["streams"], "scripts", "osa-play")
-    Popen(['/usr/bin/osascript', osa_prog])
+    Popen([config['bin']['osascript'], osa_prog])

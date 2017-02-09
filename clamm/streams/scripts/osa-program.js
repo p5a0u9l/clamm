@@ -1,7 +1,7 @@
 (function () {
 	var playlistName = 'temp-playlist';
 	var app = Application('iTunes');
-	var search_term = "Andrew Manze  Academy of Ancient Music Bach Solo  Double Violin Concertos"
+	var search_term = "Philippe Herreweghe  Collegium Vocale Gent Bach Missa in h-moll, BWV 232"
 	var library = app.libraryPlaylists[0];
 	var result;
 	var list;

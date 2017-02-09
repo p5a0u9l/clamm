@@ -24,7 +24,6 @@ def parse_input_args():
 
         example     --> ARRANGMENT contains guitar AND COMPOSER contains BACH
 
-
         NOTE: for simplicity, though multiple operators may be included in the query,
         e.g., ARRANGMENT is guitar AND COMPOSER contains BACH AND ARTIST is Glenn Gould
         only one operator will be considered since mixing, e.g. AND then OR, would overly
@@ -42,7 +41,10 @@ querystring = parse_input_args()
 sq = tags.StructuredQuery(querystring)
 
 def main():
-    """ use sql-like relational patterns to quickly build complex playlists using cmus playlist format """
+    """
+    use sql-like relational patterns to quickly build complex
+    playlists using cmus playlist format
+    """
 
     # apply playfilt to each file in library
     audiolib.walker(config["path"]["library"], playlist)

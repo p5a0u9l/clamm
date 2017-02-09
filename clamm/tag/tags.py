@@ -9,11 +9,7 @@ from collections import OrderedDict
 import copy
 
 # external
-import prompt_toolkit
-from prompt_toolkit.history import InMemoryHistory
-from prompt_toolkit.interface import AbortAction
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-
+import prompt_toolkit as ptk
 from nltk import distance
 import taglib
 
@@ -56,15 +52,18 @@ class StructuredQuery():
 
 class TagSuggestion():
     def __init__(self, tagdb, category="artist"):
-        self.history = prompt_toolkit.history.InMemoryHistory()
+        self.history = ptk.history.InMemoryHistory()
         for c in tagdb._db[category].keys():
             self.history.append(c)
 
     def prompt(self, pmsg):
-        return prompt_toolkit.prompt(pmsg, history=self.history,
-                      auto_suggest=prompt_toolkit.auto_suggest.AutoSuggestFromHistory(),
-                      enable_history_search=True,
-                      on_abort=prompt_toolkit.interface.AbortAction.RETRY)
+        r = ptk.prompt(
+                pmsg,
+                history=self.history,
+                auto_suggest=ptk.auto_suggest.AutoSuggestFromHistory(),
+                enable_history_search=True,
+                on_abort=ptk.interface.AbortAction.RETRY)
+        return r
 
 
 class TagDatabase:
@@ -346,7 +345,8 @@ class Arrangement:
             tagfile.tags["ALBUMARTIST"] = self.albumartist
             tagfile.tags["ARTIST"] = self.artist
             tagfile.tags = {key: val for key, val in tagfile.tags.items()
-                            if key not in config["library"]["tags"]["prune_artist"]}
+                            if key not in
+                            config["library"]["tags"]["prune_artist"]}
             libutil.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):

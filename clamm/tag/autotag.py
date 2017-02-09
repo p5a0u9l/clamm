@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
+# built-ins
+from subprocess import Popen
+
 # external
 import wikipedia
 import nltk
@@ -37,7 +40,9 @@ def get_field(summary, known_set, name):
 
 
 def get_borndied(summary):
-    """ extract artist/composer vital date(s) from a wikipedia summary string """
+    """
+    extract artist/composer vital date(s) from a wikipedia summary string
+    """
 
     m = re.findall("\d{4}", summary)
 
@@ -47,41 +52,49 @@ def get_borndied(summary):
             return born
 
         else:
-            born = m[0] +"-"
+            born = m[0] + "-"
             if not input("Accept %s? [y]/n: " % (born)): return born
 
     elif len(m) >= 1:
-        born = m[0] +"-"
+        born = m[0] + "-"
 
         resp = input("Accept %s? [y]/n: " % (born))
-        if not resp: return born
+        if not resp:
+            return born
 
     else:
         return input("Enter Dates: ")
 
 
 def item_fields_from_wiki(item, page, sets, category="artist"):
-    """ extract database tags/fields from a successful wikipedia query """
+    """
+    extract database tags/fields from a successful wikipedia query
+    """
 
-    new = {"permutations": item}
+    new = {"permutations": [item]}
     print(page.summary)
 
     # NAME
     resp = input("Enter name (keep/[t]itle): ")
-    if item != resp: new["permutations"].append(resp)
+    if item != resp:
+        new["permutations"].append(resp)
     new["full_name"] = resp
-    if resp == "k": new["full_name"] = item
+    if resp == "k":
+        new["full_name"] = item
 
     # ORDINALITY
     if category == "artist":
-        resp = input("[I]ndividual or Ensemble?")
-        if resp: new["ordinality"] = "Ensemble"
-        else: new["ordinality"] = "Individual"
+        if input("[I]ndividual or Ensemble?"):
+            new["ordinality"] = "Ensemble"
+        else:
+            new["ordinality"] = "Individual"
 
     new["borndied"] = get_borndied(page.summary)
-    new["nationality"] = get_field(page.summary, sets["nationality"], "nationality")
+    new["nationality"] = get_field(
+            page.summary, sets["nationality"], "nationality")
     if category == "artist":
-        new["instrument"] = get_field(page.summary, sets["instrument"], "instrument")
+        new["instrument"] = get_field(
+                page.summary, sets["instrument"], "instrument")
     elif category == "composer":
         new["period"] = input("Enter composer period: ")
         new["sort"] = swap_first_last_name(new["full_name"])
@@ -91,7 +104,9 @@ def item_fields_from_wiki(item, page, sets, category="artist"):
 
 
 def wiki_query(search_string):
-    """ featch a query result from wikipedia and determine its relevance """
+    """
+    fetch a query result from wikipedia and determine its relevance
+    """
 
     # call out to wikipedia
     query = wikipedia.search(search_string)
@@ -102,13 +117,15 @@ def wiki_query(search_string):
 
     # print query results
     print("Query returns: ")
-    if query: [print("\t%d: %s" % (i, v)) for i, v in enumerate(query)]
+    if query:
+        cutil.pretty_dict(query.items())
 
     # prompt action
-    idx = input("Enter choice: ")
+    idx = input("Enter choice (default to 0):")
 
     # default, accept the first result
-    if not idx: return wikipedia.page(query[0])
+    if not idx:
+        return wikipedia.page(query[0])
 
     # handle cases
     idx = int(idx)
@@ -125,34 +142,35 @@ def wiki_query(search_string):
 
 
 def artist_fields_from_manual(artist):
-    new_a = {}
-    resp = input("Translate/skip/continue: [t/s/<cr>]")
+    resp = input("Translate/skip/continue: t/s/[<cr>]")
     if resp:
         if resp == "t":
             artist = get_translate(artist)
         elif resp == "s":
             return
 
-    call(['googler', '-n', '3', artist])
+    Popen(['googler', '-n', '3', artist])
 
-    new_a["permutations"] = [artist]
+    new["permutations"] = [artist]
 
     resp = input("Enter name ([k]eep): ")
     if not resp:
-        new_a["full_name"] = artist
+        new["full_name"] = artist
     else:
-        new_a["full_name"] = resp
+        new["full_name"] = resp
         if artist != resp:
-            new_a["permutations"].append(resp)
+            new["permutations"].append(resp)
 
-    artist = new_a["full_name"]
+    artist = new["full_name"]
+
     resp = input("[I]ndividual or Ensemble?")
+    if resp:
+        new["ordinality"] = "Ensemble"
+    else:
+        new["ordinality"] = "Individual"
 
-    if resp: new_a["ordinality"] = "Ensemble"
-    else: new_a["ordinality"] = "Individual"
+    new["borndied"] = input("Enter dates: ")
+    new["nationality"] = input("Enter nationality: ")
+    new["instrument"] = input("Enter instrument: ")
 
-    new_a["borndied"] = input("Enter dates: ")
-    new_a["nationality"] = input("Enter nationality: ")
-    new_a["instrument"] = input("Enter instrument: ")
-    return new_a
-
+    return new

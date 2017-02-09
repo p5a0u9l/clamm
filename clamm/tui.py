@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-""" this module defines the _t_erminal _u_ser _i_nterface for clamm
+"""
+this module defines the _t_erminal _u_ser _i_nterface for clamm
 """
 
 # built-ins
@@ -18,7 +19,7 @@ from clamm.util import config
 
 
 def parse_inputs():
-    """ create heirarchical argument parser """
+    """ populate a heirarchical argument parser """
 
     # top-level
     p = argparse.ArgumentParser(prog="CLAMM",
@@ -66,21 +67,18 @@ def parse_inputs():
                             type=str, default=config["library"],
                             help="The target directory, library by default")
 
-    # parser.add_argument("-t", "--tag", default="", help="a tag field
-    # upon which to act, empty by default")
-    # parser.add_argument("-v", "--val", default="", help="the
-    # value to apply to tags, empty by default")
-    # parser.add_argument("-q", '--query', type=str, nargs='+', \
-    #         help=\
-    #     """structure   -->
-    # TAG_KEY TRACK_RELATION TAG_VALUE SET_OPERATOR ..."""
-    #     """\nexample     --> ARRANGMENT contains guitar
-    # AND COMPOSER contains BACH""")
+    lib_play_p = lib_subps.add_parser("playlist", help="")
+
+    lib_play_p.add_argument(
+            "-q", '--query', type=str, nargs='+',
+            help="""structure --> TAG_KEY TRACK_RELATION TAG_VALUE SET_OPERATOR
+            example --> ARRANGMENT contains guitar AND COMPOSER contains
+            BACH""")
 
     return p
 
 
-# functer wrappers
+# functor wrappers
 def show_config(args):
     print(json.dumps(config, ensure_ascii=False, indent=4))
 
@@ -90,22 +88,28 @@ def edit_config(args):
 
 
 def autobatch_stream(args):
-    autobatch.main()
+    autobatch.main(args)
 
 
 def initialize_library(args):
-    print("NOT IMPLEMENTED YET")
+    clamm.library.audiolib.AudioLib(args).initialize()
 
 
 def synchronize_library(args):
     clamm.library.audiolib.AudioLib(args).synchronize()
 
 
-# apply the tui parsed function
+def playlist_library(args):
+    clamm.library.audiolib.AudioLib(args).playlist()
+
+
+# each key/val pair follows following format
+#   commandsubcommand: subcommand_command
 functors = {
             "streamautobatch": autobatch_stream,
             "configshow": show_config,
             "configedit": edit_config,
             "libraryinitialize": initialize_library,
-            "librarysynchronize": synchronize_library
+            "librarysynchronize": synchronize_library,
+            "libraryplaylist": playlist_library
             }

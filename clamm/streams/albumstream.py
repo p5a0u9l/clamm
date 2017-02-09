@@ -9,16 +9,12 @@ import os
 
 # external
 import numpy as np
-import matplotlib
 import itunespy
+import matplotlib.pyplot as plt
 
 # locals
 import clamm.util as cutil
 from clamm.util import config
-
-
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 
 class Stream():

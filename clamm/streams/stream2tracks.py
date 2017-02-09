@@ -10,20 +10,24 @@ from glob import glob
 # local
 from clamm.util import config
 from clamm.streams import util, albumstream
+from clamm.library import util as libutil
 
 
-def main():
-    """ batch process wav streams to flac album tracks with metadata """
+def main(args):
+    """
+    batch process wav streams to flac album tracks with metadata
+    """
 
     # iterate over streams found in wav/ staging area
-    for stream_path in glob(join(config["path"]["streams"], "wav", "*wav")):
-
-        # prepare processing
+    print("INFO: Begin stream2tracks...")
+    for stream_path in glob(join(config["path"]["pcm"], "*pcm")):
+        # initialize the stream
+        libutil.pcm2wav(stream_path)
         (artist, album) = util.decode_stream_path(stream_path)
         query = util.itunes_lookup(artist, album)
         target = util.prep_album_target_dir(query)
 
-        # process a stream
+        # process the stream
         with wave.open(stream_path) as wav:
             stream = albumstream.AlbumStream(wav, query, target)
 
@@ -40,6 +44,7 @@ def main():
         # derived from itunes query
         util.make_flacs(target)
         util.metastize(query, target)
+    print("INFO: Finish stream2tracks.")
 
 
 if __name__ == '__main__':

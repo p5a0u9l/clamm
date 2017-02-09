@@ -2,51 +2,43 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-"""
-1. Manually compile a listing of ARTIST; ALBUM targets
-    For each line in the recipe file:
-        2. use itunes-remote (or something similar) to automate finding and
-            starting playback of the correct stream
-        3, shairport-sync should be quiescent and ready to receive the bits
-        4. a method of recognizing when the album playback has completed will
-            be necessary to take finalize actions
-
-    5 With a wav/ folder full of captured/converted streams, process each wav
-
-    6. for each wav in wavs:
-        run stream2tracks
-
-    7. the library now has a number of new folder/albums, each containing
-    a number of tracks
-"""
-
 # built-ins
 import os
-from subprocess import Popen
 import json
 import time
+import sys
 
 # local
 from clamm.util import config
 from clamm.streams import util
 from clamm.streams import stream2tracks
 
-TMPSTREAM = "./tmp.pcm"
 
-
-def main():
+def batch_stream(args):
     """
-    executive for autobatch
+    autobatch is a program for batch streaming a listing of albums from iTunes
+    to raw pcm files via shairport-sync.
+
+    iTunes is controlled using macos' built-in `osascript` tool and simple
+    javascript request templates.
+
+    When the listings have finished streaming, the pcm files (streams)
+    are processed by `stream2tracks` and converted from streams to a
+    collection of flac tracks
     """
 
-    # fetch the alibum listing
-    path = os.path.join(config["path"]["streams"], "batch_album_listing.json")
-    with open(path) as b:
-        batch = json.load(b)
+    print("INFO: Begin autobatch...")
+
+    # fetch the album listing
+    try:
+        with open(args.file) as b:
+            batch = json.load(b)
+    except FileNotFoundError:
+        sys.exit("ERROR: File with name {} not found".format(args.file))
 
     # iterate over albums in the listing
     for key, val in batch.items():
-        util.start_shairport(TMPSTREAM)
+        util.start_shairport(util.TMPSTREAM)
 
         artist, album = val['artist'], val['album']
         pcm = "{}; {}.pcm".format(artist, album)
@@ -58,26 +50,24 @@ def main():
         util.dial_itunes(artist, album)
 
         # wait for stream to start
-        while not util.is_started(TMPSTREAM):
+        while not util.is_started(util.TMPSTREAM):
             time.sleep(1)
         print("INFO: Stream successfully started, "
               " now waiting for finish (one dot per minute)...")
 
         # wait for stream to finish
-        while not util.is_finished(TMPSTREAM):
+        while not util.is_finished(util.TMPSTREAM):
             time.sleep(1)
         print("INFO: Stream successfully finished.")
 
-        os.rename(TMPSTREAM,
-                  os.path.join(config["path"]["streams"], "pcm", pcm))
+        os.rename(util.TMPSTREAM, os.path.join(config["path"]["pcm"], pcm))
 
     print("INFO: Batch successfully finished.")
-    print("INFO: Converting PCMs to WAVs...")
-    os.chdir(config["path"]["streams"], "pcm")
-    Popen(['../pcm2wav.sh'])
-    print("INFO: Success.")
-    print("INFO: Begin stream2tracks...")
-    stream2tracks.main()
+
+
+def main(args):
+    batch_stream(args)
+    stream2tracks.main(args)
 
 
 if __name__ == '__main__':
