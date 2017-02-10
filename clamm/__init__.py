@@ -2,7 +2,12 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-""" entrance point for clamm --> CLassical Music Manager """
+"""
+entrance point for clamm <-<-- CLassical Music Manager
+"""
+
+# built-ins
+import os
 
 # local
 import clamm.tui

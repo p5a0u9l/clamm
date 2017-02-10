@@ -67,7 +67,9 @@ class TagSuggestion():
 
 
 class TagDatabase:
-    """ a class for interfacing with a music library's tag database """
+    """
+    interfacing with a music library's tag database
+    """
     def __init__(self):
         self.path = config["path"]["database"]
         self.load()

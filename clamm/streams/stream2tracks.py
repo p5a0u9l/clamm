@@ -2,48 +2,30 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-# built-ins
-import wave
-from os.path import join
-from glob import glob
-
 # local
-from clamm.util import config
 from clamm.streams import util, albumstream
-from clamm.library import util as libutil
 
 
-def main(args):
+def main(streampath):
     """
-    batch process wav streams to flac album tracks with metadata
+    process raw pcm stream to tagged album tracks
     """
 
-    # iterate over streams found in wav/ staging area
     print("INFO: Begin stream2tracks...")
-    for stream_path in glob(join(config["path"]["pcm"], "*pcm")):
-        # initialize the stream
-        libutil.pcm2wav(stream_path)
-        (artist, album) = util.decode_stream_path(stream_path)
-        query = util.itunes_lookup(artist, album)
-        target = util.prep_album_target_dir(query)
+    # initialize the stream
+    stream = albumstream.Stream(streampath)
+    stream.decode_path().iQuery().prepare_target().pcm2wav()
 
-        # process the stream
-        with wave.open(stream_path) as wav:
-            stream = albumstream.AlbumStream(wav, query, target)
+    # process the stream into an album
+    album = albumstream.Album(stream).process()
 
-            # iterate over and process tracks derived from itunes search
-            for i, track in enumerate(stream.tracks):
-                stream.create(i, track).consume(i).finalize()
+    # finalize the stream into flac files with tags
+    stream.make_flacs().tagify()
 
-            # compute track-splitting validation image
-            x = stream.power_envelope()
-            albumstream.plot_envelope_splits(
-                    x, stream.splits, artist + ";" + album)
+    # create an image of the audio envelope indicating where track splits
+    # have been located
+    util.image_audio_envelope_with_tracks_markers(album.splits, stream)
 
-        # finalize the stream into flac files with tags
-        # derived from itunes query
-        util.make_flacs(target)
-        util.metastize(query, target)
     print("INFO: Finish stream2tracks.")
 
 

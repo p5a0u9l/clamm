@@ -14,13 +14,14 @@ from clamm import util as cutil
 from clamm.util import config
 
 
-def pcm2wav(pcm_name):
+def pcm2wav(pcm_name, wav_name):
     """
     wrapper for using ffmpeg to convert a pcm file to a wav file
     """
     Popen([config["bin"]["ffmpeg"],
-          config["opt"]["ffmpeg"], "-i",
-          pcm_name, pcm_name.replace("pcm", "wav")])
+          " ".join(config["opt"]["ffmpeg"]), "-i",
+           pcm_name,
+           wav_name])
     if not config["library"]["keep_pcms_once_wavs_made"]:
         os.remove(pcm_name)
 
@@ -41,13 +42,6 @@ def is_audio_file(name):
     readability short-cut for whether file contains known audio extension
     """
     return splitext(name)[1] in config["file"]["known_types"]
-
-
-def make_flacs(target):
-    """
-    convert all wav files in target directory to flac files
-    """
-    [wav2flac(wav) for wav in glob(join(target, "*wav"))]
 
 
 def commit_to_libfile(tagfile):

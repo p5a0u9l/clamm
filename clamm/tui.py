@@ -14,39 +14,81 @@ import json
 
 # local
 import clamm.library
-from clamm.streams import autobatch
+from clamm.streams import listing2streams, stream2tracks, streams
 from clamm.util import config
 
 
 def parse_inputs():
-    """ populate a heirarchical argument parser """
+    """
+    populate a heirarchical argument parser
+    """
 
     # top-level
     p = argparse.ArgumentParser(prog="CLAMM",
                                 description="classical music manager")
     subps = p.add_subparsers(dest="cmd")
 
+    # database
+    db_p = subps.add_parser(
+            "tags", help="commands providing access to tag database")
+    db_subps = db_p.add_subparsers(dest="sub_cmd")
+    db_subps.add_parser(
+            "edit", help="edit the tags.json file in $EDITOR")
+    db_subps.add_parser(
+            "show", help="pretty print the tags.json file to stdout")
+
     # config
     config_p = subps.add_parser(
             "config", help="commands providing access to configuration")
     config_subps = config_p.add_subparsers(dest="sub_cmd")
-    config_subps.add_parser("edit",
-                            help="edit the config.json file in $EDITOR")
-    config_subps.add_parser("show",
-                            help="pretty print the current configuration")
+    config_subps.add_parser(
+            "edit", help="edit the config.json file in $EDITOR")
+    config_subps.add_parser(
+            "show", help="pretty print the current configuration to stdout")
 
     # streams
-    bat_p = subps.add_parser(
-            "stream",
+    strm_p = subps.add_parser(
+            "streams",
             help="commands for working with streams of audio data")
-    bat_subps = bat_p.add_subparsers(dest="sub_cmd")
-    bat_init_p = bat_subps.add_parser("autobatch",
-                                      help="utilize the batch_album_" +
-                                      "listing.json file to create a batch " +
-                                      "of new albums")
-    bat_init_p.add_argument(
-                "-f", "--file", type=str, default="",
-                help="Path to batch_album_listing.json file")
+    strm_subps = strm_p.add_subparsers(dest="sub_cmd")
+    strm_init_p = strm_subps.add_parser(
+            "listing",
+            help="""
+                 utilize a listing.json file to create a batch of new streams
+                 """)
+
+    strm_init_p.add_argument(
+                "-l", "--listing", type=str, default="listing.json",
+                help="Path to listing.json specification.")
+
+    strm_trck_p = strm_subps.add_parser(
+            "tracks",
+            help="""
+                 process a raw pcm stream to tagged album tracks
+                 """)
+    strm_trck_p.add_argument(
+                "-s", "--streampath", type=str, default="",
+                help=" path to a raw pcm stream file ")
+
+    strm_strm_p = strm_subps.add_parser(
+            "stream",
+            help="""
+                 combination of batch listing pcm stream generation and
+                 iterative conversion of pcm streams to tagged tracks
+                 """)
+
+    strm_strm_p.add_argument(
+                "-l", "--listing", type=str, default="listing.json",
+                help="Path to listing.json specification.")
+
+    strm_strm_p.add_argument(
+                "-s", "--streamfolder", type=str,
+                default=config["path"]["pcm"],
+                help="""
+                     path to directory containing 1 or more pcm streams,
+                     defaults to path given in config.json
+                     """)
+
     # library
     lib_p = subps.add_parser(
             "library",
@@ -79,6 +121,16 @@ def parse_inputs():
 
 
 # functor wrappers
+def show_tags(args):
+    with open(config["path"]["database"]) as db:
+        tags = json.load(db)
+    print(json.dumps(tags, ensure_ascii=False, indent=4))
+
+
+def edit_tags(args):
+    call([os.environ["EDITOR"], config["path"]["database"]])
+
+
 def show_config(args):
     print(json.dumps(config, ensure_ascii=False, indent=4))
 
@@ -87,8 +139,16 @@ def edit_config(args):
     call([os.environ["EDITOR"], config["path"]["config"]])
 
 
-def autobatch_stream(args):
-    autobatch.main(args)
+def tracks_streams(args):
+    stream2tracks.main(args.streampath)
+
+
+def listing_streams(args):
+    listing2streams.main(args.listing)
+
+
+def stream_streams(args):
+    streams.main(args.streamfolder)
 
 
 def initialize_library(args):
@@ -106,7 +166,11 @@ def playlist_library(args):
 # each key/val pair follows following format
 #   commandsubcommand: subcommand_command
 functors = {
-            "streamautobatch": autobatch_stream,
+            "streamslisting": listing_streams,
+            "streamstracks": tracks_streams,
+            "streamsstream": stream_streams,
+            "tagsshow": show_tags,
+            "tagsedit": edit_tags,
             "configshow": show_config,
             "configedit": edit_config,
             "libraryinitialize": initialize_library,

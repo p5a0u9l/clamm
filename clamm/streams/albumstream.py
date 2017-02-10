@@ -5,74 +5,108 @@
 # built-ins
 from os.path import join
 import wave
+from glob import glob
 import os
+import sys
 
 # external
+import taglib
+from nltk import distance
 import numpy as np
 import itunespy
-import matplotlib.pyplot as plt
 
 # locals
 import clamm.util as cutil
 from clamm.util import config
+from clamm.library import util as libutil
+from clamm.streams import util
 
 
 class Stream():
     def __init__(self, streampath):
         """ """
-        self.path = streampath
-        self.decode_stream_path()
+        self.pcmpath = streampath
+        self.wavpath = streampath.replace("pcm", "wav")
+        self.query = []
 
-    def decode_stream_path(self):
-        """ artist/album names from stream name """
-        [artist, album] = self.path.replace(".wav", "").split(";")
-        artist, album = os.path.split(artist)[-1], album.strip()
+    def pcm2wav(self):
+        libutil.pcm2wav(self.pcmpath, self.wavpath)
+
+    def decode_path(self):
+        """
+        artist/album names from stream name
+        """
+        self.name = self.pcmpath.replace(".pcm", "")
+        [artist, album] = self.name.split(";")
+        self.artist, self.album = os.path.split(artist)[-1], album.strip()
         cutil.printr("Found and Parsed {} --> {} as target...".format(
             self.artist, self.album))
-        return (artist, album)
 
-    def itunes_lookup(artist, album):
-        query = []
-        for aquery in itunespy.search_album(artist):
-            d = distance.edit_distance(aquery.collection_name, album)
+        return self
+
+    def iQuery(self):
+        for aquery in itunespy.search_album(self.artist):
+            d = distance.edit_distance(aquery.collection_name, self.album)
             # print("{} --> distance: {}".format(aquery.collection_name, d))
             if d < 5:
-                query = itunespy.lookup(id=aquery.collection_id)[0]
+                self.query = itunespy.lookup(id=aquery.collection_id)[0]
                 break
 
-        if not query:
-            print("album search failed...")
-            sys.exit()
+        if not self.query:
+            sys.exit("ERROR: album search failed...")
 
-        return query
+        return self
 
-    def prep_album_target_dir(query):
-        artist_dir = join(config["path"]["library"], query.artist_name)
-        target = join(artist_dir, query.collection_name)
+    def prepare_target(self):
+        artist_dir = join(config["path"]["library"], self.query.artist_name)
+        self.target = join(artist_dir, self.query.collection_name)
 
         if not os.path.exists(artist_dir):
             os.mkdir(artist_dir)
-        if not os.path.exists(target):
-            os.mkdir(target)
+        if not os.path.exists(self.target):
+            os.mkdir(self.target)
 
-        return target
+        return self
+
+    def make_flacs(self):
+        """
+        convert all wav files in target directory to flac files
+        """
+        [libutil.wav2flac(wav) for wav in glob(join(self.target, "*wav"))]
+        return self
+
+    def tagify(self):
+        for i, track in enumerate(self.query.get_tracks()):
+            tracknum = "%0.2d" % (i+1)
+            globber = glob(join(self.target, tracknum + "*flac"))
+            flac = taglib.File(globber[0])
+            flac.tags["ALBUM"] = [self.query.collection_name]
+            flac.tags["ALBUMARTIST"] = [self.query.artist_name]
+            flac.tags["ARTIST"] = [track.artist_name]
+            flac.tags["TRACKNUMBER"] = [str(track.track_number)]
+            flac.tags["DATE"] = [self.query.release_date]
+            flac.tags["LABEL"] = [self.query.copyright]
+            flac.tags["GENRE"] = [self.query.primary_genre_name]
+            flac.tags["TITLE"] = [track.track_name]
+            flac.tags["COMPILATION"] = ["0"]
+            flac.save()
+            flac.close()
 
 
-class AlbumStream():
+class Album():
     """
-        given a wav file object, an itunes Album query, and a target directory,
-        locate the tracks within the stream, create new flac tracks,
-        and populate with metadata
+    given a stream object, locate the tracks within the stream,
+    create new flac tracks, and populate with metadata
     """
 
-    def __init__(self, wav, query, tgt):
+    def __init__(self, stream):
         """ """
         # wav file
-        self.wav = wav
-        self.framerate = wav.getframerate()
+        self.wavstream = wave.open(stream.wavpath)
+        self.framerate = self.wavstream.getframerate()
 
         # itunes
-        self.itunes = query
+        self.itunes = stream.query
         self.tracks = self.itunes.get_tracks()
 
         # current track position propertis
@@ -82,35 +116,35 @@ class AlbumStream():
         self.start_frame = 0
         self.n_frame = 0
 
-        self.target = tgt
+        self.target = stream.target
         self.splits = []
         self.err = {"dur": [], "pos": []}
         self.cumtime = 0
 
-    def read_wav_mono(self, N):
-        """ grab samples from one channel (every other sample) of frame """
-        return np.fromstring(self.wav.readframes(N), dtype=np.int16)[:2:-1]
-
     def find_end_frame(self, reference):
-        """ find the min energy point around a reference """
+        """
+        find the min energy point around a reference
+        """
         excursion = 10*self.framerate
         n_read = int(0.02*self.framerate)
         start_at = reference - excursion
-        go_till = np.min([reference + excursion, self.wav.getnframes()])
-        self.wav.setpos(start_at)
+        go_till = np.min([reference + excursion, self.wavstream.getnframes()])
+        self.wavstream.setpos(start_at)
         local_min = 1e9
         local_idx = -1
 
-        while self.wav.tell() < go_till:
-            wav_power = np.std(self.read_wav_mono(n_read))
+        while self.wavstream.tell() < go_till:
+            wav_power = np.std(util.read_wav_mono(self.wavstream, n_read))
             if wav_power < local_min:
                 local_min = wav_power
-                local_idx = self.wav.tell()
+                local_idx = self.wavstream.tell()
 
         self.end_frame = local_idx
 
     def find_start_frame(self):
-        """ find audio signal activity that exceeds threshold and persists """
+        """
+        find audio signal activity that exceeds threshold and persists
+        """
         not_found = True
         THRESH = 10
         persistence = 10
@@ -118,10 +152,10 @@ class AlbumStream():
         found_count = 0
 
         # start where left off
-        self.wav.setpos(self.last_track_end)
+        self.wavstream.setpos(self.last_track_end)
 
         while not_found:
-            y = np.std(self.read_wav_mono(n_read))
+            y = np.std(util.read_wav_mono(self.wavstream, n_read))
             if y > THRESH:
                 found_count += 1
             else:
@@ -129,22 +163,36 @@ class AlbumStream():
 
             not_found = found_count <= persistence
 
-        activity = self.wav.tell() - persistence*n_read
+        activity = self.wavstream.tell() - persistence*n_read
 
         # set track start 1 second before activity location
         self.start_frame = activity - round(1*self.framerate)
 
-    def create(self, i, track):
-        """ find track starts/stops within stream """
+    def process(self):
+        """
+        encapsulate the substance of Album processing
+        """
 
-        self.curtrack = track
+        # iterate over and process tracks derived from iQuery
+        for i, track in enumerate(self.tracks):
+            self.curtrack = track
+            self.curindex = i
+            self.create().consume().finalize()
+
+        # close the wav stream
+        self.wavstream.close()
+
+    def create(self):
+        """
+        find track starts/stops within stream
+        """
 
         # find start of track (find activity)
         self.find_start_frame()
 
         # find end of track (find local min)
-        reference = self.start_frame + int(
-                track.track_time/1000*self.framerate)
+        track_duration = int(self.curtrack.track_time/1000*self.framerate)
+        reference = self.start_frame + track_duration
         self.find_end_frame(reference)
 
         # update track split parameters
@@ -154,10 +202,10 @@ class AlbumStream():
 
         return self
 
-    def consume(self, i):
+    def consume(self):
         trackname = self.curtrack.track_name.strip().replace("/", ";")
         self.curtrackpath = join(
-                self.target, "%0.2d %s.wav" % (i+1, trackname))
+                self.target, "%0.2d %s.wav" % (self.curindex + 1, trackname))
 
         # status prints
         SAMP2MIN = 1/self.framerate/60
@@ -183,42 +231,14 @@ class AlbumStream():
         return self
 
     def finalize(self):
-        with wave.open(self.curtrackpath, 'w') as wavfile:
-            self.wav.setpos(self.start_frame)
+        with wave.open(self.curtrackpath, 'w') as wavtrack:
+            self.wavstream.setpos(self.start_frame)
             y = np.fromstring(
-                    self.wav.readframes(self.n_frame), dtype=np.int16)
+                    self.wavstream.readframes(self.n_frame),
+                    dtype=np.int16)
             y = np.reshape(y, (int(y.shape[0]/2), 2))
-            wavfile.setnchannels(2)
-            wavfile.setsampwidth(2)
-            wavfile.setnframes(self.n_frame)
-            wavfile.setframerate(self.wav.getframerate())
-            wavfile.writeframes(y)
-
-    def power_envelope(self):
-        """ power_envelope """
-        ds = config["stream2tracks"]["downsample_factor"]
-        print("computing audio envelope of file at {} downsample rate..."
-              .format(ds))
-        self.wav.rewind()
-        n_window = int(np.floor(self.wav.getnframes()/ds)) - 1
-        x = [np.std(self.read_wav_mono(ds))**2 for i in range(n_window)]
-        return np.asarray(x)
-
-
-def plot_envelope_splits(x, splits, fname):
-    ds = config["stream2tracks"]["downsample_factor"]
-    efr = 44100/ds
-    starts = [split[0]/ds for split in splits]
-    stops = [starts[i] + split[1]/ds for i, split in enumerate(splits)]
-    n = np.shape(x)[0]
-    n_min = int(n/efr/60)
-
-    # create figure (one inch per minute of audio)
-    plt.figure(figsize=(n_min, 10))
-    plt.plot(x, marker=".", linestyle='', markersize=0.2)
-    [plt.axvline(x=start, color="b", linestyle="--", linewidth=0.3)
-        for start in starts]
-    [plt.axvline(x=stop, color="r", linestyle="--", linewidth=0.3)
-        for stop in stops]
-    plt.savefig(join(config["path"]["streams"], "envelopes", fname + ".png"),
-                bbox_inches='tight')
+            wavtrack.setnchannels(2)
+            wavtrack.setsampwidth(2)
+            wavtrack.setnframes(self.n_frame)
+            wavtrack.setframerate(self.wavstream.getframerate())
+            wavtrack.writeframes(y)

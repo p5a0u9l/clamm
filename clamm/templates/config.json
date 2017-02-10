@@ -1,17 +1,20 @@
 {
     "path": {
-        "pcm": "/tmp/clamm/pcm/",
-        "wav": "/tmp/clamm/wav/",
+        "pcm": "/tmp/clamm/pcm",
+        "wav": "/tmp/clamm/wav",
         "playlist": "/Users/paul/music/playlists",
         "library": "/Users/paul/music/classical",
         "streams": "/Users/paul/code/python/clamm/clamm/streams",
+        "scripts": "/Users/paul/.config/clamm/scripts",
         "config": "/Users/paul/.config/clamm/config.json",
-        "database": "/Users/paul/code/python/clamm/clamm/library/json/tags.json",
-        "troubled_tracks": "/Users/paul/code/python/clamm/clamm/library/json/troubled_tracks.json"
+        "database": "/Users/paul/.config/clamm/tags.json",
+        "troubled_tracks": "/Users/paul/.config/clamm/troubled_tracks.json"
     },
 
     "library": {
+        "verbosity": 3,
         "keep_wavs_once_flacs_made": false,
+        "keep_pcms_once_wavs_made": false,
         "tags": {
             "keep_artist": ["ARTIST", "ALBUMARTIST"],
 
@@ -43,7 +46,8 @@
     },
 
     "opt":{
-        "ffmpeg": ["-hide-banner", "-y"],
+        "ffmpeg": ["-hide-banner", "-y", "-f", "s16le",
+            "-ar", "44.1k", "-ac", "2"],
         "shairport-sync": "-o=stdout",
         "cmus-remote": "-C"
     },
