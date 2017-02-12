@@ -7,18 +7,30 @@ from __future__ import unicode_literals, print_function
 import json
 from collections import OrderedDict
 import copy
+from subprocess import Popen
+import re
+import json
 
 # external
+from translate import Translator
 import prompt_toolkit as ptk
 from nltk import distance
 import taglib
+import wikipedia
+import nltk
 
 # local
-from clamm.library import util as libutil
-import clamm.util as cutil
-from clamm.util import config
-from clamm.tag import util as tagutil
-from clamm.tag import autotag
+import audiolib as alib
+import clamm
+from clamm import config
+
+# globals, constants
+artist_tag_names = ["ALBUMARTIST_CREDIT",
+                    "ALBUM ARTIST",
+                    "ARTIST",
+                    "ARTIST_CREDIT",
+                    "ALBUMARTIST"]
+tk = nltk.tokenize.WordPunctTokenizer()
 
 
 class SafeTagFile(taglib.File):
@@ -126,16 +138,16 @@ class TagDatabase:
         print("Searching for information on %s..." % (item))
 
         # attempt to match the item to a wiki entry
-        page = autotag.wiki_query(item)
+        page = wiki_query(item)
 
         if page:
             # if match is found, autotag with verification
-            new_artist = autotag.item_fields_from_wiki(
+            new_artist = item_fields_from_wiki(
                     item, page, self.sets, category=category)
         else:
             # otherwise, fall back on manual entry
             if category == "artist":
-                new_artist = autotag.artist_fields_from_manual(item)
+                new_artist = artist_fields_from_manual(item)
 
         # on approval, add the new artist/composer to the database
         print("proposed item for database:")
@@ -151,7 +163,7 @@ class TagDatabase:
             raise TagDatabaseError("add_item_to_db: proposed item rejected")
 
     def update_sets(self):
-        art_set = tagutil.perms2set(self.artist)
+        art_set = perms2set(self.artist)
 
         # update nationalities
         alist = [self.artist[aname]["nationality"]
@@ -159,15 +171,15 @@ class TagDatabase:
         clist = [self.composer[cname]["nationality"]
                  for cname in self.composer.keys()]
         alist.extend(clist)
-        nat_set = tagutil.messylist2set(alist)
+        nat_set = messylist2set(alist)
 
         # update composer set
-        comp_set = tagutil.perms2set(self.composer)
+        comp_set = perms2set(self.composer)
 
         # instrument set
         alist = [self.artist[artist]["instrument"]
                  for artist in self.artist.keys()]
-        inst_set = tagutil.messylist2set(alist)
+        inst_set = messylist2set(alist)
 
         # compile and write to disk
         self.sets = {
@@ -292,7 +304,7 @@ class TagDatabase:
             return
 
     def get_sorted_arrangement(self, tagfile):
-        aset = tagutil.get_artist_tagset(tagfile)
+        aset = get_artist_tagset(tagfile)
         sar = {}
         for aname in aset:
             akey = self.match_from_perms(aname)
@@ -349,7 +361,7 @@ class Arrangement:
             tagfile.tags = {key: val for key, val in tagfile.tags.items()
                             if key not in
                             config["library"]["tags"]["prune_artist"]}
-            libutil.commit_to_libfile(tagfile)
+            alib.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):
         is_diff_album = tagfile.tags["ALBUM"] != self.album_name
@@ -359,12 +371,250 @@ class Arrangement:
     def unpack(self):
         alist = [item for item in self.sar.keys()]
         self.albumartist = str(alist[self.prima])
-        self.artist = tagutil.messylist2tagstr(alist)
+        self.artist = messylist2tagstr(alist)
         messylist = [item[0] for item in self.sar.values()]
-        self.arrangement = tagutil.messylist2tagstr(messylist)
+        self.arrangement = messylist2tagstr(messylist)
 
 
 class TagDatabaseError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
+
+
+def get_field(summary, known_set, name):
+    guess = [word for word in tk.tokenize(summary) if word in known_set]
+    guess = list(set(guess)) # make sure entries are unique
+
+    if name == "nationality" and guess:
+        g = guess.pop(0)
+        resp = input("Accept %s? [y]/n: " % (g))
+        while resp and guess:
+            g = guess.pop(0)
+            resp = input("Accept %s? [y]/n: " % (g))
+
+        if not resp:
+            return g
+
+        else:
+            return input("Enter %s: " % (name))
+
+    else:
+        resp = [g for g in guess if not input("Accept %s? [y]/n: " % (g))]
+
+        if not resp:
+            return input("Enter %s: " % (name))
+
+        else:
+            return resp
+
+
+def get_borndied(summary):
+    """
+    extract artist/composer vital date(s) from a wikipedia summary string
+    """
+
+    m = re.findall("\d{4}", summary)
+
+    if len(m) >= 2:
+        born = m[0] + "-" + m[1]
+        if not input("Accept %s? [y]/n: " % (born)):
+            return born
+
+        else:
+            born = m[0] + "-"
+            if not input("Accept %s? [y]/n: " % (born)): return born
+
+    elif len(m) >= 1:
+        born = m[0] + "-"
+
+        resp = input("Accept %s? [y]/n: " % (born))
+        if not resp:
+            return born
+
+    else:
+        return input("Enter Dates: ")
+
+
+def item_fields_from_wiki(item, page, sets, category="artist"):
+    """
+    extract database tags/fields from a successful wikipedia query
+    """
+
+    new = {"permutations": [item]}
+    print(page.summary)
+
+    # NAME
+    resp = input("Enter name (keep/[t]itle): ")
+    if item != resp:
+        new["permutations"].append(resp)
+    new["full_name"] = resp
+    if resp == "k":
+        new["full_name"] = item
+
+    # ORDINALITY
+    if category == "artist":
+        if input("[I]ndividual or Ensemble?"):
+            new["ordinality"] = "Ensemble"
+        else:
+            new["ordinality"] = "Individual"
+
+    new["borndied"] = get_borndied(page.summary)
+    new["nationality"] = get_field(
+            page.summary, sets["nationality"], "nationality")
+    if category == "artist":
+        new["instrument"] = get_field(
+                page.summary, sets["instrument"], "instrument")
+    elif category == "composer":
+        new["period"] = input("Enter composer period: ")
+        new["sort"] = swap_first_last_name(new["full_name"])
+        new["abbreviated"] = new["full_name"].split(" ")[1]
+
+    return new
+
+
+def wiki_query(search_string):
+    """
+    fetch a query result from wikipedia and determine its relevance
+    """
+
+    # call out to wikipedia
+    query = wikipedia.search(search_string)
+
+    # print options
+    print("Options: ")
+    print("\t-3: Translate\n\t-2: New string\n\t-1: Die\n")
+
+    # print query results
+    print("Query returns: ")
+    if query:
+        cutil.pretty_dict(query.items())
+
+    # prompt action
+    idx = input("Enter choice (default to 0):")
+
+    # default, accept the first result
+    if not idx:
+        return wikipedia.page(query[0])
+
+    # handle cases
+    idx = int(idx)
+    if (idx) >= 0:
+        return wikipedia.page(query[idx])
+    elif (idx) == -1:
+        return []
+    elif (idx) == -2:
+        return wiki_query(input("Try a new search string: "))
+    elif (idx) == -3:
+        wiki_query(get_translation(search_string))
+    else:
+        return []
+
+
+def artist_fields_from_manual(artist):
+    resp = input("Translate/skip/continue: t/s/[<cr>]")
+    if resp:
+        if resp == "t":
+            artist = get_translate(artist)
+        elif resp == "s":
+            return
+
+    Popen(['googler', '-n', '3', artist])
+
+    new["permutations"] = [artist]
+
+    resp = input("Enter name ([k]eep): ")
+    if not resp:
+        new["full_name"] = artist
+    else:
+        new["full_name"] = resp
+        if artist != resp:
+            new["permutations"].append(resp)
+
+    artist = new["full_name"]
+
+    resp = input("[I]ndividual or Ensemble?")
+    if resp:
+        new["ordinality"] = "Ensemble"
+    else:
+        new["ordinality"] = "Individual"
+
+    new["borndied"] = input("Enter dates: ")
+    new["nationality"] = input("Enter nationality: ")
+    new["instrument"] = input("Enter instrument: ")
+
+    return new
+
+
+def get_translation(search_string):
+    """ occasionally artist name will be in non-Latin characters """
+
+    tr = Translator(input("Enter from language: "), 'en')
+    return tr.translate(search_string)
+
+
+def get_artist_tagset(tagfile):
+    tags = tagfile.tags
+    atags = {t: re.split(clamm.SPLIT_REGEX,
+             ', '.join(tags[t])) for t in artist_tag_names
+             if t in tags.keys()}
+    aset = set([v.strip() for val in atags.values() for v in val])
+    return aset
+
+
+def perms2set(D):
+    clist = list(D.keys())
+    blist = [D[c]["permutations"] for c in clist]
+    # flatten
+    blist = [item for sublist in blist for item in sublist]
+    clist.extend(blist)
+    cset = messylist2set(clist)
+    return cset
+
+
+def messylist2set(alist):
+    """ owing to laziness, these lists may contain gotchas """
+    y = [item for item in alist if item.__class__ is str and len(item) > 0]
+    return set(y)
+
+
+def messylist2tagstr(alist):
+    s, delim = "", "; "
+    for i, item in enumerate(alist):
+        if isinstance(item, list):
+            item = item[0]
+        if i == len(alist) - 1:
+            delim = ""
+        s += "{}{}".format(item, delim)
+
+    return s
+
+
+def swap_first_last_name(name_str):
+    """ if name_str contains a comma (assume it is formatted as Last, First),
+        invert and return First Last
+        else, invert and return Last, First """
+
+    comma_idx = name_str.find(",")
+    name_parts = name_str.replace(",", "").split(" ")
+
+    if comma_idx > -1:
+        swapd = "{} {}".format(name_parts[1], name_parts[0])
+    else:
+        swapd = "{}, {}".format(name_parts[1], name_parts[0])
+
+    return swapd
+
+
+def log_missing_tag(key, tagfile):
+    with open(config["path"]["troubled_tracks"]) as f:
+        tt = json.load(f)
+        tpath = tagfile.path.replace(config["path"]["library"], "$LIBRARY")
+        if key in tt["missing_tag"].keys():
+            if tpath not in tt["missing_tag"][key]:
+                tt["missing_tag"][key].append(tpath)
+        else:
+            tt["missing_tag"][key] = [tpath]
+
+    with open(config["path"]["troubled_tracks"], mode="w") as f:
+        json.dump(tt, f, ensure_ascii=False, indent=4)

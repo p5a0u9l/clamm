@@ -24,8 +24,11 @@ def parse_inputs():
     """
 
     # top-level
-    p = argparse.ArgumentParser(prog="CLAMM",
-                                description="classical music manager")
+    p = argparse.ArgumentParser(
+            prog="CLAMM",
+            description="""
+            CLassical Music Manager
+            """)
     subps = p.add_subparsers(dest="cmd")
 
     # database
@@ -92,22 +95,55 @@ def parse_inputs():
     # library
     lib_p = subps.add_parser(
             "library",
-            help="commands for acting on the set or a subset of the library")
+            help="""Commands for acting on each audio file in the library,
+            or a specified directory under the library.""")
+
+    lib_p.add_argument(
+                "-d", "--dir", type=str, default=config["path"]["library"],
+                help="the target directory (default: config['path']['library'])")
+
     lib_subps = lib_p.add_subparsers(dest="sub_cmd")
+
+     # ACTION
+    lib_act_p = lib_subps.add_parser(
+            "action",
+            help="""
+            Apply one of the many small(er) library maintenance actions.
+            """)
+
+    lib_act_p.add_argument(
+                "--prune_artist_tags", type=str, default="",
+                help="""
+                Conform artist/albumartist tag key names by applying
+                config['library']['tags']['prune_artist'] rule.
+                e.g., ALBUMARTIST instead of ALBUM_ARTIST
+                """)
+
+    lib_act_p.add_argument(
+                "--remove_junk_tags", type=str, default="",
+                help="""
+                Similar to prune_artist_tags, but indiscriminately
+                removes tags in config['library']['tags']['junk'].
+                Example:
+                    $ clamm library action --remove_junk_tags
+                """)
+
+    lib_act_p.add_argument(
+                "--delete_tag_globber", type=str, default="",
+                help="""
+                Unlike `remove_junk_tags`, allows removing a set of similarly
+                named tags, as in the MUSICBRAINZ_* tags, without cluttering
+                the junk list with excessive entries.
+                """)
+
     lib_init_p = lib_subps.add_parser("initialize",
                                       help="initialize a new folder " +
                                       "/ library by applying a sequence " +
                                       "of initializing actions")
-    lib_init_p.add_argument(
-                "-d", "--dir", type=str, default=config["library"],
-                help="The target directory, library by default")
 
     lib_sync_p = lib_subps.add_parser("synchronize", help="""
                                        synchronize the library file tags with
                                        the tags database""")
-    lib_sync_p.add_argument("-d", "--dir",
-                            type=str, default=config["library"],
-                            help="The target directory, library by default")
 
     lib_play_p = lib_subps.add_parser("playlist", help="")
 
@@ -121,59 +157,66 @@ def parse_inputs():
 
 
 # functor wrappers
-def show_tags(args):
+def tags_show(args):
     with open(config["path"]["database"]) as db:
         tags = json.load(db)
     print(json.dumps(tags, ensure_ascii=False, indent=4))
 
 
-def edit_tags(args):
+def tags_edit(args):
     call([os.environ["EDITOR"], config["path"]["database"]])
 
 
-def show_config(args):
+def config_show(args):
     print(json.dumps(config, ensure_ascii=False, indent=4))
 
 
-def edit_config(args):
+def config_edit(args):
     call([os.environ["EDITOR"], config["path"]["config"]])
 
 
-def tracks_streams(args):
+def streams_tracks(args):
     stream2tracks.main(args.streampath)
 
 
-def listing_streams(args):
+def streams_listing(args):
     listing2streams.main(args.listing)
 
 
-def stream_streams(args):
-    streams.main(args.streamfolder)
+def streams_stream(args):
+    streams.main(args)
 
 
-def initialize_library(args):
+def library_action(args):
+    import bpdb; bpdb.set_trace()
+    clamm.library.audiolib.AudioLib(args).walker(args.action)
+
+
+def library_initialize(args):
     clamm.library.audiolib.AudioLib(args).initialize()
 
 
-def synchronize_library(args):
+def library_synchronize(args):
     clamm.library.audiolib.AudioLib(args).synchronize()
 
 
-def playlist_library(args):
+def library_playlist(args):
     clamm.library.audiolib.AudioLib(args).playlist()
 
 
+# define `functor` function lookup
 # each key/val pair follows following format
-#   commandsubcommand: subcommand_command
+#   "subcommand_command": subcommand_command
 functors = {
-            "streamslisting": listing_streams,
-            "streamstracks": tracks_streams,
-            "streamsstream": stream_streams,
-            "tagsshow": show_tags,
-            "tagsedit": edit_tags,
-            "configshow": show_config,
-            "configedit": edit_config,
-            "libraryinitialize": initialize_library,
-            "librarysynchronize": synchronize_library,
-            "libraryplaylist": playlist_library
+            "streams_listing": streams_listing,
+            "streams_tracks": streams_tracks,
+            "streams_stream": streams_stream,
+            "tags_show": tags_show,
+            "tags_edit": tags_edit,
+            "config_show": config_show,
+            "config_edit": config_edit,
+            "library_action": library_action,
+            "library_initialize": library_initialize,
+            "library_synchronize": library_synchronize,
+            "library_playlist": library_playlist
             }

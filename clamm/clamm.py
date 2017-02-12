@@ -2,9 +2,18 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
+"""
+entrance point for clamm <---<--<- CLassical Music Manager
+"""
+
 # built-ins
+import os
 import json
 from os.path import join, expanduser
+
+# local
+import tui
+
 
 # bootstrap config file
 cfg_path = join(expanduser('~'), '.config', 'clamm', 'config.json')
@@ -46,3 +55,12 @@ def swap_first_last_name(name_str):
         swapd = "{}, {}".format(name_parts[1], name_parts[0])
 
     return swapd
+
+
+def main():
+    args = tui.parse_inputs().parse_args()
+
+    # retrieve the parsed cmd/sub/... and evaluate
+    full_cmd = "{}_{}".format(args.cmd, args.sub_cmd)
+    functor = tui.functors[full_cmd]
+    functor(args)
