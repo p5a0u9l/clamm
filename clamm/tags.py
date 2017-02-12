@@ -9,7 +9,6 @@ from collections import OrderedDict
 import copy
 from subprocess import Popen
 import re
-import json
 
 # external
 from translate import Translator
@@ -22,7 +21,7 @@ import nltk
 # local
 import audiolib as alib
 import clamm
-from clamm import config
+from config import config
 
 # globals, constants
 artist_tag_names = ["ALBUMARTIST_CREDIT",
@@ -111,7 +110,9 @@ class TagDatabase:
                 return key
 
     def closest_from_existing_set(self, qname, category="artist"):
-        """ find closest match and rerun"""
+        """
+        find closest match and rerun
+        """
         min_score = 100
         for sname in self.sets[category]:
             score = distance.edit_distance(qname, sname)
@@ -122,8 +123,10 @@ class TagDatabase:
         return mname
 
     def add_new_perm(self, key, qname, category="artist"):
-        """ add a new artist/composer permutation to
-        the item's permutation list """
+        """
+        add a new artist/composer permutation to the item's
+        permutation list
+        """
 
         print("Adding to permutations and updating db...")
         # update
@@ -131,9 +134,11 @@ class TagDatabase:
         self.refresh()
 
     def add_item_to_db(self, item, category="artist"):
-        """ map a new artist/composer into the database, including calls
+        """
+        map a new artist/composer into the database, including calls
         to functions which attempt to automate the process and
-        fall back on manual methods.  """
+        fall back on manual methods.
+        """
 
         print("Searching for information on %s..." % (item))
 
@@ -151,7 +156,7 @@ class TagDatabase:
 
         # on approval, add the new artist/composer to the database
         print("proposed item for database:")
-        cutil.pretty_dict(new_artist)
+        clamm.pretty_dict(new_artist)
         if not input("Accept? [y]/n: "):
             new_key = new_artist["full_name"]
             self.artist[new_key] = new_artist
@@ -190,8 +195,10 @@ class TagDatabase:
         self._db['sets'] = {key: list(val) for key, val in self.sets.items()}
 
     def verify_arrangement(self, tagfile, skipflag=False):
-        """ Arrangements are used as a hook to synchronize artist entries
-        in the database with files in the library.  """
+        """
+        Arrangements are used as a hook to synchronize artist entries
+        in the database with files in the library.
+        """
 
         if "ARRANGEMENT" in tagfile.tags and skipflag:
             return
@@ -238,8 +245,11 @@ class TagDatabase:
             return self.match_from_perms(mname, category="composer")
 
     def verify_artist(self, query_name):
-        """ verify that the artist query name (qname) has an entry in the tag database
-            if it doesn't, propose a series of steps to remedy.  """
+        """
+        verify that the artist query name (qname) has an entry in
+        the tag database if it doesn't, propose a series of steps to
+        remedy.
+        """
 
         # first, deal with the misfits by bailing out
         if query_name in self._db["exceptions"]["artists_to_ignore"]:
@@ -384,7 +394,7 @@ class TagDatabaseError(Exception):
 
 def get_field(summary, known_set, name):
     guess = [word for word in tk.tokenize(summary) if word in known_set]
-    guess = list(set(guess)) # make sure entries are unique
+    guess = list(set(guess))    # make sure entries are unique
 
     if name == "nationality" and guess:
         g = guess.pop(0)
@@ -423,7 +433,8 @@ def get_borndied(summary):
 
         else:
             born = m[0] + "-"
-            if not input("Accept %s? [y]/n: " % (born)): return born
+            if not input("Accept %s? [y]/n: " % (born)):
+                return born
 
     elif len(m) >= 1:
         born = m[0] + "-"
@@ -488,7 +499,7 @@ def wiki_query(search_string):
     # print query results
     print("Query returns: ")
     if query:
-        cutil.pretty_dict(query.items())
+        clamm.pretty_dict(query.items())
 
     # prompt action
     idx = input("Enter choice (default to 0):")
@@ -515,12 +526,13 @@ def artist_fields_from_manual(artist):
     resp = input("Translate/skip/continue: t/s/[<cr>]")
     if resp:
         if resp == "t":
-            artist = get_translate(artist)
+            artist = get_translation(artist)
         elif resp == "s":
             return
 
     Popen(['googler', '-n', '3', artist])
 
+    new = {}
     new["permutations"] = [artist]
 
     resp = input("Enter name ([k]eep): ")
@@ -547,7 +559,9 @@ def artist_fields_from_manual(artist):
 
 
 def get_translation(search_string):
-    """ occasionally artist name will be in non-Latin characters """
+    """
+    occasionally artist name will be in non-Latin characters
+    """
 
     tr = Translator(input("Enter from language: "), 'en')
     return tr.translate(search_string)
@@ -573,7 +587,9 @@ def perms2set(D):
 
 
 def messylist2set(alist):
-    """ owing to laziness, these lists may contain gotchas """
+    """
+    owing to laziness, these lists may contain gotchas
+    """
     y = [item for item in alist if item.__class__ is str and len(item) > 0]
     return set(y)
 
@@ -591,9 +607,11 @@ def messylist2tagstr(alist):
 
 
 def swap_first_last_name(name_str):
-    """ if name_str contains a comma (assume it is formatted as Last, First),
-        invert and return First Last
-        else, invert and return Last, First """
+    """
+    if name_str contains a comma (assume it is formatted as Last, First),
+    invert and return First Last
+    else, invert and return Last, First
+    """
 
     comma_idx = name_str.find(",")
     name_parts = name_str.replace(",", "").split(" ")

@@ -2,10 +2,6 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-"""
-streams is a concatenation of listing2streams and stream2tracks
-"""
-
 # built-ins
 import os
 from os.path import join
@@ -24,7 +20,7 @@ from nltk import distance
 import itunespy
 
 # local
-from clamm import config
+from config import config
 import clamm
 import audiolib
 
@@ -91,7 +87,7 @@ class Stream():
 
         return self
 
-    def make_flacs(self):
+    def flacify(self):
         """
         convert all wav files in target directory to flac files
         """
@@ -157,7 +153,7 @@ class Album():
         local_idx = -1
 
         while self.wavstream.tell() < go_till:
-            wav_power = np.std(util.read_wav_mono(self.wavstream, n_read))
+            wav_power = np.std(read_wav_mono(self.wavstream, n_read))
             if wav_power < local_min:
                 local_min = wav_power
                 local_idx = self.wavstream.tell()
@@ -179,7 +175,7 @@ class Album():
         self.wavstream.setpos(self.last_track_end)
 
         while not_found:
-            y = np.std(util.read_wav_mono(self.wavstream, n_read))
+            y = np.std(read_wav_mono(self.wavstream, n_read))
             if y > THRESH:
                 found_count += 1
             else:
@@ -271,9 +267,7 @@ def read_wav_mono(wav, N):
     grab samples from one channel (every other sample) of frame
     """
 
-    return np.fromstring(
-            wav.readframes(N),
-            dtype=np.int16)[:2:-1]
+    return np.fromstring(wav.readframes(N), dtype=np.int16)[:2:-1]
 
 
 def power_envelope(wavpath):
@@ -392,9 +386,12 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
     print("saving to {}".format(savepath))
     plt.savefig(savepath, bbox_inches='tight')
 
+
 # --------------------------
 # Programs
 # --------------------------
+
+
 def listing2streams(listing):
     """
     listing2streams is a program for batch streaming a listing of albums
@@ -420,7 +417,7 @@ def listing2streams(listing):
     # iterate over albums in the listing
     for key, val in batch.items():
 
-        util.start_shairport(util.TMPSTREAM)
+        start_shairport(TMPSTREAM)
 
         artist, album = val['artist'], val['album']
         pcm = "{}; {}.pcm".format(artist, album)
@@ -430,20 +427,20 @@ def listing2streams(listing):
               .format(time.ctime(), pcm))
 
         print("INFO: talking to iTunes...")
-        util.dial_itunes(artist, album)
+        dial_itunes(artist, album)
 
         # wait for stream to start
-        while not util.is_started(util.TMPSTREAM):
+        while not is_started(TMPSTREAM):
             time.sleep(1)
         print("INFO: Stream successfully started, "
               " now waiting for finish (one dot per minute)...")
 
         # wait for stream to finish
-        while not util.is_finished(util.TMPSTREAM):
+        while not is_finished(TMPSTREAM):
             time.sleep(1)
         print("INFO: Stream successfully finished.")
 
-        os.rename(util.TMPSTREAM, pcm_path)
+        os.rename(TMPSTREAM, pcm_path)
 
     print("INFO: Batch successfully finished.")
 
@@ -455,30 +452,34 @@ def stream2tracks(streampath):
 
     print("INFO: Begin stream2tracks...")
     # initialize the stream
-    stream = albumstream.Stream(streampath)
+    stream = Stream(streampath)
     stream.decode_path().iQuery().prepare_target().pcm2wav()
 
     # process the stream into an album
-    album = albumstream.Album(stream).process()
+    album = Album(stream).process()
 
     # finalize the stream into flac files with tags
-    stream.make_flacs().tagify()
+    stream.flacify().tagify()
 
     # create an image of the audio envelope indicating where track splits
     # have been located
-    util.image_audio_envelope_with_tracks_markers(album.splits, stream)
+    image_audio_envelope_with_tracks_markers(album.splits, stream)
 
     print("INFO: Finish stream2tracks.")
 
 
 def main(args):
+    """
+    main is a concatenation of listing2streams and stream2tracks
+    """
+
     # create a batch of pcm streams by interfacing with iTunes
-    listing2streams.main(args.listing)
+    listing2streams(args.listing)
 
     # iterate over streams found in config["path"]["pcm"]
     streams = glob(os.path.join(config["path"]["pcm"], "*pcm"))
     for streampath in streams:
-        stream2tracks.main(streampath)
+        stream2tracks(streampath)
 
 
 if __name__ == '__main__':

@@ -10,10 +10,9 @@ import os
 from subprocess import Popen, call
 import sys
 
-
 # local
 import clamm
-from clamm import config
+from config import config
 import tags
 
 
@@ -154,7 +153,9 @@ class LibTagFileAction(LibTagFile):
                   stdout=redirect)
 
     def playlist(self, tagfile, **kwargs):
-        """ playlist filter """
+        """
+        playlist filter
+        """
 
         # unpack
         ftags = tagfile.tags
@@ -164,7 +165,7 @@ class LibTagFileAction(LibTagFile):
             if ftags["COMPILATION"][0] == "1":
                 return
         except KeyError:
-            tag.log_missing_tag("COMPILATION", tagfile)
+            tags.log_missing_tag("COMPILATION", tagfile)
 
         if sq.operators[0] == "AND":
             include = True
@@ -175,7 +176,7 @@ class LibTagFileAction(LibTagFile):
                         include = False
                 except KeyError:
                     include = False
-                    tag.log_missing_tag(key, tagfile)
+                    tags.log_missing_tag(key, tagfile)
 
         elif sq.operators[0] == "OR":
             include = False
@@ -221,9 +222,10 @@ class LibTagFileAction(LibTagFile):
         ftags = tagfile.tags
 
         # apply deletion
-        tagfile.ftags = {key: val for key, val in ftags.items()
-                        if key not in
-                        config["library"]["tags"]["junk"]}
+        tagfile.ftags = {
+                key: val for key, val in ftags.items()
+                if key not in config["library"]["tags"]["junk"]
+                }
 
         # write to file
         self.write2tagfile(tagfile)
@@ -283,7 +285,7 @@ class LibTagFileAction(LibTagFile):
         """
 
         # existence test
-        aset = tag.get_artist_tagset(tagfile)
+        aset = tags.get_artist_tagset(tagfile)
         acom = aset.intersection(self.tagdb.sets["composer"])
 
         # null hypothesis --> do nothing
@@ -296,7 +298,7 @@ class LibTagFileAction(LibTagFile):
                 atags = re.split(clamm.SPLIT_REGEX, ', '.join(val))
                 aset = set([val.strip() for val in atags])
                 if aset.difference(acom):
-                    tagfile.tags[key] = tag.messylist2tagstr(
+                    tagfile.tags[key] = tags.messylist2tagstr(
                             list(aset.difference(acom)))
                 else:
                     tagfile.tags[key] = input('Enter artist name: ')
@@ -314,7 +316,7 @@ class LibTagFileAction(LibTagFile):
 
         # match artist to database entry for each artist found in tagfile
         [self.tagdb.verify_artist(name)
-            for name in tag.get_artist_tagset(tagfile)]
+            for name in tags.get_artist_tagset(tagfile)]
 
         # hook in the arangement, defined as the pairing of
         # artist to instrument
@@ -329,7 +331,10 @@ class LibTagFileAction(LibTagFile):
 
     def synchronize_composer(self, tagfile, **kwargs):
         """
-        Synchronize the tags database fields to the given file fields
+        Verify there is a corresponding entry in tags.json for
+        the composer found in the tag file.
+        If an entry is not found, user is prompted to add a new
+        composer.
         """
 
         # must first assume the file is missing COMPOSER
@@ -372,7 +377,7 @@ class LibTagFileAction(LibTagFile):
         count/record artist occurences (to use as ranking)
         """
 
-        aset = tag.get_artist_tagset(tagfile)
+        aset = tags.get_artist_tagset(tagfile)
 
         for aname in aset:
             artistname = self.tagdb.match_from_perms(aname)
