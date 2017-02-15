@@ -7,7 +7,7 @@ from __future__ import unicode_literals, print_function
 import json
 from collections import OrderedDict
 import copy
-from subprocess import Popen
+from subprocess import call
 import re
 
 # external
@@ -19,7 +19,7 @@ import wikipedia
 import nltk
 
 # local
-import audiolib as alib
+import audiolib
 import clamm
 from config import config
 
@@ -64,8 +64,8 @@ class StructuredQuery():
 class TagSuggestion():
     def __init__(self, tagdb, category="artist"):
         self.history = ptk.history.InMemoryHistory()
-        for c in tagdb._db[category].keys():
-            self.history.append(c)
+        for item in tagdb.sets[category]:
+            self.history.append(item)
 
     def prompt(self, pmsg):
         r = ptk.prompt(
@@ -79,12 +79,23 @@ class TagSuggestion():
 
 class TagDatabase:
     """
-    interfacing with a music library's tag database
+    interfacing with music library's tag database
     """
     def __init__(self):
         self.path = config["path"]["database"]
         self.load()
         self.arange = Arrangement()
+        self.new_item = {}
+
+        # auto_suggest
+        self.suggest = {
+                "artist": TagSuggestion(self, category="artist"),
+                "composer": TagSuggestion(self, category="composer"),
+                "period": TagSuggestion(self, category="period"),
+                "instrument": TagSuggestion(self, category="instrument"),
+                "nationality": TagSuggestion(self, category="nationality")}
+
+        self.update_sets()
 
     def dump(self):
         """ dump """
@@ -98,77 +109,26 @@ class TagDatabase:
         self.artist = self._db["artist"]
         self.composer = self._db["composer"]
         self.exceptions = self._db["exceptions"]
-        self.update_sets()
+        self.sets = self._db["sets"]
 
     def refresh(self):
         self.dump()
         self.load()
-
-    def match_from_perms(self, name, category="artist"):
-        for key, val in self._db[category].items():
-            if name in val["permutations"]:
-                return key
-
-    def closest_from_existing_set(self, qname, category="artist"):
-        """
-        find closest match and rerun
-        """
-        min_score = 100
-        for sname in self.sets[category]:
-            score = distance.edit_distance(qname, sname)
-            if score < min_score:
-                min_score = score
-                mname = sname
-
-        return mname
-
-    def add_new_perm(self, key, qname, category="artist"):
-        """
-        add a new artist/composer permutation to the item's
-        permutation list
-        """
-
-        print("Adding to permutations and updating db...")
-        # update
-        self._db[category][key]["permutations"].append(qname)
-        self.refresh()
-
-    def add_item_to_db(self, item, category="artist"):
-        """
-        map a new artist/composer into the database, including calls
-        to functions which attempt to automate the process and
-        fall back on manual methods.
-        """
-
-        print("Searching for information on %s..." % (item))
-
-        # attempt to match the item to a wiki entry
-        page = wiki_query(item)
-
-        if page:
-            # if match is found, autotag with verification
-            new_artist = item_fields_from_wiki(
-                    item, page, self.sets, category=category)
-        else:
-            # otherwise, fall back on manual entry
-            if category == "artist":
-                new_artist = artist_fields_from_manual(item)
-
-        # on approval, add the new artist/composer to the database
-        print("proposed item for database:")
-        clamm.pretty_dict(new_artist)
-        if not input("Accept? [y]/n: "):
-            new_key = new_artist["full_name"]
-            self.artist[new_key] = new_artist
-            self.artist[new_key]["count"] = 1   # needs an initial value
-            # be sure to
-            self.refresh()
-            return new_key
-        else:
-            raise TagDatabaseError("add_item_to_db: proposed item rejected")
+        self.update_sets()
 
     def update_sets(self):
-        art_set = perms2set(self.artist)
+        """
+        update the tag sets by scanning the database and compiling
+        artist, nationality, composer, instrument, and period
+        """
+
+        # update artists
+        artists = perms2set(self.artist)
+
+        # update period
+        clist = [self.composer[cname]["period"]
+                 for cname in self.composer.keys()]
+        periods = messylist2set(clist)
 
         # update nationalities
         alist = [self.artist[aname]["nationality"]
@@ -176,25 +136,171 @@ class TagDatabase:
         clist = [self.composer[cname]["nationality"]
                  for cname in self.composer.keys()]
         alist.extend(clist)
-        nat_set = messylist2set(alist)
+        nationalities = messylist2set(alist)
 
         # update composer set
-        comp_set = perms2set(self.composer)
+        composers = perms2set(self.composer)
 
         # instrument set
-        alist = [self.artist[artist]["instrument"]
+        ilist = [self.artist[artist]["instrument"]
                  for artist in self.artist.keys()]
-        inst_set = messylist2set(alist)
+        instruments = messylist2set(ilist)
 
         # compile and write to disk
         self.sets = {
-                "artist": art_set,
-                "composer": comp_set,
-                "nationality": nat_set,
-                "instrument": inst_set}
+                "period": periods,
+                "artist": artists,
+                "composer": composers,
+                "nationality": nationalities,
+                "instrument": instruments}
         self._db['sets'] = {key: list(val) for key, val in self.sets.items()}
 
-    def verify_arrangement(self, tagfile, skipflag=False):
+    def match_from_perms(self, name, category="artist"):
+        for key, val in self._db[category].items():
+            if name in val["permutations"]:
+                return key
+
+    def add_new_perm(self, key, perm, category="artist"):
+        """
+        add a new name permutation to the item's permutation list
+        """
+
+        clamm.printr("Adding to permutations and updating db...")
+        self._db[category][key]["permutations"].append(perm)
+        self.refresh()
+
+    def add_new_item(self, category="artist"):
+        """
+        inserts a new item into the tag db after prompting
+        for approval
+        """
+        # on approval, add the new artist/composer to the database
+        clamm.printr("proposed item for database:")
+        clamm.pretty_dict(self.new_item)
+        if not input("Accept? [y]/n: "):
+            self._db[category][self.new_item["full_name"]] = self.new_item
+            self.refresh()
+        else:
+            raise TagDatabaseError("get_new_item: proposed item rejected")
+
+    def get_new_item(self, item, category="artist"):
+        """
+        resolves fields for a new item by attempting auto-population
+        via `item_fields_from_wiki`, and falls back on
+        `item_fields_from_manual`.
+        returns the database key of the new item
+        """
+
+        clamm.printr("Searching for information on %s..." % (item))
+
+        # attempt to match the item to a wiki entry
+        page = wiki_query(item)
+
+        if page:
+            # if match is found, autotag with verification
+            self.item_fields_from_wiki(item, page, category=category)
+        else:
+            # otherwise, fall back on manual entry
+            self.item_fields_from_manual(item, category=category)
+
+        # update the database
+        self.add_new_item(category=category)
+
+        # return the key (presumably still available in new_item)
+        return self.new_item["full_name"]
+
+    def item_fields_from_wiki(self, item, page, category="artist"):
+        """
+        auto-populate database tags a successful wikipedia query
+        """
+
+        new = {"permutations": [item]}
+        print(page.summary)
+
+        # NAME
+        resp = input("Enter name (keep/[t]itle): ")
+
+        if item != page.title:
+            new["permutations"].append(page.title)
+
+        new["full_name"] = page.title
+        if resp == "k":
+            new["full_name"] = item
+
+        new["borndied"] = get_borndied(page.summary)
+        new["nationality"] = self.get_field(
+                page.summary, category="nationality")
+
+        # category specific
+        if category == "artist":
+            new["count"] = 1    # initial value
+            if input("[I]ndividual or Ensemble?"):
+                new["ordinality"] = "Ensemble"
+            else:
+                new["ordinality"] = "Individual"
+
+            new["instrument"] = self.get_field(
+                    page.summary, category="instrument")
+
+        else:
+            new["period"] = self.suggest["period"].prompt(
+                    "Enter composer period: ")
+            new["sort"] = swap_first_last_name(new["full_name"])
+            new["abbreviated"] = new["full_name"].split(" ")[1]
+
+        # store the result
+        self.new_item = new
+
+    def item_fields_from_manual(self, item, category="artist"):
+        """
+        alternative to `item_fields_from_wiki` in case `wiki_query` is
+        not successful.
+
+        fetches new item fields manually with help from auto-suggestion
+        """
+        resp = input("Translate/skip/continue: t/s/[<cr>]")
+        if resp:
+            if resp == "t":
+                item = get_translation(item)
+            elif resp == "s":
+                return
+
+        call(['googler', '-n', '3', item])
+
+        new = {"permutations": [item]}
+
+        resp = input("Enter name ([k]eep): ")
+        if not resp:
+            new["full_name"] = item
+        else:
+            new["full_name"] = resp
+            if item != resp:
+                new["permutations"].append(resp)
+
+        item = new["full_name"]
+
+        if category == "artist":
+            resp = input("[I]ndividual or Ensemble?")
+            if resp:
+                new["ordinality"] = "Ensemble"
+            else:
+                new["ordinality"] = "Individual"
+            new["instrument"] = self.suggest["instrument"].prompt(
+                    "Enter instrument: ")
+        else:
+            new["period"] = self.suggest["period"].prompt(
+                    "Enter composer period: ")
+            new["sort"] = swap_first_last_name(new["full_name"])
+            new["abbreviated"] = new["full_name"].split(" ")[1]
+
+        new["borndied"] = input("Enter dates: ")
+        new["nationality"] = self.suggest["nationality"].prompt(
+                "Enter nationality: ")
+
+        # store the result
+        self.new_item = new
+
+    def verify_arrangement(self, artist_set, tagfile, skipflag=False):
         """
         Arrangements are used as a hook to synchronize artist entries
         in the database with files in the library.
@@ -207,40 +313,46 @@ class TagDatabase:
         if tagfile.tags["COMPILATION"][0] == "1":
             return
 
-        sar = self.get_sorted_arrangement(tagfile)
+        sar = self.get_sorted_arrangement(tagfile, artist_set=artist_set)
         if len(sar) == 0:
             return
-
         self.arange.update(sar, tagfile)
         return self.arange
 
     def verify_composer(self, qname):
+        """
+        returns the tag database key given the query name found in the
+        tage file by verifying the query name has a match in the tag
+        database. If it doesn't, initiates `add_new_item` and
+        then, circuitously, returns the key
+        """
+
         if isinstance(qname, list):
             qname = qname[0]
 
+        # easiest, the qname is known
         if qname in self.sets["composer"]:
             return self.match_from_perms(qname, category="composer")
 
-        # try to find an existing match
-        mname = self.closest_from_existing_set(qname, category="composer")
+        # otherwise, try to find an existing edit_distance match
+        mname = get_nearest_name(qname, self.sets["composer"])
         response = input(
                 "Given: {}\tClosest Match: {}. Accept? [<CR>]/n: "
                 .format(qname, mname))
-
         if not response:
             # fetch actual key and update perms
             key = self.match_from_perms(mname, category="composer")
             self.add_new_perm(key, qname, category="composer")
             return key
 
+        # fall back 1, `add_new_item` to tags
         if not input("Add new composer? [<CR>]/n: "):
-            self.composer[qname] = self.add_item_to_db(
-                    qname, category="composer")
-            self.refresh()
-            return qname
+            new_key = self.get_new_item(qname, category="composer")
+            return new_key
 
+        # fall back 2, enter key manully (assuming something has gone wrong)
         if not input("Manually enter key lookup? [<CR>]/n: "):
-            key = input("aight, go 'head: ")
+            key = self.suggest["composer"].prompt("aight, go 'head: ")
             self.add_new_perm(key, qname, category="composer")
             return self.match_from_perms(mname, category="composer")
 
@@ -261,7 +373,7 @@ class TagDatabase:
             return key
 
         # if above fails, possibly nearest neighbor is correct?
-        nearest = self.closest_from_existing_set(query_name, category="artist")
+        nearest = get_nearest_name(query_name, self.sets["artist"])
 
         if not input("Accept {} as matching {}? ".format(nearest, query_name)):
             # fetch actual key and update perms
@@ -271,60 +383,90 @@ class TagDatabase:
 
         # Hook in the new artist process if reach this point
         if not input("Add new artist? [<CR>]/n: "):
-            new_key = self.add_item_to_db(query_name)
+            new_key = self.get_new_item(query_name)
             return new_key
 
         # It's also possible that the artist is really a composer
         if not input("Is Composer Permutation? [<CR>]/n: "):
-            cname = self.closest_from_existing_set(
-                    query_name, category="composer")
+            cname = get_nearest_name(query_name, self.sets["composer"])
 
             if not input("Accept %s as matching %s? " % (cname, query_name)):
                 ckey = self.match_from_perms(cname, category="composer")
             else:
-                ckey = input("Manually enter composer key lookup... ")
+                ckey = self.suggest["composer"].prompt(
+                        "Manually enter composer key... ")
 
             self.add_new_perm(ckey, query_name, category="composer")
-            return
+            return []
 
         # Maybe there's an error in the database and we can enter
         # the key manually
-        if not input("Manually enter key lookup? [<CR>]/n: "):
-            man_key = input("aight, go 'head: ")
-            # add as a new permutation
-            self.add_new_perm(man_key, query_name)
-            #
-            actual_key = self.match_from_perms(query_name)
+        if not input("Manually enter artist key? [<CR>]/n: "):
+            man_key = self.suggest["artist"].prompt("aight, go 'head: ")
+            actual_key = self.match_from_perms(man_key)
             return actual_key
 
         # One more chance to add a new artist
         if not input("Add new artist? [<CR>]/n: "):
-            new_key = self.add_item_to_db(query_name)
+            new_key = self.get_new_item(query_name)
             return new_key
 
         # Allow some introspection before dying
         if not input("debug? [<CR>]/n: "):
-            import pdb
-            pdb.set_trace()
+            import bpdb
+            bpdb.set_trace()
 
         # Declare a misfit and walk away in disgust
         else:
             self._db["exceptions"]["artists_to_ignore"].append(query_name)
             self.refresh()
-            return
+            return []
 
-    def get_sorted_arrangement(self, tagfile):
-        aset = get_artist_tagset(tagfile)
-        sar = {}
-        for aname in aset:
-            akey = self.match_from_perms(aname)
-            if akey is not None:
-                sar[akey] = (self.artist[akey]["instrument"],
-                             self.artist[akey]["count"])
+    def get_sorted_arrangement(self, tagfile, artist_set=None):
+        """
+        return an ordered dictionary of artist/instrument pairs
+        sorted by (pre-computed) artist relative frequency in library
+        """
+        if artist_set is not None:
+            sar = {aname: (
+                self.artist[aname]["instrument"],
+                self.artist[aname]["count"]) for aname in artist_set}
+        else:
+            artist_set = get_artist_tagset(tagfile)
+            sar = {}
+            for aname in artist_set:
+                akey = self.match_from_perms(aname)
+                if akey is not None:
+                    sar[akey] = (self.artist[akey]["instrument"],
+                                 self.artist[akey]["count"])
 
         sar = OrderedDict(sorted(
             sar.items(), key=lambda t: t[1][1], reverse=True))
         return sar
+
+    def get_field(self, summary, category="nationality"):
+        """
+        attempt to guess the tag value by matching the category sets
+        against the summary words and fall back on manual entry with
+        auto_suggest
+        """
+        known_set = self.sets[category]
+        guess = [word for word in tk.tokenize(summary) if word in known_set]
+        guess = list(set(guess))    # make sure entries are unique
+        result = None
+
+        while guess:
+            g = guess.pop(0)
+            resp = input("guessing, accept %s? [y]/n: " % (g))
+            if not resp:
+                result = g
+                break
+
+        if result is None:
+            result = self.suggest[category].prompt(
+                    "Enter {}: ".format(category))
+
+        return result
 
 
 class Arrangement:
@@ -348,7 +490,8 @@ class Arrangement:
             if len(self.sar.keys()) == 1:
                 self.prima = 0
             else:
-                print("ranking arrangement:\n{}\n\ttitle: {}\t\nalbum: {}\t\n"
+                clamm.printr("ranking arrangement:")
+                print("\n\tarrangement: {}\n\ttitle: {}\n\talbum: {}"
                       .format(
                           self.sar,
                           tagfile.tags["TITLE"],
@@ -371,7 +514,7 @@ class Arrangement:
             tagfile.tags = {key: val for key, val in tagfile.tags.items()
                             if key not in
                             config["library"]["tags"]["prune_artist"]}
-            alib.commit_to_libfile(tagfile)
+            audiolib.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):
         is_diff_album = tagfile.tags["ALBUM"] != self.album_name
@@ -390,33 +533,6 @@ class TagDatabaseError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
-
-
-def get_field(summary, known_set, name):
-    guess = [word for word in tk.tokenize(summary) if word in known_set]
-    guess = list(set(guess))    # make sure entries are unique
-
-    if name == "nationality" and guess:
-        g = guess.pop(0)
-        resp = input("Accept %s? [y]/n: " % (g))
-        while resp and guess:
-            g = guess.pop(0)
-            resp = input("Accept %s? [y]/n: " % (g))
-
-        if not resp:
-            return g
-
-        else:
-            return input("Enter %s: " % (name))
-
-    else:
-        resp = [g for g in guess if not input("Accept %s? [y]/n: " % (g))]
-
-        if not resp:
-            return input("Enter %s: " % (name))
-
-        else:
-            return resp
 
 
 def get_borndied(summary):
@@ -447,71 +563,35 @@ def get_borndied(summary):
         return input("Enter Dates: ")
 
 
-def item_fields_from_wiki(item, page, sets, category="artist"):
-    """
-    extract database tags/fields from a successful wikipedia query
-    """
-
-    new = {"permutations": [item]}
-    print(page.summary)
-
-    # NAME
-    resp = input("Enter name (keep/[t]itle): ")
-    if item != resp:
-        new["permutations"].append(resp)
-    new["full_name"] = resp
-    if resp == "k":
-        new["full_name"] = item
-
-    # ORDINALITY
-    if category == "artist":
-        if input("[I]ndividual or Ensemble?"):
-            new["ordinality"] = "Ensemble"
-        else:
-            new["ordinality"] = "Individual"
-
-    new["borndied"] = get_borndied(page.summary)
-    new["nationality"] = get_field(
-            page.summary, sets["nationality"], "nationality")
-    if category == "artist":
-        new["instrument"] = get_field(
-                page.summary, sets["instrument"], "instrument")
-    elif category == "composer":
-        new["period"] = input("Enter composer period: ")
-        new["sort"] = swap_first_last_name(new["full_name"])
-        new["abbreviated"] = new["full_name"].split(" ")[1]
-
-    return new
-
-
 def wiki_query(search_string):
     """
     fetch a query result from wikipedia and determine its relevance
     """
 
     # call out to wikipedia
-    query = wikipedia.search(search_string)
+    results = wikipedia.search(search_string)
 
     # print options
-    print("Options: ")
-    print("\t-3: Translate\n\t-2: New string\n\t-1: Die\n")
+    clamm.printr("options: ")
+    print("\t\t-3: Translate\n\t\t-2: New string\n\t\t-1: Die\n")
 
     # print query results
-    print("Query returns: ")
-    if query:
-        clamm.pretty_dict(query.items())
+    clamm.printr("query returns: ")
+    if results:
+        for i, r in enumerate(results):
+            print("\t\t{}: {}".format(i, r))
 
     # prompt action
     idx = input("Enter choice (default to 0):")
 
     # default, accept the first result
     if not idx:
-        return wikipedia.page(query[0])
+        return wikipedia.page(results[0])
 
     # handle cases
     idx = int(idx)
     if (idx) >= 0:
-        return wikipedia.page(query[idx])
+        return wikipedia.page(results[idx])
     elif (idx) == -1:
         return []
     elif (idx) == -2:
@@ -520,42 +600,6 @@ def wiki_query(search_string):
         wiki_query(get_translation(search_string))
     else:
         return []
-
-
-def artist_fields_from_manual(artist):
-    resp = input("Translate/skip/continue: t/s/[<cr>]")
-    if resp:
-        if resp == "t":
-            artist = get_translation(artist)
-        elif resp == "s":
-            return
-
-    Popen(['googler', '-n', '3', artist])
-
-    new = {}
-    new["permutations"] = [artist]
-
-    resp = input("Enter name ([k]eep): ")
-    if not resp:
-        new["full_name"] = artist
-    else:
-        new["full_name"] = resp
-        if artist != resp:
-            new["permutations"].append(resp)
-
-    artist = new["full_name"]
-
-    resp = input("[I]ndividual or Ensemble?")
-    if resp:
-        new["ordinality"] = "Ensemble"
-    else:
-        new["ordinality"] = "Individual"
-
-    new["borndied"] = input("Enter dates: ")
-    new["nationality"] = input("Enter nationality: ")
-    new["instrument"] = input("Enter instrument: ")
-
-    return new
 
 
 def get_translation(search_string):
@@ -574,6 +618,22 @@ def get_artist_tagset(tagfile):
              if t in tags.keys()}
     aset = set([v.strip() for val in atags.values() for v in val])
     return aset
+
+
+def get_nearest_name(qname, name_set):
+    """
+    return closest match by finding minimum `edit_distance`
+        qname: query name against which seeking match
+        name_set: set of names of which qname is hypothetical member
+    """
+    min_score = 100
+    for sname in name_set:
+        score = distance.edit_distance(qname, sname)
+        if score < min_score:
+            min_score = score
+            mname = sname
+
+    return mname
 
 
 def perms2set(D):

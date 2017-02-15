@@ -7,10 +7,14 @@ entrance point for clamm <---<--<- CLassical Music Manager
 """
 
 # built-ins
+import inspect
 import argparse
 from subprocess import call
 import os
 import json
+
+# external
+from colorama import Fore
 
 # local
 import audiolib
@@ -18,6 +22,30 @@ import streams
 from config import config
 
 SPLIT_REGEX = '&\s*|,\s*|;\s*| - |:\s*|/\s*| feat. | and '
+
+
+def pretty_dict(d):
+    for k, v in d.items():
+        print("\t{}: {}".format(k, v))
+
+
+def printr(func_or_msg, verbosic_precedence=3, caller=True):
+    """
+    a wrapper that enables clients to not need
+    details of controlling printing behavior
+    """
+
+    if int(config["verbosity"]) > verbosic_precedence:
+        return
+
+    caller_name = ""
+    if caller:
+        caller_name = inspect.stack()[1][3]
+
+    if isinstance(func_or_msg, str):
+        print("\n" + Fore.BLUE + caller_name + Fore.WHITE + ": " + func_or_msg)
+    else:
+        func_or_msg()
 
 
 def create_library_parsers(subps):
@@ -44,6 +72,9 @@ def create_library_parsers(subps):
         $ clamm library action --prune_artist_tags --synchronize_artist
             """)
 
+    lib_act_p.add_argument("-k", "--key", help="tag key")
+    lib_act_p.add_argument("-v", "--val", help="tag value")
+
     lib_act_p.add_argument(
                 "--prune_artist_tags", action="store_true",
                 help="""
@@ -57,6 +88,14 @@ def create_library_parsers(subps):
                 help="""
                 Similar to prune_artist_tags, but indiscriminately
                 removes tags in config['library']['tags']['junk'].
+                """)
+
+    lib_act_p.add_argument(
+                "--change_tag_by_name", action="store_true",
+                help="""
+                globally change a single tag field, applied to a
+                directory or library. Can also be used to delete
+                a tag by name.
                 """)
 
     lib_act_p.add_argument(
@@ -167,7 +206,7 @@ def create_stream_parsers(subps):
                  """)
 
     strm_init_p.add_argument(
-                "-l", "--listing", type=str, default="listing.json",
+                "-l", "--listing", type=str, default="json/listing.json",
                 help="Path to listing.json specification.")
 
     strm_trck_p = strm_subps.add_parser(
@@ -258,6 +297,7 @@ def library_action(args):
                if isinstance(q[1], bool)}
     for funcname, flag in argdict.items():
         if flag:
+            printr(funcname)
             func = eval("alib.ltfa.{}".format(funcname))
             alib.walker(func)
 
@@ -300,4 +340,5 @@ def main():
     # retrieve the parsed cmd/sub/... and evaluate
     full_cmd = "{}_{}".format(args.cmd, args.sub_cmd)
     functor = functors[full_cmd]
+    printr("parsed and executing function {}...".format(full_cmd))
     functor(args)

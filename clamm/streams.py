@@ -450,7 +450,8 @@ def stream2tracks(streampath):
     stream2tracks processes raw pcm stream to tagged album tracks.
     """
 
-    print("INFO: Begin stream2tracks...")
+    clamm.printr("Begin stream2tracks...")
+
     # initialize the stream
     stream = Stream(streampath)
     stream.decode_path().iQuery().prepare_target().pcm2wav()

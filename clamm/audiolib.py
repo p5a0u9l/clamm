@@ -9,6 +9,10 @@ from os import walk
 import os
 from subprocess import Popen, call
 import sys
+import json
+
+# external
+from colorama import Fore
 
 # local
 import clamm
@@ -35,10 +39,16 @@ class AudioLib():
             if not files:
                 continue
 
-            print("walked into {}...".format(
-                folder.replace(config["path"]["library"], "$LIBRARY")))
+            if config["verbosity"] > 2:
+                clamm.printr("walked into {}...".format(
+                    folder.replace(config["path"]["library"], "$LIBRARY")))
+            else:
+                clamm.printr(lambda: [
+                    sys.stdout.write(Fore.GREEN + "." + Fore.WHITE),
+                    sys.stdout.flush()])
 
             self.ltfa.count["album"] += 1
+
             for name in files:
                 if not is_audio_file(name):
                     continue
@@ -49,8 +59,20 @@ class AudioLib():
         self.follow_up()
 
     def follow_up(self, **kwargs):
+        after_action_review(self.ltfa.count)
+
         if self.func == "synchronize":
-            after_action_review(self.ltfa.count)
+            pass
+
+        elif self.func == "get_artist_counts":
+            for key, val in self.ltfa.artist_count.items():
+                self.ltfa.tagdb.artist[key]["count"] = val
+
+            self.ltfa.tagdb.refresh()
+
+        elif self.func == "get_arrangement_set":
+            with open(config["path"]["config"]) as fp:
+                json.dump(self.ltfa.instrument_groupings, fp, indent=4)
 
     def synchronize(self):
         """
@@ -114,8 +136,14 @@ class LibTagFileAction(LibTagFile):
 
         # helper attrs
         self.last_composer = ""     # persistent storage for last composer
+        self.artist_count = {}      # persistent storage for count of artist
+        with open(config["path"]["config"]) as fp:
+            self.instrument_groupings = json.load(fp)
 
         # auto_suggest
+        self.artist_suggest = tags.TagSuggestion(
+                self.tagdb, category="artist")
+
         self.composer_suggest = tags.TagSuggestion(
                 self.tagdb, category="composer")
 
@@ -237,7 +265,7 @@ class LibTagFileAction(LibTagFile):
         the junk list with excessive entries.
         """
 
-        untag = self.args.tag_key
+        untag = self.args.key
         ftags = tagfile.tags
 
         # apply deletion
@@ -251,26 +279,11 @@ class LibTagFileAction(LibTagFile):
         globally change a single tag field, applied to a directory or library
         In entire library context, useful for setting GENRE=classical,
         or COMPILATION=0, etc.
-        In single album/directory context, useful for setting
-        ALBUMARTIST=NAME, manually
+        In single album/directory context, useful for fixing mistakes
         """
 
-        curkey = self.args.tag_key
-        newval = self.args.tag_val
-        curval = ""
-
-        # use the value, if its there
-        if curkey in tagfile.tags.keys():
-            curval = tagfile.tags[curkey]
-
-        # get the new tag value (input arg or manual)
-        if not newval:
-            new_val = input(
-                    "Changing {} tag...\n\tCurrent Value: {}\n\tEnter new: "
-                    .format(curkey, curval))
-
         # apply the change
-        tagfile.tags[curkey] = new_val
+        tagfile.tags[self.args.key] = [self.args.val]
 
         # write to file
         self.write2tagfile(tagfile)
@@ -315,12 +328,13 @@ class LibTagFileAction(LibTagFile):
         """
 
         # match artist to database entry for each artist found in tagfile
-        [self.tagdb.verify_artist(name)
-            for name in tags.get_artist_tagset(tagfile)]
+        aset = [self.tagdb.verify_artist(name)
+                for name in tags.get_artist_tagset(tagfile)]
 
-        # hook in the arangement, defined as the pairing of
+        # hook in the arrangement, defined as the pairing of
         # artist to instrument
         arrange = self.tagdb.verify_arrangement(
+                aset,
                 tagfile,
                 skipflag=config["database"]["skip_existing_arrangements"])
 
@@ -344,7 +358,7 @@ class LibTagFileAction(LibTagFile):
             clamm.pretty_dict(tagfile.tags)
 
             # attempt to use last_composer (speeds up when adding new album)
-            fmt = "Accept last input: {} ? [CR]".format(self.last_composer)
+            fmt = "Accept last input: {}? [CR] ".format(self.last_composer)
             if not input(fmt):
                 cname = self.last_composer
             else:
@@ -362,12 +376,12 @@ class LibTagFileAction(LibTagFile):
         composer = self.tagdb.composer[ckey]
 
         # write database values to tagfile tags
-        tagfile.tags["COMPOSER"] = ckey
-        tagfile.tags["COMPOSER_ABBREVIATED"] = composer["abbreviated"]
-        tagfile.tags["COMPOSER_DATE"] = composer["borndied"]
-        tagfile.tags["COMPOSER_PERIOD"] = composer["period"]
-        tagfile.tags["COMPOSER_SORT"] = composer["sort"]
-        tagfile.tags["COMPOSER_NATION"] = composer["nationality"]
+        tagfile.tags["COMPOSER"] = [ckey]
+        tagfile.tags["COMPOSER_ABBREVIATED"] = [composer["abbreviated"]]
+        tagfile.tags["COMPOSER_DATE"] = [composer["borndied"]]
+        tagfile.tags["COMPOSER_PERIOD"] = [composer["period"]]
+        tagfile.tags["COMPOSER_SORT"] = [composer["sort"]]
+        tagfile.tags["COMPOSER_NATION"] = [composer["nationality"]]
 
         # ensure the files are sync'd to database
         self.write2tagfile(tagfile)
@@ -381,14 +395,15 @@ class LibTagFileAction(LibTagFile):
 
         for aname in aset:
             artistname = self.tagdb.match_from_perms(aname)
-            if artistname in self.instrument_groupings.keys():
-                self.instrument_groupings[artistname] += 1
+            if artistname in self.artist_count.keys():
+                self.artist_count[artistname] += 1
             else:
-                self.instrument_groupings[artistname] = 1
+                self.artist_count[artistname] = 1
 
     def get_arrangement_set(self, tagfile, **kwargs):
         """
-        get set and count of instrumental groupings via sorted arrangements
+        get set and count of instrumental groupings via sorted
+        arrangements
         """
 
         # returns arrangement sorted by artist count
@@ -406,8 +421,13 @@ class LibTagFileAction(LibTagFile):
 
 
 def after_action_review(count):
-    clamm.printr("AAR: file/folder count, track/album deltas")
-    clamm.pretty_dict(count)
+    clamm.printr(
+            "\n%15s: %5d %10s: %5d\n%15s: %5d %10s: %5d"
+            % (
+                "changed tags", count["tag"],
+                "tracks", count["track"],
+                "counted folder", count["album"],
+                "files", count["file"]))
 
 
 def pcm2wav(pcm_name, wav_name):
@@ -456,7 +476,7 @@ def commit_to_libfile(tagfile):
     for k, v in tagfile.tags.items():
         is_new = k not in tagfile.tag_copy.keys()
         if not is_new:
-            is_dif = tagfile.tags[k] != tagfile.tag_copy[k]
+            is_dif = tagfile.tags[k][0] != tagfile.tag_copy[k][0]
         if is_new or is_dif:
             n_delta_fields += 1
 
@@ -464,18 +484,20 @@ def commit_to_libfile(tagfile):
     if n_delta_fields == 0:
         return (n_tracks_updated, n_delta_fields)
 
+    n_tracks_updated += 1
     # prompted or automatic write
     if config["database"]["require_prompt_when_committing"]:
         clamm.printr("Proposed: ")
         clamm.pretty_dict(sorted(tagfile.tags))
 
         if not input("Accept? [y]/n: "):
-            n_tracks_updated += 1
             tagfile.save()
 
     else:
-        n_tracks_updated += 1
         tagfile.save()
-        clamm.printr(lambda: [sys.stdout.write("."), sys.stdout.flush()])
+        clamm.printr(
+                lambda: [
+                    sys.stdout.write(Fore.RED + "." + Fore.WHITE),
+                    sys.stdout.flush()])
 
     return (n_tracks_updated, n_delta_fields)
