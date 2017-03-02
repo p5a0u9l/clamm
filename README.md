@@ -1,4 +1,5 @@
+# clamm
+
 ![](clam.png?raw=true)
 
-# clamm
-classical music manager
+the classical music manager for which you've waited a lifetime. 
