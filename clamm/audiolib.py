@@ -7,6 +7,7 @@ import re
 from os.path import splitext, join
 from os import walk
 import os
+import time
 from subprocess import Popen, call
 import sys
 import json
@@ -25,9 +26,10 @@ class AudioLib():
     external interface to audiolib module
     """
     def __init__(self, args):
-        self.root = args.dir
-        self.func = args.sub_cmd
-        self.ltfa = LibTagFileAction(args)
+        self.args = args
+        self.root = self.args.dir
+        self.func = self.args.sub_cmd
+        self.ltfa = LibTagFileAction(self.args)
 
     def walker(self, func, **kwargs):
         """
@@ -61,8 +63,22 @@ class AudioLib():
     def follow_up(self, **kwargs):
         after_action_review(self.ltfa.count)
 
-        if self.func == "synchronize":
+        if self.func == "playlist":
             pass
+
+        elif self.func == "recently_added":
+            # now, write the accumulated list to a simple pls file format
+            pl_name = "recently-added-{}".format(time.ctime()[:10])
+            pl_path = os.path.join(config["path"]["playlist"], pl_name)
+            with open(pl_path, mode="w") as pl:
+                [pl.write("{}\n".format(track))
+                    for track in self.ltfa._playlist]
+
+            # finally, tell cmus to add the playlist to its catalog
+            call([
+                config["bin"]["cmus-remote"],
+                config["opt"]["cmus-remote"],
+                "pl-import " + pl_path])
 
         elif self.func == "get_artist_counts":
             for key, val in self.ltfa.artist_count.items():
@@ -82,6 +98,7 @@ class AudioLib():
 
         self.walker(self.ltfa.synchronize_composer)
         self.walker(self.ltfa.synchronize_artist)
+        self.walker(self.ltfa.synchronize_arrangement)
 
     def initialize(self):
         """
@@ -135,6 +152,7 @@ class LibTagFileAction(LibTagFile):
         LibTagFile.__init__(self, args)
 
         # helper attrs
+        self._playlist = []         # persistent storage for playlist
         self.last_composer = ""     # persistent storage for last composer
         self.artist_count = {}      # persistent storage for count of artist
         with open(config["path"]["config"]) as fp:
@@ -179,6 +197,18 @@ class LibTagFileAction(LibTagFile):
             Popen([config["bin"]["ffmpeg"],
                   config["opt"]["ffmpeg"], "-i", src, dst],
                   stdout=redirect)
+
+    def recently_added(self, tagfile, **kwargs):
+        """
+        since I have not embedded date-added to library, this is a hacky means
+        of generating a recently_added playlist by looking at the date of the
+        parent directory.
+        """
+        parent = os.path.split(tagfile.path)[0]
+        SEC_PER_DAY = 60*60*24
+        age_in_days = (time.time() - os.stat(parent).st_ctime)/SEC_PER_DAY
+        if age_in_days < config["library"]["recently_added_day_age"]:
+            self._playlist.append(tagfile.path)
 
     def playlist(self, tagfile, **kwargs):
         """
@@ -319,20 +349,14 @@ class LibTagFileAction(LibTagFile):
         # write to file
         self.write2tagfile(tagfile)
 
-    def synchronize_artist(self, tagfile, **kwargs):
+    def synchronize_arrangement(self, tagfile, **kwargs):
         """
-        Verify there is an artist entry in tags.json for each artist found in
-        tagfile.
         Find arrangement that is best fit for a given file.
-        Sync files to library.
         """
 
-        # match artist to database entry for each artist found in tagfile
-        aset = [self.tagdb.verify_artist(name)
-                for name in tags.get_artist_tagset(tagfile)]
+        aset = tags.get_artist_tagset(tagfile)
 
-        # hook in the arrangement, defined as the pairing of
-        # artist to instrument
+        # arrangement, defined as the pairing of artist to instrument
         arrange = self.tagdb.verify_arrangement(
                 aset,
                 tagfile,
@@ -340,8 +364,18 @@ class LibTagFileAction(LibTagFile):
 
         if not arrange:
             return
-        if config["database"]["sync_to_library"]:
-            arrange.apply(tagfile)
+
+        arrange.apply(tagfile)
+
+    def synchronize_artist(self, tagfile, **kwargs):
+        """
+        Verify there is an artist entry in tags.json for each artist
+        found in tagfile.
+        Will not update ARTIST/ALBUMARTIST until arrangement is verified
+        """
+
+        for name in tags.get_artist_tagset(tagfile):
+            self.tagdb.verify_artist(name)
 
     def synchronize_composer(self, tagfile, **kwargs):
         """
@@ -395,6 +429,8 @@ class LibTagFileAction(LibTagFile):
 
         for aname in aset:
             artistname = self.tagdb.match_from_perms(aname)
+            if artistname is None:
+                continue
             if artistname in self.artist_count.keys():
                 self.artist_count[artistname] += 1
             else:

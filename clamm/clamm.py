@@ -84,6 +84,13 @@ def create_library_parsers(subps):
                 """)
 
     lib_act_p.add_argument(
+                "--recently_added", action="store_true",
+                help="""
+                Generate a recently_added playlist by looking at the
+                date of the parent directory.
+                """)
+
+    lib_act_p.add_argument(
                 "--remove_junk_tags", action="store_true",
                 help="""
                 Similar to prune_artist_tags, but indiscriminately
@@ -293,11 +300,12 @@ def streams_stream(args):
 
 def library_action(args):
     alib = audiolib.AudioLib(args)
-    argdict = {q[0]: q[1] for q in args._get_kwargs()
-               if isinstance(q[1], bool)}
-    for funcname, flag in argdict.items():
+    funcdict = {q[0]: q[1] for q in args._get_kwargs()
+                if isinstance(q[1], bool)}
+    for funcname, flag in funcdict.items():
         if flag:
             printr(funcname)
+            alib.func = funcname
             func = eval("alib.ltfa.{}".format(funcname))
             alib.walker(func)
 

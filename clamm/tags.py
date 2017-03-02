@@ -131,6 +131,11 @@ class TagDatabase:
         periods = messylist2set(clist)
 
         # update nationalities
+        for aname in self.artist.keys():
+            if "instrument" not in self.artist[aname]:
+                self.artist[aname]["instrument"] = "null"
+            if "nationality" not in self.artist[aname]:
+                self.artist[aname]["nationality"] = "null"
         alist = [self.artist[aname]["nationality"]
                  for aname in self.artist.keys()]
         clist = [self.composer[cname]["nationality"]
@@ -159,6 +164,8 @@ class TagDatabase:
         for key, val in self._db[category].items():
             if name in val["permutations"]:
                 return key
+        raise KeyNotFoundError(
+                "No match from permutations for {}...".format(name))
 
     def add_new_perm(self, key, perm, category="artist"):
         """
@@ -302,7 +309,7 @@ class TagDatabase:
 
     def verify_arrangement(self, artist_set, tagfile, skipflag=False):
         """
-        Arrangements are used as a hook to synchronize artist entries
+        Arrangements are used to synchronize artist entries
         in the database with files in the library.
         """
 
@@ -310,12 +317,13 @@ class TagDatabase:
             return
         if "COMPILATION" not in tagfile.tags:
             tagfile.tags["COMPILATION"] = ["0"]
+        # not interested in arrangements for compilations
         if tagfile.tags["COMPILATION"][0] == "1":
             return
 
         sar = self.get_sorted_arrangement(tagfile, artist_set=artist_set)
-        if len(sar) == 0:
-            return
+        # if len(sar) == 0:
+        #     return
         self.arange.update(sar, tagfile)
         return self.arange
 
@@ -339,8 +347,9 @@ class TagDatabase:
         response = input(
                 "Given: {}\tClosest Match: {}. Accept? [<CR>]/n: "
                 .format(qname, mname))
+
+        # fetch actual key and update perms
         if not response:
-            # fetch actual key and update perms
             key = self.match_from_perms(mname, category="composer")
             self.add_new_perm(key, qname, category="composer")
             return key
@@ -527,6 +536,12 @@ class Arrangement:
         self.artist = messylist2tagstr(alist)
         messylist = [item[0] for item in self.sar.values()]
         self.arrangement = messylist2tagstr(messylist)
+
+
+class KeyNotFoundError(Exception):
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
 
 
 class TagDatabaseError(Exception):
