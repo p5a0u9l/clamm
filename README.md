@@ -1,4 +1,4 @@
-![Alt Text](./clam.png?raw=true)
+![](clam.png?raw=true)
 
 # clamm
 classical music manager
