@@ -2,9 +2,9 @@
 
 ![](clam.png?raw=true)
 
-_the classical music manager for which you've waited a lifetime._
+_the classical music manager you never knew you needed, until now..._
 
-`clamm` is a tool for managing a library of classical music. For a brief discussion on what is meant by "classical", see
+`clamm` is a python program for managing a library of classical music. For a brief discussion on what is meant by "classical", see
 NOTES, below. 
 
 `clamm` 
@@ -14,7 +14,6 @@ NOTES, below.
 * provides tools for working with raw audio streams of (you guessed it!) classical music
 
 * generate playlists using iTunes-like combination logic. 
-
 
 ## NOTES
 

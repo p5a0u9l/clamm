@@ -323,8 +323,7 @@ def library_playlist(args):
 
 
 """
-define `functor` function lookup.
-each key/val pair follows following format
+`functors` function lookup.  each key/val pair follows format
     "subcommand_command": subcommand_command
 """
 functors = {

@@ -163,6 +163,7 @@ class Album():
     def find_start_frame(self):
         """
         find audio signal activity that exceeds threshold and persists
+        call this the start frame of a track
         """
         not_found = True
         THRESH = 10

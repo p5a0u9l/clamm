@@ -1,0 +1,400 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>clamm Documentation &#8212; clamm 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-clamm">
+<span id="clamm-documentation"></span><h1>clamm Documentation<a class="headerlink" href="#module-clamm" title="Permalink to this headline">¶</a></h1>
+<p>entrance point for clamm &lt;&#8212;&lt;&#8211;&lt;- CLassical Music Manager</p>
+<div class="section" id="module-audiolib">
+<span id="audiolib"></span><h2>audiolib<a class="headerlink" href="#module-audiolib" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="audiolib.AudioLib">
+<em class="property">class </em><code class="descclassname">audiolib.</code><code class="descname">AudioLib</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib" title="Permalink to this definition">¶</a></dt>
+<dd><p>external interface to audiolib module</p>
+<dl class="method">
+<dt id="audiolib.AudioLib.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>special hook for consuming new music into library.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.AudioLib.synchronize">
+<code class="descname">synchronize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.synchronize" title="Permalink to this definition">¶</a></dt>
+<dd><p>special hook for ensuring the tag database and the library file
+tags are sync&#8217;d.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.AudioLib.walker">
+<code class="descname">walker</code><span class="sig-paren">(</span><em>func</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.walker" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterate over every audio file under the target directory
+pass the tagfile and apply action to each</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.commit_to_libfile">
+<code class="descclassname">audiolib.</code><code class="descname">commit_to_libfile</code><span class="sig-paren">(</span><em>tagfile</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.commit_to_libfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>common entry point for writing values from tag database into an audio file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.is_audio_file">
+<code class="descclassname">audiolib.</code><code class="descname">is_audio_file</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.is_audio_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>readability short-cut for whether file contains known audio extension</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.pcm2wav">
+<code class="descclassname">audiolib.</code><code class="descname">pcm2wav</code><span class="sig-paren">(</span><em>pcm_name</em>, <em>wav_name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.pcm2wav" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper for using ffmpeg to convert a pcm file to a wav file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.wav2flac">
+<code class="descclassname">audiolib.</code><code class="descname">wav2flac</code><span class="sig-paren">(</span><em>wav_name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.wav2flac" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper for using ffmpeg to convert a wav file to a flac file</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tags">
+<span id="tags"></span><h2>tags<a class="headerlink" href="#module-tags" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="tags.TagDatabase">
+<em class="property">class </em><code class="descclassname">tags.</code><code class="descname">TagDatabase</code><a class="headerlink" href="#tags.TagDatabase" title="Permalink to this definition">¶</a></dt>
+<dd><p>interfacing with music library&#8217;s tag database</p>
+<dl class="method">
+<dt id="tags.TagDatabase.add_new_item">
+<code class="descname">add_new_item</code><span class="sig-paren">(</span><em>category='artist'</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.add_new_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>inserts a new item into the tag db after prompting
+for approval</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.add_new_perm">
+<code class="descname">add_new_perm</code><span class="sig-paren">(</span><em>key</em>, <em>perm</em>, <em>category='artist'</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.add_new_perm" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a new name permutation to the item&#8217;s permutation list</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.dump">
+<code class="descname">dump</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.dump" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.get_field">
+<code class="descname">get_field</code><span class="sig-paren">(</span><em>summary</em>, <em>category='nationality'</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.get_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>attempt to guess the tag value by matching the category sets
+against the summary words and fall back on manual entry with
+auto_suggest</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.get_new_item">
+<code class="descname">get_new_item</code><span class="sig-paren">(</span><em>item</em>, <em>category='artist'</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.get_new_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>resolves fields for a new item by attempting auto-population
+via <cite>item_fields_from_wiki</cite>, and falls back on
+<cite>item_fields_from_manual</cite>.
+returns the database key of the new item</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.get_sorted_arrangement">
+<code class="descname">get_sorted_arrangement</code><span class="sig-paren">(</span><em>tagfile</em>, <em>artist_set=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.get_sorted_arrangement" title="Permalink to this definition">¶</a></dt>
+<dd><p>return an ordered dictionary of artist/instrument pairs
+sorted by (pre-computed) artist relative frequency in library</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.item_fields_from_manual">
+<code class="descname">item_fields_from_manual</code><span class="sig-paren">(</span><em>item</em>, <em>category='artist'</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.item_fields_from_manual" title="Permalink to this definition">¶</a></dt>
+<dd><p>alternative to <cite>item_fields_from_wiki</cite> in case <cite>wiki_query</cite> is
+not successful.</p>
+<p>fetches new item fields manually with help from auto-suggestion</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.item_fields_from_wiki">
+<code class="descname">item_fields_from_wiki</code><span class="sig-paren">(</span><em>item</em>, <em>page</em>, <em>category='artist'</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.item_fields_from_wiki" title="Permalink to this definition">¶</a></dt>
+<dd><p>auto-populate database tags a successful wikipedia query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.update_sets">
+<code class="descname">update_sets</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.update_sets" title="Permalink to this definition">¶</a></dt>
+<dd><p>update the tag sets by scanning the database and compiling
+artist, nationality, composer, instrument, and period</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.verify_arrangement">
+<code class="descname">verify_arrangement</code><span class="sig-paren">(</span><em>artist_set</em>, <em>tagfile</em>, <em>skipflag=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.verify_arrangement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arrangements are used to synchronize artist entries
+in the database with files in the library.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.verify_artist">
+<code class="descname">verify_artist</code><span class="sig-paren">(</span><em>query_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.verify_artist" title="Permalink to this definition">¶</a></dt>
+<dd><p>verify that the artist query name (qname) has an entry in
+the tag database if it doesn&#8217;t, propose a series of steps to
+remedy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tags.TagDatabase.verify_composer">
+<code class="descname">verify_composer</code><span class="sig-paren">(</span><em>qname</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.verify_composer" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the tag database key given the query name found in the
+tage file by verifying the query name has a match in the tag
+database. If it doesn&#8217;t, initiates <cite>add_new_item</cite> and
+then, circuitously, returns the key</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tags.get_borndied">
+<code class="descclassname">tags.</code><code class="descname">get_borndied</code><span class="sig-paren">(</span><em>summary</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.get_borndied" title="Permalink to this definition">¶</a></dt>
+<dd><p>extract artist/composer vital date(s) from a wikipedia summary string</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tags.get_nearest_name">
+<code class="descclassname">tags.</code><code class="descname">get_nearest_name</code><span class="sig-paren">(</span><em>qname</em>, <em>name_set</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.get_nearest_name" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>return closest match by finding minimum <cite>edit_distance</cite></dt>
+<dd>qname: query name against which seeking match
+name_set: set of names of which qname is hypothetical member</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tags.get_translation">
+<code class="descclassname">tags.</code><code class="descname">get_translation</code><span class="sig-paren">(</span><em>search_string</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.get_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>occasionally artist name will be in non-Latin characters</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tags.messylist2set">
+<code class="descclassname">tags.</code><code class="descname">messylist2set</code><span class="sig-paren">(</span><em>alist</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.messylist2set" title="Permalink to this definition">¶</a></dt>
+<dd><p>owing to laziness, these lists may contain gotchas</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tags.swap_first_last_name">
+<code class="descclassname">tags.</code><code class="descname">swap_first_last_name</code><span class="sig-paren">(</span><em>name_str</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.swap_first_last_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>if name_str contains a comma (assume it is formatted as Last, First),
+invert and return First Last
+else, invert and return Last, First</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tags.wiki_query">
+<code class="descclassname">tags.</code><code class="descname">wiki_query</code><span class="sig-paren">(</span><em>search_string</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.wiki_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>fetch a query result from wikipedia and determine its relevance</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-streams">
+<span id="streams"></span><h2>streams<a class="headerlink" href="#module-streams" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="streams.Album">
+<em class="property">class </em><code class="descclassname">streams.</code><code class="descname">Album</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album" title="Permalink to this definition">¶</a></dt>
+<dd><p>given a stream object, locate the tracks within the stream,
+create new flac tracks, and populate with metadata</p>
+<dl class="method">
+<dt id="streams.Album.create">
+<code class="descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>find track starts/stops within stream</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streams.Album.find_end_frame">
+<code class="descname">find_end_frame</code><span class="sig-paren">(</span><em>reference</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.find_end_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>find the min energy point around a reference</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streams.Album.find_start_frame">
+<code class="descname">find_start_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.find_start_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>find audio signal activity that exceeds threshold and persists
+call this the start frame of a track</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streams.Album.process">
+<code class="descname">process</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>encapsulate the substance of Album processing</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.dial_itunes">
+<code class="descclassname">streams.</code><code class="descname">dial_itunes</code><span class="sig-paren">(</span><em>artist</em>, <em>album</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.dial_itunes" title="Permalink to this definition">¶</a></dt>
+<dd><p>run apple script and attempt to uniquely locate the artist/album pair</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.image_audio_envelope_with_tracks_markers">
+<code class="descclassname">streams.</code><code class="descname">image_audio_envelope_with_tracks_markers</code><span class="sig-paren">(</span><em>markers</em>, <em>stream</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.image_audio_envelope_with_tracks_markers" title="Permalink to this definition">¶</a></dt>
+<dd><p>track-splitting validation image</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.is_started">
+<code class="descclassname">streams.</code><code class="descname">is_started</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.is_started" title="Permalink to this definition">¶</a></dt>
+<dd><p>test to see if recording has started</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.listing2streams">
+<code class="descclassname">streams.</code><code class="descname">listing2streams</code><span class="sig-paren">(</span><em>listing</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.listing2streams" title="Permalink to this definition">¶</a></dt>
+<dd><p>listing2streams is a program for batch streaming a listing of albums
+from iTunes to raw pcm files via shairport-sync.</p>
+<p>iTunes is controlled using macos&#8217; built-in <cite>osascript</cite> tool and simple
+javascript request templates.</p>
+<p>When the listings have finished streaming, the pcm files (streams)
+are processed by <cite>stream2tracks</cite> and converted from streams to a
+collection of flac tracks</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.main">
+<code class="descclassname">streams.</code><code class="descname">main</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>main is a concatenation of listing2streams and stream2tracks</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.power_envelope">
+<code class="descclassname">streams.</code><code class="descname">power_envelope</code><span class="sig-paren">(</span><em>wavpath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.power_envelope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="streams.read_wav_mono">
+<code class="descclassname">streams.</code><code class="descname">read_wav_mono</code><span class="sig-paren">(</span><em>wav</em>, <em>N</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.read_wav_mono" title="Permalink to this definition">¶</a></dt>
+<dd><p>grab samples from one channel (every other sample) of frame</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.size_sampler">
+<code class="descclassname">streams.</code><code class="descname">size_sampler</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.size_sampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the file size, sampled with a 1 second gap to determine
+if the file is being written to and thus growing</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.start_shairport">
+<code class="descclassname">streams.</code><code class="descname">start_shairport</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.start_shairport" title="Permalink to this definition">¶</a></dt>
+<dd><p>make sure no duplicate processes and start up shairport-sync</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.stream2tracks">
+<code class="descclassname">streams.</code><code class="descname">stream2tracks</code><span class="sig-paren">(</span><em>streampath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.stream2tracks" title="Permalink to this definition">¶</a></dt>
+<dd><p>stream2tracks processes raw pcm stream to tagged album tracks.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">clamm Documentation</a><ul>
+<li><a class="reference internal" href="#module-audiolib">audiolib</a></li>
+<li><a class="reference internal" href="#module-tags">tags</a></li>
+<li><a class="reference internal" href="#module-streams">streams</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/code.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Paul Adams.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/code.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
