@@ -6,9 +6,9 @@ _the classical music manager you never knew you needed, until now..._
 
 `clamm` is a python program for managing a library of classical music. For a brief discussion on what is meant by "classical", see NOTES, below. 
 
-`clamm` 
+[![Documentation Status](https://readthedocs.org/projects/clamm/badge/?version=latest)](http://clamm.readthedocs.io/en/latest/?badge=latest)
 
-[documentation](http://clamm.readthedocs.io/en/latest/)
+`clamm` 
 
 * efficiently maps the tags of classical music audio files to sane structures
 
