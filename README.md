@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/clamm/badge/?version=latest)](http://clamm.readthedocs.io/en/latest/?badge=latest)
+
 # clamm
 
 ![](clam.png?raw=true)
@@ -5,8 +7,6 @@
 _the classical music manager you never knew you needed, until now..._
 
 `clamm` is a python program for managing a library of classical music. For a brief discussion on what is meant by "classical", see NOTES, below. 
-
-[![Documentation Status](https://readthedocs.org/projects/clamm/badge/?version=latest)](http://clamm.readthedocs.io/en/latest/?badge=latest)
 
 `clamm` 
 
