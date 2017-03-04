@@ -1,6 +1,4 @@
 .. image:: https://readthedocs.org/projects/clamm/badge/?version=latest
-:target: http://clamm.readthedocs.io/en/latest/?badge=latest
-:alt: Documentation Status
 .. image:: clam.png
 .. inclusion-marker-do-not-remove
 clamm README
