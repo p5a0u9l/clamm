@@ -1,8 +1,7 @@
 [![Documentation Status](https://readthedocs.org/projects/clamm/badge/?version=latest)](http://clamm.readthedocs.io/en/latest/?badge=latest)
+![](clam.png?raw=true)
 
 # clamm
-
-![](clam.png?raw=true)
 
 _the classical music manager you never knew you needed, until now..._
 
@@ -16,7 +15,7 @@ _the classical music manager you never knew you needed, until now..._
 
 * generate playlists using iTunes-like combination logic. 
 
-## NOTES
+NOTES
 
 By _classical_, I mean any piece of music characterized by having an associated 
 

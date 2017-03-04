@@ -1,7 +1,13 @@
-clamm Documentation
+`clamm` Documentation
 *******************
 
 .. automodule:: clamm
+
+clamm
+=====
+
+.. automodule:: clamm
+    :members:
 
 audiolib
 ========
