@@ -1,7 +1,5 @@
-`clamm` Documentation
-*******************
-
-.. automodule:: clamm
+clamm code
+**********
 
 clamm
 =====
