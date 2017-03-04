@@ -26,11 +26,11 @@ By *classical*, I mean any piece of music characterized by having an associated
 * arrangement
 
 Which, for my library, includes traditional classical composers, like 
-`J.S. Bach<https://en.wikipedia.org/wiki/Johann_Sebastian\_Bach>` and 
-`Beethoven<https://en.wikipedia.org/wiki/Ludwig_van_Beethoven>`, as well as 
+`J.S. Bach<https://en.wikipedia.org/wiki/Johann_Sebastian\_Bach>`_ and 
+`Beethoven<https://en.wikipedia.org/wiki/Ludwig_van_Beethoven>`_, as well as 
 newer, harder to categorize composers, like 
-`Max Richter<https://en.wikipedia.org/wiki/Max_Richter>` and 
-`Steve Reich<https://en.wikipedia.org/wiki/Steve_Reich>`.
+`Max Richter<https://en.wikipedia.org/wiki/Max_Richter>`_ and 
+`Steve Reich<https://en.wikipedia.org/wiki/Steve_Reich>`_.
 
 Indices and tables
 ==================
