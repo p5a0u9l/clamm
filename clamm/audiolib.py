@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
+""" an interface to a classical music audio library.
+"""
+
 # built-ins
 import re
 from os.path import splitext, join
@@ -22,8 +25,7 @@ import tags
 
 
 class AudioLib():
-    """
-    external interface to audiolib module
+    """ external interface to audiolib module
     """
     def __init__(self, args):
         self.args = args
@@ -32,9 +34,13 @@ class AudioLib():
         self.ltfa = LibTagFileAction(self.args)
 
     def walker(self, func, **kwargs):
-        """
-        iterate over every audio file under the target directory
-        pass the tagfile and apply action to each
+        """Recursively walks the directories/sub-directories under
+        :py:attr:`~root` and applies specified function to each audio
+        file encountered.
+
+        :param func: action to apply to audio files.
+        :type name: function.
+
         """
         # walk every file under root
         for folder, _, files in walk(self.root, topdown=False):
@@ -91,9 +97,8 @@ class AudioLib():
                 json.dump(self.ltfa.instrument_groupings, fp, indent=4)
 
     def synchronize(self):
-        """
-        special hook for ensuring the tag database and the library file
-        tags are sync'd.
+        """synchronize the audiofile's composer/artist/arrangement tags
+        with the tag database
         """
 
         self.walker(self.ltfa.synchronize_composer)
@@ -101,8 +106,7 @@ class AudioLib():
         self.walker(self.ltfa.synchronize_arrangement)
 
     def initialize(self):
-        """
-        special hook for consuming new music into library.
+        """initialize a new music library of audiofiles
         """
 
         self.walker(self.ltfa.audio2preferred_format)
@@ -115,8 +119,7 @@ class AudioLib():
 
 class LibTagFile():
     def __init__(self, args):
-        """
-        super class for tagfile action classes
+        """ super class for tagfile action classes
         """
 
         # arg unpack
@@ -136,17 +139,15 @@ class LibTagFile():
 
 class LibTagFileAction(LibTagFile):
     def __init__(self, args):
-        """
-        LibTagFileAction is a collection of library tag file _action_
-        methods.
+        """a collection of library tag file _action_ methods.
 
-        Each action method follows a methodical implementation
+        Each action method follows a structure:
             1. recieves a tagfile as an input
-            2. has access to argparser tui args and must use consistent
-                Namespace references
-            3. has the option/necessity to create a persistent result
-            4. should define a follow-up action upon completion of
-            tags.walker
+            2. has access to argparser cli args and must use consistent
+               Namespace references
+            3. has the option to create a persistent result
+            4. has the option define a follow-up action upon completion of
+               walker
         """
 
         LibTagFile.__init__(self, args)
@@ -155,6 +156,7 @@ class LibTagFileAction(LibTagFile):
         self._playlist = []         # persistent storage for playlist
         self.last_composer = ""     # persistent storage for last composer
         self.artist_count = {}      # persistent storage for count of artist
+
         with open(config["path"]["config"]) as fp:
             self.instrument_groupings = json.load(fp)
 
@@ -173,9 +175,8 @@ class LibTagFileAction(LibTagFile):
                 self.func[attr] = fobject
 
     def audio2preferred_format(self, tagfile, **kwargs):
-        """
-        using ffmpeg, convert arbitrary audio file to preferred_type,
-        flac by default
+        """using ffmpeg, convert arbitrary audio file to a
+        preferred type, flac by default
         """
 
         # unpack
@@ -199,10 +200,8 @@ class LibTagFileAction(LibTagFile):
                   stdout=redirect)
 
     def recently_added(self, tagfile, **kwargs):
-        """
-        since I have not embedded date-added to library, this is a hacky means
-        of generating a recently_added playlist by looking at the date of the
-        parent directory.
+        """generate a _recently added_ playlist by looking at the
+        date of the parent directory.
         """
         parent = os.path.split(tagfile.path)[0]
         SEC_PER_DAY = 60*60*24
@@ -211,8 +210,7 @@ class LibTagFileAction(LibTagFile):
             self._playlist.append(tagfile.path)
 
     def playlist(self, tagfile, **kwargs):
-        """
-        playlist filter
+        """ playlist filter
         """
 
         # unpack
@@ -248,10 +246,11 @@ class LibTagFileAction(LibTagFile):
             self.playlist.append(tagfile.path)
 
     def prune_artist_tags(self, tagfile, **kwargs):
-        """
-        Conform artist/albumartist tag key names by applying
+        """Conform artist/albumartist tag key names by applying
         config['library']['tags']['prune_artist'] rules
-        e.g., ALBUMARTIST instead of ALBUM_ARTIST
+
+        Example
+            ALBUMARTIST instead of ALBUM_ARTIST
         """
 
         ftags = tagfile.tags
@@ -272,9 +271,8 @@ class LibTagFileAction(LibTagFile):
         self.write2tagfile(tagfile)
 
     def remove_junk_tags(self, tagfile, **kwargs):
-        """
-        similar to prune_artist_tags, but indiscriminately removes tags in
-        junk list
+        """similar to prune_artist_tags, but removes all tags that
+        are in ``config["library"]["tags"]["junk"]``
         """
 
         ftags = tagfile.tags
@@ -289,10 +287,10 @@ class LibTagFileAction(LibTagFile):
         self.write2tagfile(tagfile)
 
     def delete_tag_globber(self, tagfile, **kwargs):
-        """
-        Unlike `remove_junk_tags`, allows removing as set of similarly
-        named tags, as in the MUSICBRAINZ_* tags, without cluttering
-        the junk list with excessive entries.
+        """Unlike ``remove_junk_tags``, allows removing as glob of
+        similarly named tags, as in the MUSICBRAINZ_* tags, without
+        cluttering  ``config["library"]["tags"]["junk"]`` with
+        excessive entries.
         """
 
         untag = self.args.key
@@ -305,11 +303,13 @@ class LibTagFileAction(LibTagFile):
         self.write2tagfile(tagfile)
 
     def change_tag_by_name(self, tagfile, **kwargs):
-        """
-        globally change a single tag field, applied to a directory or library
-        In entire library context, useful for setting GENRE=classical,
-        or COMPILATION=0, etc.
-        In single album/directory context, useful for fixing mistakes
+        """globally change a single tag field, applied to a directory
+        or library.
+        Library example
+            set GENRE=classical
+            set COMPILATION=0
+        Single album/directory example
+            set ARTIST=<artist_name>
         """
 
         # apply the change
@@ -319,12 +319,12 @@ class LibTagFileAction(LibTagFile):
         self.write2tagfile(tagfile)
 
     def handle_composer_as_artist(self, tagfile, **kwargs):
-        """
-        test for and handle composer in artist fields.
-        Background:
+        """test for and handle composer in artist fields.
+
+        Background
             Many taggers/publishers deal with classical music tags by
             lumping the composer in with the artist, as in
-            ARTIST=JS Bach; Glenn Gould
+            ARTIST=JS Bach; Glenn Gould.
         """
 
         # existence test
@@ -350,8 +350,7 @@ class LibTagFileAction(LibTagFile):
         self.write2tagfile(tagfile)
 
     def synchronize_arrangement(self, tagfile, **kwargs):
-        """
-        Find arrangement that is best fit for a given file.
+        """Find arrangement that is best fit for a given file.
         """
 
         aset = tags.get_artist_tagset(tagfile)
@@ -368,9 +367,9 @@ class LibTagFileAction(LibTagFile):
         arrange.apply(tagfile)
 
     def synchronize_artist(self, tagfile, **kwargs):
-        """
-        Verify there is an artist entry in tags.json for each artist
-        found in tagfile.
+        """Verify there is an artist entry in ``tags.json`` for each
+        artist found in audiofile.
+        NOTE
         Will not update ARTIST/ALBUMARTIST until arrangement is verified
         """
 
@@ -378,11 +377,10 @@ class LibTagFileAction(LibTagFile):
             self.tagdb.verify_artist(name)
 
     def synchronize_composer(self, tagfile, **kwargs):
-        """
-        Verify there is a corresponding entry in tags.json for
-        the composer found in the tag file.
-        If an entry is not found, user is prompted to add a new
-        composer.
+        """Verify there is a corresponding entry in ``tags.json`` for
+        the composer found in the audiofile.
+
+        If an entry is not found, prompt to add a new composer.
         """
 
         # must first assume the file is missing COMPOSER
@@ -421,8 +419,7 @@ class LibTagFileAction(LibTagFile):
         self.write2tagfile(tagfile)
 
     def get_artist_counts(self, tagfile, **kwargs):
-        """
-        count/record artist occurences (to use as ranking)
+        """count/record artist occurences (to use as ranking)
         """
 
         aset = tags.get_artist_tagset(tagfile)
@@ -437,8 +434,7 @@ class LibTagFileAction(LibTagFile):
                 self.artist_count[artistname] = 1
 
     def get_arrangement_set(self, tagfile, **kwargs):
-        """
-        get set and count of instrumental groupings via sorted
+        """get set and count of instrumental groupings via sorted
         arrangements
         """
 
@@ -467,8 +463,8 @@ def after_action_review(count):
 
 
 def pcm2wav(pcm_name, wav_name):
-    """
-    wrapper for using ffmpeg to convert a pcm file to a wav file
+    """utility for calling ``ffmpeg`` to convert a pcm file to a wav
+    file
     """
 
     call(
@@ -483,8 +479,7 @@ def pcm2wav(pcm_name, wav_name):
 
 
 def wav2flac(wav_name):
-    """
-    wrapper for using ffmpeg to convert a wav file to a flac file
+    """utility for using ``ffmpeg`` to convert a wav file to a flac file
     """
     call(
             [config["bin"]["ffmpeg"],
@@ -496,15 +491,15 @@ def wav2flac(wav_name):
 
 
 def is_audio_file(name):
-    """
-    readability short-cut for whether file contains known audio extension
+    """readability short-cut for testing whether file contains a known
+    audio file extension as defined in ``config["file"]["known_types"]``
     """
     return splitext(name)[1] in config["file"]["known_types"]
 
 
 def commit_to_libfile(tagfile):
-    """
-    common entry point for writing values from tag database into an audio file
+    """common entry point for writing values from tag database into
+    an audiofile.
     """
 
     # check if differences (or newness) exists

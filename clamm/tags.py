@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
+""" the tags module contains classes and functions that create an
+interface to the clamm's tag database.
+"""
+
 # built-ins
 from __future__ import unicode_literals, print_function
 import json
@@ -33,6 +37,22 @@ tk = nltk.tokenize.WordPunctTokenizer()
 
 
 class SafeTagFile(taglib.File):
+    """ Allow for consistent file tagging.
+
+    Subclasses ``taglib.File`` and creates a deep copy of a
+    ``taglib.File`` objects
+
+    Parameters
+    ----------
+    filepath: str
+        the absolute file path to the audio file.
+
+    Attributes
+    ----------
+    tag_copy: taglib.File
+        a copy that allows for before/after comparison.
+
+    """
     def __init__(self, filepath):
         taglib.File.__init__(self, filepath)
         self.tag_copy = copy.deepcopy(self.tags)
@@ -61,7 +81,23 @@ class StructuredQuery():
         return str(["{}".format(filt) for filt in self.filters])
 
 
-class TagSuggestion():
+class Suggestor():
+    """ Auto-suggestion support
+
+    Implements ``prompt_toolkit.auto_suggest.AutoSuggestFromHistory``
+    by populating history with a list of items from one of the tag
+    database sets.
+
+    Parameters
+    ----------
+    tagdb: tags.TagDatabase
+        provides access to the sets in ``tags.json``.
+
+    category: str, optional
+        Inidicate which set categorytegory to populate the history
+        with, one of {artist, composer, instrument, nationality, period}.
+        Default is *artist*.
+    """
     def __init__(self, tagdb, category="artist"):
         self.history = ptk.history.InMemoryHistory()
         for item in tagdb.sets[category]:
@@ -79,8 +115,24 @@ class TagSuggestion():
 
 class TagDatabase:
     """
-    interfacing with music library's tag database
+    Primary object for interaction with the library tag database.
+
+    Manages ``tags.json``, including adding new artists/composers.
+
+    Attributes
+    ----------
+    path: str
+        path to ``tags.json`` file, set via ``config["path"]["database"]``
+
+    arange: Arrangement
+        Arrangement instance used for verifying track instrumental
+        arrangement.
+
+    new_item: dict
+        container for new item to be added to database. _item_ can be one of
+        {artist, composer, arrangement}
     """
+
     def __init__(self):
         self.path = config["path"]["database"]
         self.load()
@@ -89,11 +141,11 @@ class TagDatabase:
 
         # auto_suggest
         self.suggest = {
-                "artist": TagSuggestion(self, category="artist"),
-                "composer": TagSuggestion(self, category="composer"),
-                "period": TagSuggestion(self, category="period"),
-                "instrument": TagSuggestion(self, category="instrument"),
-                "nationality": TagSuggestion(self, category="nationality")}
+                "artist": Suggestor(self, category="artist"),
+                "composer": Suggestor(self, category="composer"),
+                "period": Suggestor(self, category="period"),
+                "instrument": Suggestor(self, category="instrument"),
+                "nationality": Suggestor(self, category="nationality")}
 
         self.update_sets()
 
@@ -551,40 +603,65 @@ class TagDatabaseError(Exception):
 
 
 def get_borndied(summary):
-    """
-    extract artist/composer vital date(s) from a wikipedia summary string
+    """ gets borndied/died dates
+
+    Use a regexp to extract artist/composer date(s) from a wikipedia
+    summary string.
+
+    Parameters
+    ----------
+    summary: str
+        the summary corresponding to a wikipedia query.
+
+    Returns
+    -------
+    borndied: str
+        Dates of subject birth and death. Example format is 1910-1990.
+
     """
 
     m = re.findall("\d{4}", summary)
 
     if len(m) >= 2:
-        born = m[0] + "-" + m[1]
-        if not input("Accept %s? [y]/n: " % (born)):
-            return born
+        borndied = m[0] + "-" + m[1]
+        if not input("Accept %s? [y]/n: " % (borndied)):
+            return borndied
 
         else:
-            born = m[0] + "-"
-            if not input("Accept %s? [y]/n: " % (born)):
-                return born
+            borndied = m[0] + "-"
+            if not input("Accept %s? [y]/n: " % (borndied)):
+                return borndied
 
     elif len(m) >= 1:
-        born = m[0] + "-"
+        borndied = m[0] + "-"
 
-        resp = input("Accept %s? [y]/n: " % (born))
+        resp = input("Accept %s? [y]/n: " % (borndied))
         if not resp:
-            return born
+            return borndied
 
     else:
         return input("Enter Dates: ")
 
 
-def wiki_query(search_string):
-    """
-    fetch a query result from wikipedia and determine its relevance
+def wiki_query(search):
+    """ Perform a Wikipedia search
+
+    Fetches a result from wikipedia and prompts user to select correct
+    page, if one exists.
+
+    Parameters
+    ----------
+    search: str
+        The query
+
+    Returns
+    -------
+    if query is successful, returns a wikipedia.page object
+    otherwise, returns None
     """
 
     # call out to wikipedia
-    results = wikipedia.search(search_string)
+    results = wikipedia.search(search)
 
     # print options
     clamm.printr("options: ")
@@ -612,18 +689,29 @@ def wiki_query(search_string):
     elif (idx) == -2:
         return wiki_query(input("Try a new search string: "))
     elif (idx) == -3:
-        wiki_query(get_translation(search_string))
+        wiki_query(get_translation(search))
     else:
         return []
 
 
-def get_translation(search_string):
-    """
-    occasionally artist name will be in non-Latin characters
+def get_translation(search):
+    """Translate non-Latin characters
+
+    occasionally artist name will be in non-Latin characters. Prompts
+    the user to supply the *From* language.
+
+    Parameters
+    ----------
+    search: str
+        the search string
+
+    Returns
+    -------
+    search string translated to Latin characters.
     """
 
     tr = Translator(input("Enter from language: "), 'en')
-    return tr.translate(search_string)
+    return tr.translate(search)
 
 
 def get_artist_tagset(tagfile):
@@ -636,10 +724,19 @@ def get_artist_tagset(tagfile):
 
 
 def get_nearest_name(qname, name_set):
-    """
-    return closest match by finding minimum `edit_distance`
-        qname: query name against which seeking match
-        name_set: set of names of which qname is hypothetical member
+    """return closest match by finding minimum `edit_distance`
+
+    Parameters
+    ----------
+    qname: str
+        query name against which seeking match
+
+    name_set: set
+        set of names of which qname is possible member
+
+    Returns
+    -------
+    the element from ``name_set`` which minimizes distance to ``qname``.
     """
     min_score = 100
     for sname in name_set:

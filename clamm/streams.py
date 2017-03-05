@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
+""" streams module contains classes, programs, tools for creating
+and processing audio streams.
+"""
+
 # built-ins
 import os
 from os.path import join
@@ -44,8 +48,7 @@ class Stream():
             audiolib.pcm2wav(self.pcmpath, self.wavpath)
 
     def decode_path(self):
-        """
-        artist/album names from stream name
+        """artist/album names from stream name
         """
         tmp = self.pcmpath.replace(".pcm", "")
         [artist, album] = tmp.split(";")
@@ -57,9 +60,9 @@ class Stream():
         return self
 
     def iQuery(self):
-        """
-        seek an iTunes collection_id by iterating over albums of from a
-        search artist and finding the minimum edit_distance
+        """seek an iTunes ``collection_id`` by iterating over albums
+        of from a search artist and finding the minimum
+        ``nltk.distance.edit_distance``
         """
         min_dist = 10000
         for aquery in itunespy.search_album(self.artist):
@@ -88,13 +91,14 @@ class Stream():
         return self
 
     def flacify(self):
-        """
-        convert all wav files in target directory to flac files
+        """convert all wav files in target directory to flac files
         """
         [audiolib.wav2flac(wav) for wav in glob(join(self.target, "*wav"))]
         return self
 
     def tagify(self):
+        """Use iQuery to populate audio track tags.
+        """
         for i, track in enumerate(self.query.get_tracks()):
             tracknum = "%0.2d" % (i+1)
             globber = glob(join(self.target, tracknum + "*flac"))
@@ -113,9 +117,8 @@ class Stream():
 
 
 class Album():
-    """
-    given a stream object, locate the tracks within the stream,
-    create new flac tracks, and populate with metadata
+    """Given a stream object, locate the tracks within the stream,
+    create new flac tracks, and populate with metadata.
     """
 
     def __init__(self, stream):
@@ -264,16 +267,14 @@ class Album():
 
 
 def read_wav_mono(wav, N):
-    """
-    grab samples from one channel (every other sample) of frame
+    """grab samples from one channel (every other sample) of frame
     """
 
     return np.fromstring(wav.readframes(N), dtype=np.int16)[:2:-1]
 
 
 def power_envelope(wavpath):
-    """
-    power_envelope
+    """power_envelope
     """
 
     ds = config["streams"]["downsample_factor"]
@@ -289,8 +290,7 @@ def power_envelope(wavpath):
 
 
 def start_shairport(filepath):
-    """
-    make sure no duplicate processes and start up shairport-sync
+    """make sure no duplicate processes and start up shairport-sync
     """
 
     Popen(['killall', 'shairport-sync'])
@@ -305,9 +305,8 @@ def start_shairport(filepath):
 
 
 def size_sampler(filepath):
-    """
-    return the file size, sampled with a 1 second gap to determine
-    if the file is being written to and thus growing
+    """ return the file size, sampled with a 1 second gap to
+    determine if the file is being written to.
     """
 
     s0 = os.path.getsize(filepath)
@@ -317,8 +316,7 @@ def size_sampler(filepath):
 
 
 def is_started(filepath):
-    """
-    test to see if recording has started
+    """test to see if recording has started
     """
 
     # reset seconds counter
@@ -352,8 +350,8 @@ def generate_playlist(artist, album):
 
 
 def dial_itunes(artist, album):
-    """
-    run apple script and attempt to uniquely locate the artist/album pair
+    """run apple script and attempt to uniquely locate the
+    artist/album pair.
     """
 
     generate_playlist(artist, album)
@@ -363,8 +361,7 @@ def dial_itunes(artist, album):
 
 
 def image_audio_envelope_with_tracks_markers(markers, stream):
-    """
-    track-splitting validation image
+    """track-splitting validation image
     """
 
     x = power_envelope(stream.wavpath)
@@ -394,16 +391,15 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
 
 
 def listing2streams(listing):
-    """
-    listing2streams is a program for batch streaming a listing of albums
-    from iTunes to raw pcm files via shairport-sync.
+    """a program for batch streaming a ``json`` listing of albums
+    from iTunes to raw pcm files via ``shairport-sync``.
 
-    iTunes is controlled using macos' built-in `osascript` tool and simple
-    javascript request templates.
+    iTunes is controlled using macos' built-in ``osascript`` tool and
+    simple javascript request templates.
 
     When the listings have finished streaming, the pcm files (streams)
-    are processed by `stream2tracks` and converted from streams to a
-    collection of flac tracks
+    can be processed by ``stream2tracks`` and converted from streams
+    to a collection of flac tracks.
     """
 
     print("INFO: Begin listing2streams...")
@@ -447,8 +443,7 @@ def listing2streams(listing):
 
 
 def stream2tracks(streampath):
-    """
-    stream2tracks processes raw pcm stream to tagged album tracks.
+    """process raw pcm stream to tagged album tracks.
     """
 
     clamm.printr("Begin stream2tracks...")

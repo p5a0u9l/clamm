@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-"""
-entrance point for clamm <---<--<- CLassical Music Manager
+""" clamm is a module containing command line interface implementation
+and utilities.
 """
 
 # built-ins
@@ -30,9 +30,19 @@ def pretty_dict(d):
 
 
 def printr(func_or_msg, verbosic_precedence=3, caller=True):
-    """
-    a wrapper that enables clients to not need
-    details of controlling printing behavior
+    """a utility that enables callers simplify printing behavior.
+
+        Args:
+            func_or_msg: Either a function handle to call or a message string
+            to print.
+
+        Kwargs:
+            verbosic_precedence: Integer setting verbosity level.
+            If not set, the message is printed if the config value
+            `verbosity` is higher than the default value.
+            The caller can short-circuit the config value by setting
+            the kwarg.
+            caller: Bool indicating whether or not to print the caller name.
     """
 
     if int(config["verbosity"]) > verbosic_precedence:
@@ -49,7 +59,8 @@ def printr(func_or_msg, verbosic_precedence=3, caller=True):
 
 
 def create_library_parsers(subps):
-    """ library """
+    """creates library sub-parsers
+    """
     lib_p = subps.add_parser(
             "library",
             help="""Commands for acting on each audio file in the library,
@@ -172,7 +183,8 @@ def create_library_parsers(subps):
 
 
 def create_config_parsers(subps):
-    """ config """
+    """ creates config sub-parsers
+    """
     config_p = subps.add_parser(
             "config",
             help="""
@@ -188,7 +200,8 @@ def create_config_parsers(subps):
 
 
 def create_database_parsers(subps):
-    """ database """
+    """ creates tag database sub-parsers
+    """
     db_p = subps.add_parser(
             "tags", help="commands providing access to tag database")
     db_subps = db_p.add_subparsers(dest="sub_cmd")
@@ -199,7 +212,8 @@ def create_database_parsers(subps):
 
 
 def create_stream_parsers(subps):
-    """ streams """
+    """creates streams subparsers
+    """
     strm_p = subps.add_parser(
             "streams",
             help="""
@@ -246,8 +260,7 @@ def create_stream_parsers(subps):
 
 
 def parse_inputs():
-    """
-    populate a heirarchical argument parser
+    """populate a heirarchical argument parser
     """
 
     # top-level
@@ -267,38 +280,70 @@ def parse_inputs():
     return p
 
 
-# functor wrappers
 def tags_show(args):
+    """Dump tags database to ``STDOUT``
+    """
     with open(config["path"]["database"]) as db:
         tags = json.load(db)
     print(json.dumps(tags, ensure_ascii=False, indent=4))
 
 
 def tags_edit(args):
+    """Open tag database in ``$EDITOR``
+    """
     call([os.environ["EDITOR"], config["path"]["database"]])
 
 
 def config_show(args):
+    """Dump config.json to ``STDOUT``
+    """
     print(json.dumps(config, ensure_ascii=False, indent=4))
 
 
 def config_edit(args):
+    """Open config.json in ``$EDITOR``.
+    """
     call([os.environ["EDITOR"], config["path"]["config"]])
 
 
 def streams_tracks(args):
+    """ Calls :func:`~streams.stream2tracks` with ``streampath`` provided
+    at command line.
+
+    .. code-block:: bash
+
+       $ clamm streams initialize
+    """
     streams.stream2tracks(args.streampath)
 
 
 def streams_listing(args):
+    """ Calls :func:`~streams.listing2streams` with ``listing`` provided
+    at command line.
+
+    .. code-block:: bash
+
+       $ clamm library initialize
+    """
     streams.listing2streams(args.listing)
 
 
 def streams_stream(args):
+    """ Calls :func:`~streams.main`
+    """
     streams.main(args)
 
 
 def library_action(args):
+    """ calls :func:`~audiolib.AudioLib.walker` with ``args`` provided
+    at command line.
+
+    Example
+
+    .. code-block:: bash
+
+       $ clamm library action --recently_added
+    """
     alib = audiolib.AudioLib(args)
     funcdict = {q[0]: q[1] for q in args._get_kwargs()
                 if isinstance(q[1], bool)}
@@ -311,41 +356,58 @@ def library_action(args):
 
 
 def library_initialize(args):
+    """ calls :func:`~audiolib.AudioLib.initialize` with ``args`` provided
+    at command line.
+
+    Example
+
+    .. code-block:: bash
+
+       $ clamm library initialize
+    """
     audiolib.AudioLib(args).initialize()
 
 
 def library_synchronize(args):
+    """ calls :func:`~audiolib.AudioLib.synchronize` with ``args``
+    provided at command line.
+
+    Example
+
+    .. code-block:: bash
+
+       $ clamm library synchronize
+    """
     audiolib.AudioLib(args).synchronize()
 
 
 def library_playlist(args):
+    """ calls :func:`~audiolib.AudioLib.playlist` with ``args``
+    provided at command line.
+
+    Example
+
+    .. code-block:: bash
+
+       $ clamm library playlist
+    """
     audiolib.AudioLib(args).playlist()
 
 
-"""
-`functors` function lookup.  each key/val pair follows format
-    "subcommand_command": subcommand_command
-"""
-functors = {
-            "streams_listing": streams_listing,
-            "streams_tracks": streams_tracks,
-            "streams_stream": streams_stream,
-            "tags_show": tags_show,
-            "tags_edit": tags_edit,
-            "config_show": config_show,
-            "config_edit": config_edit,
-            "library_action": library_action,
-            "library_initialize": library_initialize,
-            "library_synchronize": library_synchronize,
-            "library_playlist": library_playlist
-            }
-
-
 def main():
+    """clamm entrance point.
+
+    Parses and executes the action specified by the command line inputs.
+    """
     args = parse_inputs().parse_args()
 
     # retrieve the parsed cmd/sub/... and evaluate
     full_cmd = "{}_{}".format(args.cmd, args.sub_cmd)
-    functor = functors[full_cmd]
-    printr("parsed and executing function {}...".format(full_cmd))
+    try:
+        functor = eval(full_cmd)
+    except NameError as ne:
+        printr("failed to parse the command {}...".format(full_cmd))
+        raise ne
+
+    printr("parsed and executing command {}...".format(full_cmd))
     functor(args)
