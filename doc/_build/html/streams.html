@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>4. streams module &mdash; clamm 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="clamm 0.1 documentation" href="index.html"/>
+        <link rel="prev" title="3. audiolib module" href="audiolib.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> clamm
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme_include.html">1. clamm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">2. modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audiolib.html">3. audiolib module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. streams module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#listing2streams">4.1. listing2streams</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example">4.1.1. Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">clamm</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>4. streams module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streams.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="streams-module">
+<h1>4. streams module<a class="headerlink" href="#streams-module" title="Permalink to this headline">¶</a></h1>
+<p>The streams module provides two programs for working with raw audio streams.</p>
+<p>. The second processes a stream into an album.</p>
+<div class="section" id="listing2streams">
+<h2>4.1. listing2streams<a class="headerlink" href="#listing2streams" title="Permalink to this headline">¶</a></h2>
+<p>The first use case automates generating raw <code class="docutils literal"><span class="pre">pcm</span></code> files from iTunes using a listing of album/artist pairs in <code class="docutils literal"><span class="pre">json</span></code> format.</p>
+<div class="section" id="example">
+<h3>4.1.1. Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="docutils">
+<dt>&#8220;A2&#8221;: {</dt>
+<dd>&#8220;artist&#8221;: &#8220;Richard Egarr, Academy of Ancient Music &amp; Andrew Manze&#8221;,
+&#8220;album&#8221;: &#8220;Bach: Harpsichord Concertos - Triple Concerto&#8221;</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>See also <a class="reference external" href="../clamm/templates/batch_album_listing.json">batch_album_listing</a> under the <code class="docutils literal"><span class="pre">templates</span></code> directory.</p>
+<span class="target" id="module-streams"></span><p>streams module contains classes, programs, tools for creating
+and processing audio streams.</p>
+<dl class="class">
+<dt id="streams.Album">
+<em class="property">class </em><code class="descclassname">streams.</code><code class="descname">Album</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process an audio stream into an Album</p>
+<dl class="attribute">
+<dt id="streams.Album.wavstream">
+<code class="descname">wavstream</code><a class="headerlink" href="#streams.Album.wavstream" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>wave.Wave_read</em> &#8211; Read access to wave file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streams.Album.framerate">
+<code class="descname">framerate</code><a class="headerlink" href="#streams.Album.framerate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; rate, in Hz, of channel samples</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streams.Album.track_list">
+<code class="descname">track_list</code><a class="headerlink" href="#streams.Album.track_list" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> &#8211; list of itunespy.track.Track objects containing track tags</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">wavstream</code></dt>
+<dd><p><em>wave.File</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streams.Album.cur_track_start">
+<code class="descname">cur_track_start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.cur_track_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>find audio signal activity that exceeds threshold and persists
+call this the start frame of a track</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streams.Album.cur_track_stop">
+<code class="descname">cur_track_stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.cur_track_stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>find the min energy point around a reference</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streams.Album.locate_track">
+<code class="descname">locate_track</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.locate_track" title="Permalink to this definition">¶</a></dt>
+<dd><p>find track starts/stops within stream</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streams.Album.process">
+<code class="descname">process</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>encapsulate the substance of Album processing</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.dial_itunes">
+<code class="descclassname">streams.</code><code class="descname">dial_itunes</code><span class="sig-paren">(</span><em>artist</em>, <em>album</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.dial_itunes" title="Permalink to this definition">¶</a></dt>
+<dd><p>run apple script and attempt to uniquely locate the
+artist/album pair.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.image_audio_envelope_with_tracks_markers">
+<code class="descclassname">streams.</code><code class="descname">image_audio_envelope_with_tracks_markers</code><span class="sig-paren">(</span><em>markers</em>, <em>stream</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.image_audio_envelope_with_tracks_markers" title="Permalink to this definition">¶</a></dt>
+<dd><p>track-splitting validation image</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.is_started">
+<code class="descclassname">streams.</code><code class="descname">is_started</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.is_started" title="Permalink to this definition">¶</a></dt>
+<dd><p>test to see if recording has started</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.listing2streams">
+<code class="descclassname">streams.</code><code class="descname">listing2streams</code><span class="sig-paren">(</span><em>listing</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.listing2streams" title="Permalink to this definition">¶</a></dt>
+<dd><p>a program for batch streaming a <code class="docutils literal"><span class="pre">json</span></code> listing of albums
+from iTunes to raw pcm files via <code class="docutils literal"><span class="pre">shairport-sync</span></code>.</p>
+<p>iTunes is controlled using macos&#8217; built-in <code class="docutils literal"><span class="pre">osascript</span></code> tool and
+simple javascript request templates.</p>
+<p>When the listings have finished streaming, the pcm files (streams)
+can be processed by <code class="docutils literal"><span class="pre">stream2tracks</span></code> and converted from streams
+to a collection of flac tracks.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.main">
+<code class="descclassname">streams.</code><code class="descname">main</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>main is a concatenation of listing2streams and stream2tracks</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.read_wav_mono">
+<code class="descclassname">streams.</code><code class="descname">read_wav_mono</code><span class="sig-paren">(</span><em>wav</em>, <em>N</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.read_wav_mono" title="Permalink to this definition">¶</a></dt>
+<dd><p>grab samples from one channel (every other sample) of frame</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.size_sampler">
+<code class="descclassname">streams.</code><code class="descname">size_sampler</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.size_sampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the file size, sampled with a 1 second gap to
+determine if the file is being written to.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.start_shairport">
+<code class="descclassname">streams.</code><code class="descname">start_shairport</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.start_shairport" title="Permalink to this definition">¶</a></dt>
+<dd><p>make sure no duplicate processes and start up shairport-sync</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.stream2tracks">
+<code class="descclassname">streams.</code><code class="descname">stream2tracks</code><span class="sig-paren">(</span><em>streampath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.stream2tracks" title="Permalink to this definition">¶</a></dt>
+<dd><p>process raw pcm stream to tagged album tracks.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streams.wave_envelope">
+<code class="descclassname">streams.</code><code class="descname">wave_envelope</code><span class="sig-paren">(</span><em>wavstream</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.wave_envelope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="audiolib.html" class="btn btn-neutral" title="3. audiolib module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Paul Adams.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

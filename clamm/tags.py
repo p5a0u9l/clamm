@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
@@ -94,7 +93,7 @@ class Suggestor():
         provides access to the sets in ``tags.json``.
 
     category: str, optional
-        Inidicate which set categorytegory to populate the history
+        Inidicate which set category to populate the history
         with, one of {artist, composer, instrument, nationality, period}.
         Default is *artist*.
     """
@@ -380,11 +379,23 @@ class TagDatabase:
         return self.arange
 
     def verify_composer(self, qname):
-        """
-        returns the tag database key given the query name found in the
-        tage file by verifying the query name has a match in the tag
-        database. If it doesn't, initiates `add_new_item` and
-        then, circuitously, returns the key
+        """Verify the queried composer is in the database.
+
+        Returns the tag database key given the query name found in
+        the tag file by verifying the query name has a match in the
+        tag database. If it doesn't, initiates ``tags.add_new_item``
+        and then returns the key.
+
+        Parameters
+        ----------
+        qname: str
+            query name from audiofile tags
+
+        Returns
+        -------
+        key: str
+            Key to composer entry
+
         """
 
         if isinstance(qname, list):
@@ -417,47 +428,58 @@ class TagDatabase:
             self.add_new_perm(key, qname, category="composer")
             return self.match_from_perms(mname, category="composer")
 
-    def verify_artist(self, query_name):
-        """
-        verify that the artist query name (qname) has an entry in
-        the tag database if it doesn't, propose a series of steps to
-        remedy.
+    def verify_artist(self, qname):
+        """Verify the queried artist is in the database.
+
+        Returns the tag database key given the query name found in
+        the tag file. If it doesn't, initiates ``tags.add_new_item``
+        and then returns the key.
+
+        Parameters
+        ----------
+        qname: str
+            query name from audiofile tags
+
+        Returns
+        -------
+        key: str
+            Key to artist entry
         """
 
         # first, deal with the misfits by bailing out
-        if query_name in self._db["exceptions"]["artists_to_ignore"]:
+        if qname in self._db["exceptions"]["artists_to_ignore"]:
             return []
 
         # if we already know this artist, job done
-        if query_name in self.sets["artist"]:
-            key = self.match_from_perms(query_name)
+        if qname in self.sets["artist"]:
+            key = self.match_from_perms(qname)
             return key
 
         # if above fails, possibly nearest neighbor is correct?
-        nearest = get_nearest_name(query_name, self.sets["artist"])
+        nearest = get_nearest_name(qname, self.sets["artist"])
 
-        if not input("Accept {} as matching {}? ".format(nearest, query_name)):
+        if not input("Accept {} as matching {}? ".format(nearest, qname)):
             # fetch actual key and update perms
             key = self.match_from_perms(nearest)
-            self.add_new_perm(key, query_name)
+            self.add_new_perm(key, qname)
             return key
 
         # Hook in the new artist process if reach this point
         if not input("Add new artist? [<CR>]/n: "):
-            new_key = self.get_new_item(query_name)
+            new_key = self.get_new_item(qname)
             return new_key
 
         # It's also possible that the artist is really a composer
         if not input("Is Composer Permutation? [<CR>]/n: "):
-            cname = get_nearest_name(query_name, self.sets["composer"])
+            cname = get_nearest_name(qname, self.sets["composer"])
 
-            if not input("Accept %s as matching %s? " % (cname, query_name)):
+            if not input("Accept %s as matching %s? " % (cname, qname)):
                 ckey = self.match_from_perms(cname, category="composer")
             else:
                 ckey = self.suggest["composer"].prompt(
                         "Manually enter composer key... ")
 
-            self.add_new_perm(ckey, query_name, category="composer")
+            self.add_new_perm(ckey, qname, category="composer")
             return []
 
         # Maybe there's an error in the database and we can enter
@@ -469,7 +491,7 @@ class TagDatabase:
 
         # One more chance to add a new artist
         if not input("Add new artist? [<CR>]/n: "):
-            new_key = self.get_new_item(query_name)
+            new_key = self.get_new_item(qname)
             return new_key
 
         # Allow some introspection before dying
@@ -479,14 +501,26 @@ class TagDatabase:
 
         # Declare a misfit and walk away in disgust
         else:
-            self._db["exceptions"]["artists_to_ignore"].append(query_name)
+            self._db["exceptions"]["artists_to_ignore"].append(qname)
             self.refresh()
             return []
 
     def get_sorted_arrangement(self, tagfile, artist_set=None):
-        """
-        return an ordered dictionary of artist/instrument pairs
-        sorted by (pre-computed) artist relative frequency in library
+        """Compile a sorted instrument/ARTIST arrangement.
+
+        Order audiofile ARTIST tags by library frequency ranking.
+
+        Parameters
+        ----------
+        tagfile: SafeTagFile
+            taglib.File subclass containing audio file's tags
+        artist_set: set
+            Unique listing of ARTISTs associated with ``tagfile``.
+
+        Returns
+        -------
+        sar: OrderedDict
+            Arrangement sorted by ARTIST's library frequency.
         """
         if artist_set is not None:
             sar = {aname: (
@@ -506,10 +540,24 @@ class TagDatabase:
         return sar
 
     def get_field(self, summary, category="nationality"):
-        """
-        attempt to guess the tag value by matching the category sets
-        against the summary words and fall back on manual entry with
-        auto_suggest
+        """ Get a given category field from the Wikipedia summary.
+
+        Guess the tag value by matching the category sets against the
+        summary words. If guessing fails, fall back on manual entry
+        with ``tags.Suggestor``.
+
+        Parameters
+        ----------
+        tagfile: SafeTagFile
+            ``taglib.File`` subclass containing audiofile's tags
+        category: str, optional
+            Indicates the type of field, on of {instrument,
+            nationality, period}. Default is *nationality*.
+
+        Returns
+        -------
+        result: str
+            The value for the sought field.
         """
         known_set = self.sets[category]
         guess = [word for word in tk.tokenize(summary) if word in known_set]
@@ -531,9 +579,42 @@ class TagDatabase:
 
 
 class Arrangement:
+    """ Manage the instrument/artist grouping for an audio file.
+
+    Attributes
+    ----------
+    album: str
+        Name of current album
+
+    commit_flag: bool
+        If ``False``, prevents arrangement from being written to file.
+
+    prima: int
+        Index into sorted artist list indicating which artist should be
+        treated as ALBUM_ARTIST.
+
+    arrangement: str
+        current instrumental ARRANGMENT. If more than one ARTIST,
+        list of instruments is semicolon delimited and order identical
+        to ARTIST.
+
+    sar: OrderedDict
+        sorted arrangement compiled by ``tags.get_sorted_arrangement``
+
+    trackc: int
+        track count associated with current album.
+
+    artist: str
+        current ARTIST name. If more than one ARTIST, list is semicolon
+        delimited.
+
+    albumartist: str
+        current ALBUM_ARTIST name
+    """
+
     def __init__(self):
-        self.album_name = ""
-        self.flag = False
+        self.album = ""
+        self.commit_flag = False
         self.prima = 0
         self.arrangement = ""
         self.sar = ""  # sorted arrangement
@@ -542,15 +623,24 @@ class Arrangement:
         self.albumartist = ""
 
     def update(self, sar, tagfile):
+        """Conditionally update album/artist attributes.
+
+        The default value for ``prima`` corresponds to the highest
+        ranking (via ARTIST frequency count) ``artist``. This behavior
+        can be changed via
+        ``config["database"]["prompt_for_album_artist"]`` to prompt
+        for a custom ordering.
+        """
         self.sar = sar
 
         if self.is_changed(tagfile, sar):
-            self.flag = False
-            self.album_name = tagfile.tags["ALBUM"]
+            self.commit_flag = True
+            self.album = tagfile.tags["ALBUM"]
+            self.prima = 0  # default value
 
-            if len(self.sar.keys()) == 1:
-                self.prima = 0
-            else:
+            if len(self.sar.keys()) > 1 and \
+                    config["database"]["prompt_for_album_artist"]:
+
                 clamm.printr("ranking arrangement:")
                 print("\n\tarrangement: {}\n\ttitle: {}\n\talbum: {}"
                       .format(
@@ -559,16 +649,17 @@ class Arrangement:
                           tagfile.tags["ALBUM"]))
 
                 response = input("[#]ordering, [s]kip, ... ? ")
-                try:
+
+                if isinstance(eval(response), int):
                     self.prima = int(response)
-                except:
-                    self.flag = True
-                    return
+                else:
+                    clamm.printr(
+                            "Unable to parse response, using default ordering")
 
         self.unpack()
 
     def apply(self, tagfile):
-        if not self.flag:
+        if self.commit_flag:
             tagfile.tags["ARRANGEMENT"] = self.arrangement
             tagfile.tags["ALBUMARTIST"] = self.albumartist
             tagfile.tags["ARTIST"] = self.artist
@@ -578,7 +669,15 @@ class Arrangement:
             audiolib.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):
-        is_diff_album = tagfile.tags["ALBUM"] != self.album_name
+        """ Test if album or artist has changed.
+
+        Returns
+        -------
+        is_changed: bool
+            True if either ``tagfile`` or ``sar`` has changed.
+        """
+
+        is_diff_album = tagfile.tags["ALBUM"] != self.album
         is_delta_sar = str(self.sar) != str(sar)
         return is_diff_album or is_delta_sar
 
@@ -603,10 +702,10 @@ class TagDatabaseError(Exception):
 
 
 def get_borndied(summary):
-    """ gets borndied/died dates
+    """ gets born/died dates
 
     Use a regexp to extract artist/composer date(s) from a wikipedia
-    summary string.
+    summary string. If regexp fails, fall back on user prompt.
 
     Parameters
     ----------
@@ -617,7 +716,6 @@ def get_borndied(summary):
     -------
     borndied: str
         Dates of subject birth and death. Example format is 1910-1990.
-
     """
 
     m = re.findall("\d{4}", summary)
@@ -724,7 +822,8 @@ def get_artist_tagset(tagfile):
 
 
 def get_nearest_name(qname, name_set):
-    """return closest match by finding minimum `edit_distance`
+    """return closest match by finding minimum
+    ``nltk.distance.edit_distance``
 
     Parameters
     ----------
@@ -759,8 +858,7 @@ def perms2set(D):
 
 
 def messylist2set(alist):
-    """
-    owing to laziness, these lists may contain gotchas
+    """owing to laziness, these lists may contain gotchas
     """
     y = [item for item in alist if item.__class__ is str and len(item) > 0]
     return set(y)
@@ -779,10 +877,17 @@ def messylist2tagstr(alist):
 
 
 def swap_first_last_name(name_str):
-    """
-    if name_str contains a comma (assume it is formatted as Last, First),
-    invert and return First Last
-    else, invert and return Last, First
+    """ Toggle first/last name order
+
+    Parameters
+    ----------
+    name_str (str)
+        Name formatted as either "First Last" or "Last, First"
+
+    Returns
+    -------
+    swapd (str)
+        Name format toggled
     """
 
     comma_idx = name_str.find(",")

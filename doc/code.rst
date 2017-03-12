@@ -1,5 +1,5 @@
-modules
-*******
+command line interface
+**********************
 
 clamm
 =====
@@ -7,22 +7,9 @@ clamm
 .. automodule:: clamm
     :members:
 
-audiolib
-========
-
-.. automodule:: audiolib
-    :members:
-
-tags
-====
+tags module
+===========
 
 .. automodule:: tags
     :members:
-
-streams
-=======
-
-.. automodule:: streams
-    :members:
-
 

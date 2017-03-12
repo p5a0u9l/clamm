@@ -1,49 +1,164 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2. command line interface &mdash; clamm 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
     
-    <title>2. modules &#8212; clamm 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="1. README" href="readme_include.html" />
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="clamm 0.1 documentation" href="index.html"/>
+        <link rel="next" title="3. audiolib module" href="audiolib.html"/>
+        <link rel="prev" title="1. README" href="readme_include.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
    
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <div class="wy-grid-for-nav">
 
-  </head>
-  <body role="document">
-  
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+          
+            <a href="index.html" class="icon icon-home"> clamm
+          
+
+          
+          </a>
+
+          
             
-  <div class="section" id="modules">
-<h1>2. modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h1>
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme_include.html">1. README</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. command line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-clamm">2.1. clamm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-tags">2.2. tags module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="audiolib.html">3. audiolib module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streams.html">4. streams module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">clamm</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>2. command line interface</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/code.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="command-line-interface">
+<h1>2. command line interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-clamm">
 <span id="clamm"></span><h2>2.1. clamm<a class="headerlink" href="#module-clamm" title="Permalink to this headline">¶</a></h2>
 <p>clamm is a module containing command line interface implementation
@@ -87,7 +202,7 @@ and utilities.</p>
 <dl class="function">
 <dt id="clamm.library_action">
 <code class="descclassname">clamm.</code><code class="descname">library_action</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#clamm.library_action" title="Permalink to this definition">¶</a></dt>
-<dd><p>calls <a class="reference internal" href="#audiolib.AudioLib.walker" title="audiolib.AudioLib.walker"><code class="xref py py-func docutils literal"><span class="pre">walker()</span></code></a> with <code class="docutils literal"><span class="pre">args</span></code> provided
+<dd><p>calls <a class="reference internal" href="audiolib.html#audiolib.AudioLib.walker" title="audiolib.AudioLib.walker"><code class="xref py py-func docutils literal"><span class="pre">walker()</span></code></a> with <code class="docutils literal"><span class="pre">args</span></code> provided
 at command line.</p>
 <p>Example</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>$ clamm library action --recently_added
@@ -98,7 +213,7 @@ at command line.</p>
 <dl class="function">
 <dt id="clamm.library_initialize">
 <code class="descclassname">clamm.</code><code class="descname">library_initialize</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#clamm.library_initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>calls <a class="reference internal" href="#audiolib.AudioLib.initialize" title="audiolib.AudioLib.initialize"><code class="xref py py-func docutils literal"><span class="pre">initialize()</span></code></a> with <code class="docutils literal"><span class="pre">args</span></code> provided
+<dd><p>calls <a class="reference internal" href="audiolib.html#audiolib.AudioLib.initialize" title="audiolib.AudioLib.initialize"><code class="xref py py-func docutils literal"><span class="pre">initialize()</span></code></a> with <code class="docutils literal"><span class="pre">args</span></code> provided
 at command line.</p>
 <p>Example</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>$ clamm library initialize
@@ -120,7 +235,7 @@ provided at command line.</p>
 <dl class="function">
 <dt id="clamm.library_synchronize">
 <code class="descclassname">clamm.</code><code class="descname">library_synchronize</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#clamm.library_synchronize" title="Permalink to this definition">¶</a></dt>
-<dd><p>calls <a class="reference internal" href="#audiolib.AudioLib.synchronize" title="audiolib.AudioLib.synchronize"><code class="xref py py-func docutils literal"><span class="pre">synchronize()</span></code></a> with <code class="docutils literal"><span class="pre">args</span></code>
+<dd><p>calls <a class="reference internal" href="audiolib.html#audiolib.AudioLib.synchronize" title="audiolib.AudioLib.synchronize"><code class="xref py py-func docutils literal"><span class="pre">synchronize()</span></code></a> with <code class="docutils literal"><span class="pre">args</span></code>
 provided at command line.</p>
 <p>Example</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>$ clamm library synchronize
@@ -171,7 +286,7 @@ caller: Bool indicating whether or not to print the caller name.</dd>
 <dl class="function">
 <dt id="clamm.streams_listing">
 <code class="descclassname">clamm.</code><code class="descname">streams_listing</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#clamm.streams_listing" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls <a class="reference internal" href="#streams.listing2streams" title="streams.listing2streams"><code class="xref py py-func docutils literal"><span class="pre">listing2streams()</span></code></a> with <code class="docutils literal"><span class="pre">listing</span></code> provided
+<dd><p>Calls <a class="reference internal" href="streams.html#streams.listing2streams" title="streams.listing2streams"><code class="xref py py-func docutils literal"><span class="pre">listing2streams()</span></code></a> with <code class="docutils literal"><span class="pre">listing</span></code> provided
 at command line.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>$ clamm library initialize
 </pre></div>
@@ -181,13 +296,13 @@ at command line.</p>
 <dl class="function">
 <dt id="clamm.streams_stream">
 <code class="descclassname">clamm.</code><code class="descname">streams_stream</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#clamm.streams_stream" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls <a class="reference internal" href="#streams.main" title="streams.main"><code class="xref py py-func docutils literal"><span class="pre">main()</span></code></a></p>
+<dd><p>Calls <a class="reference internal" href="streams.html#streams.main" title="streams.main"><code class="xref py py-func docutils literal"><span class="pre">main()</span></code></a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="clamm.streams_tracks">
 <code class="descclassname">clamm.</code><code class="descname">streams_tracks</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#clamm.streams_tracks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls <a class="reference internal" href="#streams.stream2tracks" title="streams.stream2tracks"><code class="xref py py-func docutils literal"><span class="pre">stream2tracks()</span></code></a> with <code class="docutils literal"><span class="pre">streampath</span></code> provided
+<dd><p>Calls <a class="reference internal" href="streams.html#streams.stream2tracks" title="streams.stream2tracks"><code class="xref py py-func docutils literal"><span class="pre">stream2tracks()</span></code></a> with <code class="docutils literal"><span class="pre">streampath</span></code> provided
 at command line.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>$ clamm streams initialize
 </pre></div>
@@ -207,76 +322,95 @@ at command line.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-audiolib">
-<span id="audiolib"></span><h2>2.2. audiolib<a class="headerlink" href="#module-audiolib" title="Permalink to this headline">¶</a></h2>
-<p>an interface to a classical music audio library.</p>
+<div class="section" id="module-tags">
+<span id="tags-module"></span><h2>2.2. tags module<a class="headerlink" href="#module-tags" title="Permalink to this headline">¶</a></h2>
+<p>the tags module contains classes and functions that create an
+interface to the clamm&#8217;s tag database.</p>
 <dl class="class">
-<dt id="audiolib.AudioLib">
-<em class="property">class </em><code class="descclassname">audiolib.</code><code class="descname">AudioLib</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib" title="Permalink to this definition">¶</a></dt>
-<dd><p>external interface to audiolib module</p>
-<dl class="method">
-<dt id="audiolib.AudioLib.initialize">
-<code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>initialize a new music library of audiofiles</p>
+<dt id="tags.Arrangement">
+<em class="property">class </em><code class="descclassname">tags.</code><code class="descname">Arrangement</code><a class="headerlink" href="#tags.Arrangement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manage the instrument/artist grouping for an audio file.</p>
+<dl class="attribute">
+<dt id="tags.Arrangement.album">
+<code class="descname">album</code><a class="headerlink" href="#tags.Arrangement.album" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Name of current album</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tags.Arrangement.commit_flag">
+<code class="descname">commit_flag</code><a class="headerlink" href="#tags.Arrangement.commit_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; If <code class="docutils literal"><span class="pre">False</span></code>, prevents arrangement from being written to file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tags.Arrangement.prima">
+<code class="descname">prima</code><a class="headerlink" href="#tags.Arrangement.prima" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Index into sorted artist list indicating which artist should be
+treated as ALBUM_ARTIST.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tags.Arrangement.arrangement">
+<code class="descname">arrangement</code><a class="headerlink" href="#tags.Arrangement.arrangement" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; current instrumental ARRANGMENT. If more than one ARTIST,
+list of instruments is semicolon delimited and order identical
+to ARTIST.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tags.Arrangement.sar">
+<code class="descname">sar</code><a class="headerlink" href="#tags.Arrangement.sar" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OrderedDict</em> &#8211; sorted arrangement compiled by <code class="docutils literal"><span class="pre">tags.get_sorted_arrangement</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tags.Arrangement.trackc">
+<code class="descname">trackc</code><a class="headerlink" href="#tags.Arrangement.trackc" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; track count associated with current album.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tags.Arrangement.artist">
+<code class="descname">artist</code><a class="headerlink" href="#tags.Arrangement.artist" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; current ARTIST name. If more than one ARTIST, list is semicolon
+delimited.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tags.Arrangement.albumartist">
+<code class="descname">albumartist</code><a class="headerlink" href="#tags.Arrangement.albumartist" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; current ALBUM_ARTIST name</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="audiolib.AudioLib.synchronize">
-<code class="descname">synchronize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.synchronize" title="Permalink to this definition">¶</a></dt>
-<dd><p>synchronize the audiofile&#8217;s composer/artist/arrangement tags
-with the tag database</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="audiolib.AudioLib.walker">
-<code class="descname">walker</code><span class="sig-paren">(</span><em>func</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.walker" title="Permalink to this definition">¶</a></dt>
-<dd><p>Recursively walks the directories/sub-directories under
-<code class="xref py py-attr docutils literal"><span class="pre">root</span></code> and applies specified function to each audio
-file encountered.</p>
+<dt id="tags.Arrangement.is_changed">
+<code class="descname">is_changed</code><span class="sig-paren">(</span><em>tagfile</em>, <em>sar</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.Arrangement.is_changed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if album or artist has changed.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> &#8211; action to apply to audio files.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>is_changed</strong> &#8211; True if either <code class="docutils literal"><span class="pre">tagfile</span></code> or <code class="docutils literal"><span class="pre">sar</span></code> has changed.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="tags.Arrangement.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>sar</em>, <em>tagfile</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.Arrangement.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conditionally update album/artist attributes.</p>
+<p>The default value for <code class="docutils literal"><span class="pre">prima</span></code> corresponds to the highest
+ranking (via ARTIST frequency count) <code class="docutils literal"><span class="pre">artist</span></code>. This behavior
+can be changed via
+<code class="docutils literal"><span class="pre">config[&quot;database&quot;][&quot;prompt_for_album_artist&quot;]</span></code> to prompt
+for a custom ordering.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="audiolib.commit_to_libfile">
-<code class="descclassname">audiolib.</code><code class="descname">commit_to_libfile</code><span class="sig-paren">(</span><em>tagfile</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.commit_to_libfile" title="Permalink to this definition">¶</a></dt>
-<dd><p>common entry point for writing values from tag database into
-an audiofile.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="audiolib.is_audio_file">
-<code class="descclassname">audiolib.</code><code class="descname">is_audio_file</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.is_audio_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>readability short-cut for testing whether file contains a known
-audio file extension as defined in <code class="docutils literal"><span class="pre">config[&quot;file&quot;][&quot;known_types&quot;]</span></code></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="audiolib.pcm2wav">
-<code class="descclassname">audiolib.</code><code class="descname">pcm2wav</code><span class="sig-paren">(</span><em>pcm_name</em>, <em>wav_name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.pcm2wav" title="Permalink to this definition">¶</a></dt>
-<dd><p>utility for calling <code class="docutils literal"><span class="pre">ffmpeg</span></code> to convert a pcm file to a wav
-file</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="audiolib.wav2flac">
-<code class="descclassname">audiolib.</code><code class="descname">wav2flac</code><span class="sig-paren">(</span><em>wav_name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.wav2flac" title="Permalink to this definition">¶</a></dt>
-<dd><p>utility for using <code class="docutils literal"><span class="pre">ffmpeg</span></code> to convert a wav file to a flac file</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-tags">
-<span id="tags"></span><h2>2.3. tags<a class="headerlink" href="#module-tags" title="Permalink to this headline">¶</a></h2>
-<p>the tags module contains classes and functions that create an
-interface to the clamm&#8217;s tag database.</p>
 <dl class="class">
 <dt id="tags.SafeTagFile">
 <em class="property">class </em><code class="descclassname">tags.</code><code class="descname">SafeTagFile</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.SafeTagFile" title="Permalink to this definition">¶</a></dt>
@@ -312,7 +446,7 @@ database sets.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>tagdb</strong> (<a class="reference internal" href="#tags.TagDatabase" title="tags.TagDatabase"><em>tags.TagDatabase</em></a>) &#8211; provides access to the sets in <code class="docutils literal"><span class="pre">tags.json</span></code>.</li>
-<li><strong>category</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Inidicate which set categorytegory to populate the history
+<li><strong>category</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Inidicate which set category to populate the history
 with, one of {artist, composer, instrument, nationality, period}.
 Default is <em>artist</em>.</li>
 </ul>
@@ -368,9 +502,29 @@ for approval</p>
 <dl class="method">
 <dt id="tags.TagDatabase.get_field">
 <code class="descname">get_field</code><span class="sig-paren">(</span><em>summary</em>, <em>category='nationality'</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.get_field" title="Permalink to this definition">¶</a></dt>
-<dd><p>attempt to guess the tag value by matching the category sets
-against the summary words and fall back on manual entry with
-auto_suggest</p>
+<dd><p>Get a given category field from the Wikipedia summary.</p>
+<p>Guess the tag value by matching the category sets against the
+summary words. If guessing fails, fall back on manual entry
+with <code class="docutils literal"><span class="pre">tags.Suggestor</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tagfile</strong> (<a class="reference internal" href="#tags.SafeTagFile" title="tags.SafeTagFile"><em>SafeTagFile</em></a>) &#8211; <code class="docutils literal"><span class="pre">taglib.File</span></code> subclass containing audiofile&#8217;s tags</li>
+<li><strong>category</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Indicates the type of field, on of {instrument,
+nationality, period}. Default is <em>nationality</em>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> &#8211; The value for the sought field.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -385,8 +539,26 @@ returns the database key of the new item</p>
 <dl class="method">
 <dt id="tags.TagDatabase.get_sorted_arrangement">
 <code class="descname">get_sorted_arrangement</code><span class="sig-paren">(</span><em>tagfile</em>, <em>artist_set=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.get_sorted_arrangement" title="Permalink to this definition">¶</a></dt>
-<dd><p>return an ordered dictionary of artist/instrument pairs
-sorted by (pre-computed) artist relative frequency in library</p>
+<dd><p>Compile a sorted instrument/ARTIST arrangement.</p>
+<p>Order audiofile ARTIST tags by library frequency ranking.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tagfile</strong> (<a class="reference internal" href="#tags.SafeTagFile" title="tags.SafeTagFile"><em>SafeTagFile</em></a>) &#8211; taglib.File subclass containing audio file&#8217;s tags</li>
+<li><strong>artist_set</strong> (<em>set</em>) &#8211; Unique listing of ARTISTs associated with <code class="docutils literal"><span class="pre">tagfile</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sar</strong> &#8211; Arrangement sorted by ARTIST&#8217;s library frequency.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">OrderedDict</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -419,19 +591,45 @@ in the database with files in the library.</p>
 
 <dl class="method">
 <dt id="tags.TagDatabase.verify_artist">
-<code class="descname">verify_artist</code><span class="sig-paren">(</span><em>query_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.verify_artist" title="Permalink to this definition">¶</a></dt>
-<dd><p>verify that the artist query name (qname) has an entry in
-the tag database if it doesn&#8217;t, propose a series of steps to
-remedy.</p>
+<code class="descname">verify_artist</code><span class="sig-paren">(</span><em>qname</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.verify_artist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify the queried artist is in the database.</p>
+<p>Returns the tag database key given the query name found in
+the tag file. If it doesn&#8217;t, initiates <code class="docutils literal"><span class="pre">tags.add_new_item</span></code>
+and then returns the key.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>qname</strong> (<em>str</em>) &#8211; query name from audiofile tags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>key</strong> &#8211; Key to artist entry</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="tags.TagDatabase.verify_composer">
 <code class="descname">verify_composer</code><span class="sig-paren">(</span><em>qname</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.TagDatabase.verify_composer" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns the tag database key given the query name found in the
-tage file by verifying the query name has a match in the tag
-database. If it doesn&#8217;t, initiates <cite>add_new_item</cite> and
-then, circuitously, returns the key</p>
+<dd><p>Verify the queried composer is in the database.</p>
+<p>Returns the tag database key given the query name found in
+the tag file by verifying the query name has a match in the
+tag database. If it doesn&#8217;t, initiates <code class="docutils literal"><span class="pre">tags.add_new_item</span></code>
+and then returns the key.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>qname</strong> (<em>str</em>) &#8211; query name from audiofile tags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>key</strong> &#8211; Key to composer entry</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -439,9 +637,9 @@ then, circuitously, returns the key</p>
 <dl class="function">
 <dt id="tags.get_borndied">
 <code class="descclassname">tags.</code><code class="descname">get_borndied</code><span class="sig-paren">(</span><em>summary</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.get_borndied" title="Permalink to this definition">¶</a></dt>
-<dd><p>gets borndied/died dates</p>
+<dd><p>gets born/died dates</p>
 <p>Use a regexp to extract artist/composer date(s) from a wikipedia
-summary string.</p>
+summary string. If regexp fails, fall back on user prompt.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -459,7 +657,8 @@ summary string.</p>
 <dl class="function">
 <dt id="tags.get_nearest_name">
 <code class="descclassname">tags.</code><code class="descname">get_nearest_name</code><span class="sig-paren">(</span><em>qname</em>, <em>name_set</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.get_nearest_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>return closest match by finding minimum <cite>edit_distance</cite></p>
+<dd><p>return closest match by finding minimum
+<code class="docutils literal"><span class="pre">nltk.distance.edit_distance</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -509,9 +708,19 @@ the user to supply the <em>From</em> language.</p>
 <dl class="function">
 <dt id="tags.swap_first_last_name">
 <code class="descclassname">tags.</code><code class="descname">swap_first_last_name</code><span class="sig-paren">(</span><em>name_str</em><span class="sig-paren">)</span><a class="headerlink" href="#tags.swap_first_last_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>if name_str contains a comma (assume it is formatted as Last, First),
-invert and return First Last
-else, invert and return Last, First</p>
+<dd><p>Toggle first/last name order</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong></strong><strong>(</strong><strong>str</strong><strong>)</strong><strong></strong> (<em>name_str</em>) &#8211; Name formatted as either &#8220;First Last&#8221; or &#8220;Last, First&#8221;</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Name format toggled</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">swapd (str)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -537,171 +746,78 @@ page, if one exists.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-streams">
-<span id="streams"></span><h2>2.4. streams<a class="headerlink" href="#module-streams" title="Permalink to this headline">¶</a></h2>
-<p>streams module contains classes, programs, tools for creating
-and processing audio streams.</p>
-<dl class="class">
-<dt id="streams.Album">
-<em class="property">class </em><code class="descclassname">streams.</code><code class="descname">Album</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a stream object, locate the tracks within the stream,
-create new flac tracks, and populate with metadata.</p>
-<dl class="method">
-<dt id="streams.Album.create">
-<code class="descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.create" title="Permalink to this definition">¶</a></dt>
-<dd><p>find track starts/stops within stream</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="streams.Album.find_end_frame">
-<code class="descname">find_end_frame</code><span class="sig-paren">(</span><em>reference</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.find_end_frame" title="Permalink to this definition">¶</a></dt>
-<dd><p>find the min energy point around a reference</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="streams.Album.find_start_frame">
-<code class="descname">find_start_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.find_start_frame" title="Permalink to this definition">¶</a></dt>
-<dd><p>find audio signal activity that exceeds threshold and persists
-call this the start frame of a track</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="streams.Album.process">
-<code class="descname">process</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streams.Album.process" title="Permalink to this definition">¶</a></dt>
-<dd><p>encapsulate the substance of Album processing</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.dial_itunes">
-<code class="descclassname">streams.</code><code class="descname">dial_itunes</code><span class="sig-paren">(</span><em>artist</em>, <em>album</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.dial_itunes" title="Permalink to this definition">¶</a></dt>
-<dd><p>run apple script and attempt to uniquely locate the
-artist/album pair.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.image_audio_envelope_with_tracks_markers">
-<code class="descclassname">streams.</code><code class="descname">image_audio_envelope_with_tracks_markers</code><span class="sig-paren">(</span><em>markers</em>, <em>stream</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.image_audio_envelope_with_tracks_markers" title="Permalink to this definition">¶</a></dt>
-<dd><p>track-splitting validation image</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.is_started">
-<code class="descclassname">streams.</code><code class="descname">is_started</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.is_started" title="Permalink to this definition">¶</a></dt>
-<dd><p>test to see if recording has started</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.listing2streams">
-<code class="descclassname">streams.</code><code class="descname">listing2streams</code><span class="sig-paren">(</span><em>listing</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.listing2streams" title="Permalink to this definition">¶</a></dt>
-<dd><p>a program for batch streaming a <code class="docutils literal"><span class="pre">json</span></code> listing of albums
-from iTunes to raw pcm files via <code class="docutils literal"><span class="pre">shairport-sync</span></code>.</p>
-<p>iTunes is controlled using macos&#8217; built-in <code class="docutils literal"><span class="pre">osascript</span></code> tool and
-simple javascript request templates.</p>
-<p>When the listings have finished streaming, the pcm files (streams)
-can be processed by <code class="docutils literal"><span class="pre">stream2tracks</span></code> and converted from streams
-to a collection of flac tracks.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.main">
-<code class="descclassname">streams.</code><code class="descname">main</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>main is a concatenation of listing2streams and stream2tracks</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.power_envelope">
-<code class="descclassname">streams.</code><code class="descname">power_envelope</code><span class="sig-paren">(</span><em>wavpath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.power_envelope" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="streams.read_wav_mono">
-<code class="descclassname">streams.</code><code class="descname">read_wav_mono</code><span class="sig-paren">(</span><em>wav</em>, <em>N</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.read_wav_mono" title="Permalink to this definition">¶</a></dt>
-<dd><p>grab samples from one channel (every other sample) of frame</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.size_sampler">
-<code class="descclassname">streams.</code><code class="descname">size_sampler</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.size_sampler" title="Permalink to this definition">¶</a></dt>
-<dd><p>return the file size, sampled with a 1 second gap to
-determine if the file is being written to.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.start_shairport">
-<code class="descclassname">streams.</code><code class="descname">start_shairport</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.start_shairport" title="Permalink to this definition">¶</a></dt>
-<dd><p>make sure no duplicate processes and start up shairport-sync</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="streams.stream2tracks">
-<code class="descclassname">streams.</code><code class="descname">stream2tracks</code><span class="sig-paren">(</span><em>streampath</em><span class="sig-paren">)</span><a class="headerlink" href="#streams.stream2tracks" title="Permalink to this definition">¶</a></dt>
-<dd><p>process raw pcm stream to tagged album tracks.</p>
-</dd></dl>
-
-</div>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="audiolib.html" class="btn btn-neutral float-right" title="3. audiolib module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="readme_include.html" class="btn btn-neutral" title="1. README" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Paul Adams.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">2. modules</a><ul>
-<li><a class="reference internal" href="#module-clamm">2.1. clamm</a></li>
-<li><a class="reference internal" href="#module-audiolib">2.2. audiolib</a></li>
-<li><a class="reference internal" href="#module-tags">2.3. tags</a></li>
-<li><a class="reference internal" href="#module-streams">2.4. streams</a></li>
-</ul>
-</li>
-</ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="readme_include.html" title="previous chapter">1. README</a></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/code.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Paul Adams.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
-      
-      |
-      <a href="_sources/code.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

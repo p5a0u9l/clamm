@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
@@ -34,15 +33,17 @@ class AudioLib():
         self.ltfa = LibTagFileAction(self.args)
 
     def walker(self, func, **kwargs):
-        """Recursively walks the directories/sub-directories under
+        """
+        Recursively walks the directories/sub-directories under
         :py:attr:`~root` and applies specified function to each audio
         file encountered.
 
-        :param func: action to apply to audio files.
-        :type name: function.
-
+        Parameters
+        ----------
+        func: function
+            action to apply to audio files.
         """
-        # walk every file under root
+
         for folder, _, files in walk(self.root, topdown=False):
             if not files:
                 continue
@@ -97,7 +98,8 @@ class AudioLib():
                 json.dump(self.ltfa.instrument_groupings, fp, indent=4)
 
     def synchronize(self):
-        """synchronize the audiofile's composer/artist/arrangement tags
+        """
+        synchronize the audiofile's composer/artist/arrangement tags
         with the tag database
         """
 
@@ -106,7 +108,8 @@ class AudioLib():
         self.walker(self.ltfa.synchronize_arrangement)
 
     def initialize(self):
-        """initialize a new music library of audiofiles
+        """
+        initialize a new music library of audiofiles
         """
 
         self.walker(self.ltfa.audio2preferred_format)
@@ -118,10 +121,17 @@ class AudioLib():
 
 
 class LibTagFile():
-    def __init__(self, args):
-        """ super class for tagfile action classes
-        """
+    """
+    super class for LibTagFileAction
 
+    Attributes
+    ----------
+    args: Namespace
+        command line arguments, forwarded from clamm.
+
+    """
+
+    def __init__(self, args):
         # arg unpack
         self.args = args
         self.tagdb = tags.TagDatabase()
@@ -161,10 +171,10 @@ class LibTagFileAction(LibTagFile):
             self.instrument_groupings = json.load(fp)
 
         # auto_suggest
-        self.artist_suggest = tags.TagSuggestion(
+        self.artist_suggest = tags.Suggestor(
                 self.tagdb, category="artist")
 
-        self.composer_suggest = tags.TagSuggestion(
+        self.composer_suggest = tags.Suggestor(
                 self.tagdb, category="composer")
 
         # wrap methods in dictionary for dynamic access
@@ -175,8 +185,9 @@ class LibTagFileAction(LibTagFile):
                 self.func[attr] = fobject
 
     def audio2preferred_format(self, tagfile, **kwargs):
-        """using ffmpeg, convert arbitrary audio file to a
-        preferred type, flac by default
+        """
+        using ``ffmpeg``, convert arbitrary audio file to a
+        preferred type, ``flac`` by default
         """
 
         # unpack
@@ -200,7 +211,7 @@ class LibTagFileAction(LibTagFile):
                   stdout=redirect)
 
     def recently_added(self, tagfile, **kwargs):
-        """generate a _recently added_ playlist by looking at the
+        """generate a recently added playlist by looking at the
         date of the parent directory.
         """
         parent = os.path.split(tagfile.path)[0]
@@ -303,15 +314,15 @@ class LibTagFileAction(LibTagFile):
         self.write2tagfile(tagfile)
 
     def change_tag_by_name(self, tagfile, **kwargs):
-        """globally change a single tag field, applied to a directory
-        or library.
-        Library example
-            set GENRE=classical
-            set COMPILATION=0
-        Single album/directory example
-            set ARTIST=<artist_name>
         """
+        globally change a single tag field, applied to a directory
+        or library.
 
+        Examples
+        --------
+            $ clamm library -d ~/path/to/album/ action --change_tag_by_name -k ALBUMARTIST -v 'Richard Egarr'
+
+        """
         # apply the change
         tagfile.tags[self.args.key] = [self.args.val]
 
@@ -324,7 +335,7 @@ class LibTagFileAction(LibTagFile):
         Background
             Many taggers/publishers deal with classical music tags by
             lumping the composer in with the artist, as in
-            ARTIST=JS Bach; Glenn Gould.
+            ``ARTIST=JS Bach; Glenn Gould``
         """
 
         # existence test
@@ -369,7 +380,6 @@ class LibTagFileAction(LibTagFile):
     def synchronize_artist(self, tagfile, **kwargs):
         """Verify there is an artist entry in ``tags.json`` for each
         artist found in audiofile.
-        NOTE
         Will not update ARTIST/ALBUMARTIST until arrangement is verified
         """
 

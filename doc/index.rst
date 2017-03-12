@@ -4,6 +4,8 @@
 
    readme_include
    code
+   audiolib
+   streams
 
 notes
 =====

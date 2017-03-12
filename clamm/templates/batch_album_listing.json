@@ -1,8 +1,4 @@
 {
-    "A1": {
-        "artist": "Max Richter",
-        "album": "Three Worlds: Music from Woolf Works"
-    },
     "A2": {
         "artist": "Richard Egarr, Academy of Ancient Music & Andrew Manze",
         "album": "Bach: Harpsichord Concertos - Triple Concerto"
@@ -15,10 +11,6 @@
         "artist": "Andrew Manze & Academy of Ancient Music",
         "album": "Bach: Solo & Double Violin Concertos"
     },
-    "A5": {
-        "artist": "ChromaDuo",
-        "album": "Hidden Waters"
-    },
     "A6": {
         "artist": "Alexandre Tharaud",
         "album": "J.S. Bach: Goldberg Variations"
@@ -26,10 +18,6 @@
     "A7": {
         "artist": "Pascal Rogé",
         "album": "Debussy: Piano Works"
-    },
-    "A8": {
-        "artist": "Jenő Jandó",
-        "album": "J. S. Bach: The Well-Tempered Clavier Book I"
     },
     "A9": {
         "artist": "Alisa Weilerstein & Inon Barnatan",

@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>3. audiolib module &mdash; clamm 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="clamm 0.1 documentation" href="index.html"/>
+        <link rel="next" title="4. streams module" href="streams.html"/>
+        <link rel="prev" title="2. modules" href="code.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> clamm
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme_include.html">1. clamm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">2. modules</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. audiolib module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streams.html">4. streams module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">clamm</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>3. audiolib module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/audiolib.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-audiolib">
+<span id="audiolib-module"></span><h1>3. audiolib module<a class="headerlink" href="#module-audiolib" title="Permalink to this headline">¶</a></h1>
+<p>an interface to a classical music audio library.</p>
+<dl class="class">
+<dt id="audiolib.AudioLib">
+<em class="property">class </em><code class="descclassname">audiolib.</code><code class="descname">AudioLib</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib" title="Permalink to this definition">¶</a></dt>
+<dd><p>external interface to audiolib module</p>
+<dl class="method">
+<dt id="audiolib.AudioLib.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>initialize a new music library of audiofiles</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.AudioLib.synchronize">
+<code class="descname">synchronize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.synchronize" title="Permalink to this definition">¶</a></dt>
+<dd><p>synchronize the audiofile&#8217;s composer/artist/arrangement tags
+with the tag database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.AudioLib.walker">
+<code class="descname">walker</code><span class="sig-paren">(</span><em>func</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.AudioLib.walker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively walks the directories/sub-directories under
+<code class="xref py py-attr docutils literal"><span class="pre">root</span></code> and applies specified function to each audio
+file encountered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>function</em>) &#8211; action to apply to audio files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="audiolib.LibTagFile">
+<em class="property">class </em><code class="descclassname">audiolib.</code><code class="descname">LibTagFile</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>super class for LibTagFileAction</p>
+<dl class="attribute">
+<dt id="audiolib.LibTagFile.args">
+<code class="descname">args</code><a class="headerlink" href="#audiolib.LibTagFile.args" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Namespace</em> &#8211; command line arguments, forwarded from clamm.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.commit_to_libfile">
+<code class="descclassname">audiolib.</code><code class="descname">commit_to_libfile</code><span class="sig-paren">(</span><em>tagfile</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.commit_to_libfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>common entry point for writing values from tag database into
+an audiofile.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.is_audio_file">
+<code class="descclassname">audiolib.</code><code class="descname">is_audio_file</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.is_audio_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>readability short-cut for testing whether file contains a known
+audio file extension as defined in <code class="docutils literal"><span class="pre">config[&quot;file&quot;][&quot;known_types&quot;]</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.pcm2wav">
+<code class="descclassname">audiolib.</code><code class="descname">pcm2wav</code><span class="sig-paren">(</span><em>pcm_name</em>, <em>wav_name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.pcm2wav" title="Permalink to this definition">¶</a></dt>
+<dd><p>utility for calling <code class="docutils literal"><span class="pre">ffmpeg</span></code> to convert a pcm file to a wav
+file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="audiolib.wav2flac">
+<code class="descclassname">audiolib.</code><code class="descname">wav2flac</code><span class="sig-paren">(</span><em>wav_name</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.wav2flac" title="Permalink to this definition">¶</a></dt>
+<dd><p>utility for using <code class="docutils literal"><span class="pre">ffmpeg</span></code> to convert a wav file to a flac file</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="audiolib.LibTagFileAction">
+<em class="property">class </em><code class="descclassname">audiolib.</code><code class="descname">LibTagFileAction</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="audiolib.LibTagFileAction.audio2preferred_format">
+<code class="descname">audio2preferred_format</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.audio2preferred_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>using <code class="docutils literal"><span class="pre">ffmpeg</span></code>, convert arbitrary audio file to a
+preferred type, <code class="docutils literal"><span class="pre">flac</span></code> by default</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.change_tag_by_name">
+<code class="descname">change_tag_by_name</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.change_tag_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>globally change a single tag field, applied to a directory
+or library.</p>
+<p class="rubric">Examples</p>
+<p>$ clamm library -d ~/path/to/album/ action &#8211;change_tag_by_name -k ALBUMARTIST -v &#8216;Richard Egarr&#8217;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.delete_tag_globber">
+<code class="descname">delete_tag_globber</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.delete_tag_globber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlike <code class="docutils literal"><span class="pre">remove_junk_tags</span></code>, allows removing as glob of
+similarly named tags, as in the MUSICBRAINZ_* tags, without
+cluttering  <code class="docutils literal"><span class="pre">config[&quot;library&quot;][&quot;tags&quot;][&quot;junk&quot;]</span></code> with
+excessive entries.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.get_arrangement_set">
+<code class="descname">get_arrangement_set</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.get_arrangement_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>get set and count of instrumental groupings via sorted
+arrangements</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.get_artist_counts">
+<code class="descname">get_artist_counts</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.get_artist_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>count/record artist occurences (to use as ranking)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.handle_composer_as_artist">
+<code class="descname">handle_composer_as_artist</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.handle_composer_as_artist" title="Permalink to this definition">¶</a></dt>
+<dd><p>test for and handle composer in artist fields.</p>
+<dl class="docutils">
+<dt>Background</dt>
+<dd>Many taggers/publishers deal with classical music tags by
+lumping the composer in with the artist, as in
+<code class="docutils literal"><span class="pre">ARTIST=JS</span> <span class="pre">Bach;</span> <span class="pre">Glenn</span> <span class="pre">Gould</span></code></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.playlist">
+<code class="descname">playlist</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.playlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>playlist filter</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.prune_artist_tags">
+<code class="descname">prune_artist_tags</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.prune_artist_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conform artist/albumartist tag key names by applying
+config[&#8216;library&#8217;][&#8216;tags&#8217;][&#8216;prune_artist&#8217;] rules</p>
+<dl class="docutils">
+<dt>Example</dt>
+<dd>ALBUMARTIST instead of ALBUM_ARTIST</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.recently_added">
+<code class="descname">recently_added</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.recently_added" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate a recently added playlist by looking at the
+date of the parent directory.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.remove_junk_tags">
+<code class="descname">remove_junk_tags</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.remove_junk_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>similar to prune_artist_tags, but removes all tags that
+are in <code class="docutils literal"><span class="pre">config[&quot;library&quot;][&quot;tags&quot;][&quot;junk&quot;]</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.synchronize_arrangement">
+<code class="descname">synchronize_arrangement</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.synchronize_arrangement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find arrangement that is best fit for a given file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.synchronize_artist">
+<code class="descname">synchronize_artist</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.synchronize_artist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify there is an artist entry in <code class="docutils literal"><span class="pre">tags.json</span></code> for each
+artist found in audiofile.
+Will not update ARTIST/ALBUMARTIST until arrangement is verified</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="audiolib.LibTagFileAction.synchronize_composer">
+<code class="descname">synchronize_composer</code><span class="sig-paren">(</span><em>tagfile</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#audiolib.LibTagFileAction.synchronize_composer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify there is a corresponding entry in <code class="docutils literal"><span class="pre">tags.json</span></code> for
+the composer found in the audiofile.</p>
+<p>If an entry is not found, prompt to add a new composer.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streams.html" class="btn btn-neutral float-right" title="4. streams module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="code.html" class="btn btn-neutral" title="2. modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Paul Adams.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
