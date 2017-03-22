@@ -86,9 +86,10 @@
             
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme_include.html">1. README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="code.html">2. command line interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="audiolib.html">3. audiolib module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streams.html">4. streams module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tag_scheme.html">2. tagging scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">3. command line interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audiolib.html">4. audiolib module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streams.html">5. streams module</a></li>
 </ul>
 
             
@@ -163,41 +164,22 @@
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
- | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
- | <a href="#U"><strong>U</strong></a>
- | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.TagDatabase.add_new_item">add_new_item() (tags.TagDatabase method)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.add_new_perm">add_new_perm() (tags.TagDatabase method)</a>
-</li>
       <li><a href="streams.html#streams.Album">Album (class in streams)</a>
 </li>
-      <li><a href="code.html#tags.Arrangement.album">album (tags.Arrangement attribute)</a>
-</li>
-      <li><a href="code.html#tags.Arrangement.albumartist">albumartist (tags.Arrangement attribute)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.arange">arange (tags.TagDatabase attribute)</a>
+      <li><a href="audiolib.html#audiolib.LibTagFile.args">args (audiolib.LibTagFile attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="audiolib.html#audiolib.LibTagFile.args">args (audiolib.LibTagFile attribute)</a>
-</li>
-      <li><a href="code.html#tags.Arrangement">Arrangement (class in tags)</a>
-</li>
-      <li><a href="code.html#tags.Arrangement.arrangement">arrangement (tags.Arrangement attribute)</a>
-</li>
-      <li><a href="code.html#tags.Arrangement.artist">artist (tags.Arrangement attribute)</a>
-</li>
       <li><a href="audiolib.html#audiolib.LibTagFileAction.audio2preferred_format">audio2preferred_format() (audiolib.LibTagFileAction method)</a>
 </li>
       <li><a href="audiolib.html#audiolib.AudioLib">AudioLib (class in audiolib)</a>
@@ -213,8 +195,6 @@
       <li><a href="audiolib.html#audiolib.LibTagFileAction.change_tag_by_name">change_tag_by_name() (audiolib.LibTagFileAction method)</a>
 </li>
       <li><a href="code.html#module-clamm">clamm (module)</a>
-</li>
-      <li><a href="code.html#tags.Arrangement.commit_flag">commit_flag (tags.Arrangement attribute)</a>
 </li>
       <li><a href="audiolib.html#audiolib.commit_to_libfile">commit_to_libfile() (in module audiolib)</a>
 </li>
@@ -248,8 +228,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="streams.html#streams.dial_itunes">dial_itunes() (in module streams)</a>
 </li>
-      <li><a href="code.html#tags.TagDatabase.dump">dump() (tags.TagDatabase method)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -266,21 +244,9 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="audiolib.html#audiolib.LibTagFileAction.get_arrangement_set">get_arrangement_set() (audiolib.LibTagFileAction method)</a>
 </li>
-      <li><a href="audiolib.html#audiolib.LibTagFileAction.get_artist_counts">get_artist_counts() (audiolib.LibTagFileAction method)</a>
-</li>
-      <li><a href="code.html#tags.get_borndied">get_borndied() (in module tags)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.get_field">get_field() (tags.TagDatabase method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.get_nearest_name">get_nearest_name() (in module tags)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.get_new_item">get_new_item() (tags.TagDatabase method)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.get_sorted_arrangement">get_sorted_arrangement() (tags.TagDatabase method)</a>
-</li>
-      <li><a href="code.html#tags.get_translation">get_translation() (in module tags)</a>
+      <li><a href="audiolib.html#audiolib.LibTagFileAction.get_artist_counts">get_artist_counts() (audiolib.LibTagFileAction method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -300,17 +266,11 @@
 </li>
       <li><a href="audiolib.html#audiolib.AudioLib.initialize">initialize() (audiolib.AudioLib method)</a>
 </li>
-      <li><a href="audiolib.html#audiolib.is_audio_file">is_audio_file() (in module audiolib)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.Arrangement.is_changed">is_changed() (tags.Arrangement method)</a>
+      <li><a href="audiolib.html#audiolib.is_audio_file">is_audio_file() (in module audiolib)</a>
 </li>
       <li><a href="streams.html#streams.is_started">is_started() (in module streams)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.item_fields_from_manual">item_fields_from_manual() (tags.TagDatabase method)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.item_fields_from_wiki">item_fields_from_wiki() (tags.TagDatabase method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -349,18 +309,6 @@
 </li>
       </ul></li>
   </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.messylist2set">messylist2set() (in module tags)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="N">N</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.TagDatabase.new_item">new_item (tags.TagDatabase attribute)</a>
-</li>
-  </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
@@ -368,16 +316,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="code.html#clamm.parse_inputs">parse_inputs() (in module clamm)</a>
 </li>
-      <li><a href="code.html#tags.TagDatabase.path">path (tags.TagDatabase attribute)</a>
-</li>
       <li><a href="audiolib.html#audiolib.pcm2wav">pcm2wav() (in module audiolib)</a>
 </li>
       <li><a href="audiolib.html#audiolib.LibTagFileAction.playlist">playlist() (audiolib.LibTagFileAction method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.Arrangement.prima">prima (tags.Arrangement attribute)</a>
-</li>
       <li><a href="code.html#clamm.printr">printr() (in module clamm)</a>
 </li>
       <li><a href="streams.html#streams.Album.process">process() (streams.Album method)</a>
@@ -404,10 +348,6 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.SafeTagFile">SafeTagFile (class in tags)</a>
-</li>
-      <li><a href="code.html#tags.Arrangement.sar">sar (tags.Arrangement attribute)</a>
-</li>
       <li><a href="streams.html#streams.size_sampler">size_sampler() (in module streams)</a>
 </li>
       <li><a href="streams.html#streams.start_shairport">start_shairport() (in module streams)</a>
@@ -424,10 +364,6 @@
 </li>
       <li><a href="code.html#clamm.streams_tracks">streams_tracks() (in module clamm)</a>
 </li>
-      <li><a href="code.html#tags.Suggestor">Suggestor (class in tags)</a>
-</li>
-      <li><a href="code.html#tags.swap_first_last_name">swap_first_last_name() (in module tags)</a>
-</li>
       <li><a href="audiolib.html#audiolib.AudioLib.synchronize">synchronize() (audiolib.AudioLib method)</a>
 </li>
       <li><a href="audiolib.html#audiolib.LibTagFileAction.synchronize_arrangement">synchronize_arrangement() (audiolib.LibTagFileAction method)</a>
@@ -442,47 +378,13 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.SafeTagFile.tag_copy">tag_copy (tags.SafeTagFile attribute)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase">TagDatabase (class in tags)</a>
-</li>
-      <li><a href="code.html#module-tags">tags (module)</a>
+      <li><a href="code.html#clamm.tags_edit">tags_edit() (in module clamm)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#clamm.tags_edit">tags_edit() (in module clamm)</a>
-</li>
       <li><a href="code.html#clamm.tags_show">tags_show() (in module clamm)</a>
 </li>
       <li><a href="streams.html#streams.Album.track_list">track_list (streams.Album attribute)</a>
-</li>
-      <li><a href="code.html#tags.Arrangement.trackc">trackc (tags.Arrangement attribute)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="U">U</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.Arrangement.update">update() (tags.Arrangement method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.TagDatabase.update_sets">update_sets() (tags.TagDatabase method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="V">V</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.TagDatabase.verify_arrangement">verify_arrangement() (tags.TagDatabase method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#tags.TagDatabase.verify_artist">verify_artist() (tags.TagDatabase method)</a>
-</li>
-      <li><a href="code.html#tags.TagDatabase.verify_composer">verify_composer() (tags.TagDatabase method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -499,8 +401,6 @@
       <li><a href="streams.html#streams.wave_envelope">wave_envelope() (in module streams)</a>
 </li>
       <li><a href="streams.html#streams.Album.wavstream">wavstream (streams.Album attribute)</a>, <a href="streams.html#streams.Album.wavstream">[1]</a>
-</li>
-      <li><a href="code.html#tags.wiki_query">wiki_query() (in module tags)</a>
 </li>
   </ul></td>
 </tr></table>

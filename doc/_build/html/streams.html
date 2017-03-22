@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>4. streams module &mdash; clamm 0.1 documentation</title>
+  <title>5. streams module &mdash; clamm 0.1 documentation</title>
   
 
   
@@ -34,7 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="clamm 0.1 documentation" href="index.html"/>
-        <link rel="prev" title="3. audiolib module" href="audiolib.html"/> 
+        <link rel="prev" title="4. audiolib module" href="audiolib.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,14 +85,12 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="readme_include.html">1. clamm</a></li>
-<li class="toctree-l1"><a class="reference internal" href="code.html">2. modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="audiolib.html">3. audiolib module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">4. streams module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#listing2streams">4.1. listing2streams</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#example">4.1.1. Example</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="readme_include.html">1. README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tag_scheme.html">2. tagging scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">3. command line interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audiolib.html">4. audiolib module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. streams module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#listing2streams">5.1. listing2streams</a></li>
 </ul>
 </li>
 </ul>
@@ -139,7 +137,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>4. streams module</li>
+      <li>5. streams module</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -159,22 +157,18 @@
            <div itemprop="articleBody">
             
   <div class="section" id="streams-module">
-<h1>4. streams module<a class="headerlink" href="#streams-module" title="Permalink to this headline">¶</a></h1>
+<h1>5. streams module<a class="headerlink" href="#streams-module" title="Permalink to this headline">¶</a></h1>
 <p>The streams module provides two programs for working with raw audio streams.</p>
 <p>. The second processes a stream into an album.</p>
 <div class="section" id="listing2streams">
-<h2>4.1. listing2streams<a class="headerlink" href="#listing2streams" title="Permalink to this headline">¶</a></h2>
-<p>The first use case automates generating raw <code class="docutils literal"><span class="pre">pcm</span></code> files from iTunes using a listing of album/artist pairs in <code class="docutils literal"><span class="pre">json</span></code> format.</p>
-<div class="section" id="example">
-<h3>4.1.1. Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><dl class="docutils">
-<dt>&#8220;A2&#8221;: {</dt>
-<dd>&#8220;artist&#8221;: &#8220;Richard Egarr, Academy of Ancient Music &amp; Andrew Manze&#8221;,
-&#8220;album&#8221;: &#8220;Bach: Harpsichord Concertos - Triple Concerto&#8221;</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
+<h2>5.1. listing2streams<a class="headerlink" href="#listing2streams" title="Permalink to this headline">¶</a></h2>
+<p>The first use case automates generating raw <code class="docutils literal"><span class="pre">pcm</span></code> files from iTunes using a listing of album/artist pairs in <code class="docutils literal"><span class="pre">json</span></code> format. Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="s2">&quot;A2&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;artist&quot;</span><span class="p">:</span> <span class="s2">&quot;Richard Egarr, Academy of Ancient Music &amp; Andrew Manze&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;album&quot;</span><span class="p">:</span> <span class="s2">&quot;Bach: Harpsichord Concertos - Triple Concerto&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p>See also <a class="reference external" href="../clamm/templates/batch_album_listing.json">batch_album_listing</a> under the <code class="docutils literal"><span class="pre">templates</span></code> directory.</p>
 <span class="target" id="module-streams"></span><p>streams module contains classes, programs, tools for creating
 and processing audio streams.</p>
@@ -302,7 +296,6 @@ determine if the file is being written to.</p>
 
 </div>
 </div>
-</div>
 
 
            </div>
@@ -315,7 +308,7 @@ determine if the file is being written to.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="audiolib.html" class="btn btn-neutral" title="3. audiolib module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="audiolib.html" class="btn btn-neutral" title="4. audiolib module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

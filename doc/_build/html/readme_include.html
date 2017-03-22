@@ -34,7 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="clamm 0.1 documentation" href="index.html"/>
-        <link rel="next" title="2. command line interface" href="code.html"/>
+        <link rel="next" title="2. tagging scheme" href="tag_scheme.html"/>
         <link rel="prev" title="notes" href="index.html"/> 
 
   
@@ -87,12 +87,17 @@
             
                 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">1. README</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#caveats">1.1. caveats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">1.1. INSTALLATION</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#faq">1.2. FAQ</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#aren-t-there-libraries-that-do-this-already">1.2.1. Aren&#8217;t there libraries that do this already?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="code.html">2. command line interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="audiolib.html">3. audiolib module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streams.html">4. streams module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tag_scheme.html">2. tagging scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">3. command line interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audiolib.html">4. audiolib module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streams.html">5. streams module</a></li>
 </ul>
 
             
@@ -159,17 +164,23 @@
   <div class="section" id="readme">
 <h1>1. README<a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h1>
 <p><em>the classical music manager you never knew you needed, until now...</em></p>
-<p><code class="docutils literal"><span class="pre">clamm</span></code> is a python program for managing a library of classical music.</p>
+<p><code class="docutils literal"><span class="pre">clamm</span></code> is a python command line program for managing a library of classical music.</p>
 <ul class="simple">
-<li>efficiently maps the tags of classical music audio files to sane structures</li>
+<li>efficiently maps the tags of classical music audio files to sane structures, see <span class="xref std std-ref">tag-scheme-label</span></li>
 <li>provides tools for working with raw audio streams of (you guessed it!) classical music</li>
 <li>generate playlists using iTunes-like combination logic.</li>
 </ul>
-<div class="section" id="caveats">
-<h2>1.1. caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic simple">
-<li>There are already several good music library tools on the market. The best I am aware of is probably is <a class="reference external" href="http://beets.io/">beets</a>. <code class="docutils literal"><span class="pre">beets</span></code> has great support for interfacing with the open-source tag database <a class="reference external" href="https://musicbrainz.org/database">musicbrainz</a> as well a host of library management functionality and a rich plugin ecosphere. Indeed, <code class="docutils literal"><span class="pre">clamm</span></code> aspires to be like <code class="docutils literal"><span class="pre">beets</span></code> when it grows up.</li>
-</ol>
+<div class="section" id="installation">
+<h2>1.1. INSTALLATION<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+</div>
+<div class="section" id="faq">
+<h2>1.2. FAQ<a class="headerlink" href="#faq" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="aren-t-there-libraries-that-do-this-already">
+<h3>1.2.1. Aren&#8217;t there libraries that do this already?<a class="headerlink" href="#aren-t-there-libraries-that-do-this-already" title="Permalink to this headline">¶</a></h3>
+<p>There are already several good music library tools on the market. The best I am aware of is probably is <a class="reference external" href="http://beets.io/">beets</a>. <code class="docutils literal"><span class="pre">beets</span></code> has great support for interfacing with the open-source tag database <a class="reference external" href="https://musicbrainz.org/database">musicbrainz</a> as well a host of library management functionality and a rich plugin ecosphere. Indeed, <code class="docutils literal"><span class="pre">clamm</span></code> aspires to be like <code class="docutils literal"><span class="pre">beets</span></code> when it grows up.</p>
+<p>I tried beets and still have a use for it, but it didn&#8217;t have the support for classical music tags I wanted. In fairness, beets relies heavily on musicbrainz, and musicbrainz reflects all other audio file tag schemas in skewing toward popular music.</p>
+</div>
 </div>
 </div>
 
@@ -183,7 +194,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="code.html" class="btn btn-neutral float-right" title="2. command line interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="tag_scheme.html" class="btn btn-neutral float-right" title="2. tagging scheme" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral" title="notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

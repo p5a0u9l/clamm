@@ -16,6 +16,7 @@ import sys
 from subprocess import Popen
 
 # external
+from numba import vectorize, float64
 from tqdm import trange
 import matplotlib
 import numpy as np
@@ -34,6 +35,7 @@ import matplotlib.pyplot as plt
 global seconds
 TMPSTREAM = os.path.join(config["path"]["pcm"], "temp.pcm")
 DF = config["streams"]["downsample_factor"]
+DF = 4410*10
 FS = 44100
 FS_DEC = FS/DF
 SAMP2MIN = 1/FS/60
@@ -191,7 +193,6 @@ class Album():
         activity = index - persistence - preactivity_offset
         if activity < firstindex:
             activity = firstindex
-        import bpdb; bpdb.set_trace()
         track.start_frame = activity*DF
 
     def cur_track_stop(self):
@@ -199,7 +200,7 @@ class Album():
         """
         track = self.track[self.current]
         n_samp_track = int(track.duration*MS2SEC*FS_DEC)
-        reference = track.start_frame + n_samp_track
+        reference = track.start_frame/DF + n_samp_track
         # +- 5 seconds around projected end frame
         excursion = 5*FS_DEC
         curpos = reference - excursion
@@ -229,56 +230,23 @@ class Album():
 
         return self
 
-    def process(self):
-        """encapsulate the substance of Album processing
-        """
-        # iterate and initialize tracks
-        for i in range(self.n_track):
-            self.track.append(Track(self.track_list[i]))
-            self.track[i].set_path(i, self.target)
-
-        # compute audio power envelope
-        self.envelope = wave_envelope(self.wavstream)
-
-        # truncate zeros in beginning
-        first_nz = np.nonzero(self.envelope)[0][0]
-        self.envelope = self.envelope[first_nz:-1]
-
-        # test envelope to expected
-        n_sec_env = len(self.envelope)/FS_DEC
-        n_sec_exp = sum([t.duration*MS2SEC for t in self.track])
-        if abs(1 - n_sec_env/n_sec_exp) > .05:
-            raise StreamError("envelope does not match expected duration")
-
-        # iterate and process tracks
-        for i in range(self.n_track):
-            self.locate_track().status()
-            self.current += 1
-
-        import bpdb; bpdb.set_trace()
-        # close the wav stream
-        self.wavstream.close()
-
-        return self
-
     def status(self):
         track = self.track[self.current]
         trackname = track.name.strip().replace("/", ";")
 
         # status prints
         print("{}".format(trackname))
-        self.err["dur"].append(track.n_frame*SAMP2MIN - track.duration*MS2MIN)
-        self.err["pos"].append(
-                track.start_frame*SAMP2MIN - self.cumtime)
-        print("\tESTIMATED duration: %.2f min         --> position: %.2f min" %
-              (track.n_frame*SAMP2MIN, track.start_frame*SAMP2MIN))
-        print("\tEXPECTED            %.2f min         -->           %.2f min" %
-              (track.duration*MS2MIN, self.cumtime))
+        self.err["dur"].append(track.n_frame/FS - track.duration/1000)
+        self.err["pos"].append(track.start_frame/FS - self.cumtime)
+        print("\tESTIMATED duration: %.2f sec         --> position: %.2f sec" %
+              (track.n_frame/FS, track.start_frame/FS))
+        print("\tEXPECTED            %.2f sec         -->           %.2f sec" %
+              (track.duration/1000, self.cumtime))
         print("\tERROR\t   (%.2f, %.2f) sec \t     --> (%.2f, %.2f) sec" %
-              (60*np.mean(self.err["dur"]), 60*np.std(self.err["dur"]),
-               60*np.mean(self.err["pos"]), 60*np.std(self.err["pos"])))
+              (np.mean(self.err["dur"]), np.std(self.err["dur"]),
+               np.mean(self.err["pos"]), np.std(self.err["pos"])))
 
-        self.cumtime += track.duration*MS2MIN
+        self.cumtime += track.duration/1000
 
         return self
 
@@ -294,6 +262,61 @@ class Album():
             wavtrack.setnframes(self.n_frame)
             wavtrack.setframerate(self.wavstream.getframerate())
             wavtrack.writeframes(y)
+
+    def process(self):
+        """encapsulate the substance of Album processing
+        """
+        # iterate and initialize tracks
+        for i in range(self.n_track):
+            self.track.append(Track(self.track_list[i]))
+            self.track[i].set_path(i, self.target)
+
+        # compute audio power envelope
+        self.envelope = wave_envelope(self.wavstream)
+
+        # truncate zeros in beginning
+        first_nz = np.nonzero(self.envelope)[0][0] - FS_DEC*3
+        self.envelope = self.envelope[first_nz:-1]
+        self.imageit()
+        import bpdb; bpdb.set_trace()
+
+        # test envelope to expected
+        n_sec_env = len(self.envelope)/FS_DEC
+        n_sec_exp = sum([t.duration*MS2SEC for t in self.track])
+        if abs(1 - n_sec_env/n_sec_exp) > .05:
+            raise StreamError("envelope does not match expected duration")
+
+        # iterate and process tracks
+        for i in range(self.n_track):
+            self.locate_track().status()
+            self.current += 1
+
+        self.imageit()
+
+        # close the wav stream
+        self.wavstream.close()
+
+        return self
+
+    def imageit(self):
+        x = self.envelope < 20**2
+        y = self.envelope/(np.max(self.envelope)*0.008)
+        n = np.shape(x)[0]
+        n_min = int(n/FS_DEC/60)
+
+        plt.figure(figsize=(3*n_min, 4))
+        plt.plot(x, marker=".", linestyle='')
+        # plt.plot(y, marker=".", linestyle='', markersize=3)
+        plt.plot(y, marker=".", linestyle='')
+        plt.ylim(0, 1.1)
+
+        marks = np.cumsum([t.duration*MS2SEC*FS_DEC for t in self.track])
+        [plt.axvline(x=mark, color="b", linestyle="--") for mark in marks]
+
+        # marks = np.cumsum([t.n_frame/DF for t in self.track])
+        # [plt.axvline(x=mark, color="r", linestyle="--") for mark in marks]
+
+        saveit('image')
 
 
 class Track():
@@ -315,26 +338,25 @@ class Track():
                 root, "%0.2d %s.wav" % (self.index + 1, self.name))
 
 
-def read_wav_mono(wav, N):
+def get_mean_stereo(wav, N):
     """grab samples from one channel (every other sample) of frame
     """
+    x = np.fromstring(wav.readframes(N), dtype=np.int16)
+    return np.mean(np.reshape(x, (2, -1)), axis=0)
 
-    return np.fromstring(wav.readframes(N), dtype=np.int16)[:2:-1]
-
-def rms(x):
-    return np.std(x)
+@vectorize([float64(float64)])
+def mabs2(x):
+    return x**2
 
 def wave_envelope(wavstream):
     """wave_envelope
     """
-    ds = config["streams"]["downsample_factor"]
-    print("computing audio envelope of file at {} downsample rate..."
-          .format(ds))
 
-    n_window = int(np.floor(wavstream.getnframes()/ds)) - 1
+    print("computing audio energy at {} downsample rate...".format(DF))
+    n_window = int(np.floor(wavstream.getnframes()/DF)) - 1
     x = np.zeros(n_window)
     for i in trange(n_window):
-        x[i] = np.std(read_wav_mono(wavstream, ds))
+        x[i] = np.var(get_mean_stereo(wavstream, DF))
 
     return x
 
@@ -414,18 +436,6 @@ def saveit(name):
     print("saving to {}".format(savepath))
     plt.savefig(savepath, bbox_inches='tight')
 
-def imageit(stream, x):
-    ds = config["streams"]["downsample_factor"]
-    efr = 44100/ds
-    n = np.shape(x)[0]
-    n_min = int(n/efr/60)
-    plt.figure(figsize=(3*n_min, 10))
-    plt.plot(x, marker=".", linestyle='')
-    marks = np.cumsum([t.duration/1000*efr for t in stream.track])
-    [plt.axvline(x=mark, color="b", linestyle="--", linewidth=0.3)
-        for mark in marks]
-    saveit('image')
-
 
 def image_audio_envelope_with_tracks_markers(markers, stream):
     """track-splitting validation image
@@ -444,9 +454,9 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
     plt.figure(figsize=(n_min, 10))
     plt.plot(x, marker=".", linestyle='', markersize=0.2)
     [plt.axvline(x=start, color="b", linestyle="--", linewidth=0.3)
-        for start in starts]
+            for start in starts]
     [plt.axvline(x=stop, color="r", linestyle="--", linewidth=0.3)
-        for stop in stops]
+            for stop in stops]
     saveit(stream.name)
 
 
@@ -486,7 +496,7 @@ def listing2streams(listing):
         pcm_path = join(config["path"]["pcm"], pcm)
 
         print("INFO: {} --> begin listing2streams stream of {}..."
-              .format(time.ctime(), pcm))
+                .format(time.ctime(), pcm))
 
         print("INFO: talking to iTunes...")
         dial_itunes(artist, album)
@@ -495,7 +505,7 @@ def listing2streams(listing):
         while not is_started(TMPSTREAM):
             time.sleep(1)
         print("INFO: Stream successfully started, "
-              " now waiting for finish (one dot per minute)...")
+                " now waiting for finish (one dot per minute)...")
 
         # wait for stream to finish
         while not is_finished(TMPSTREAM):

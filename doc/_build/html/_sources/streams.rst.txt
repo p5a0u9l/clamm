@@ -7,10 +7,7 @@ The streams module provides two programs for working with raw audio streams.
 
 listing2streams
 ^^^^^^^^^^^^^^^
-The first use case automates generating raw ``pcm`` files from iTunes using a listing of album/artist pairs in ``json`` format. 
-
-Example
-'''''''
+The first use case automates generating raw ``pcm`` files from iTunes using a listing of album/artist pairs in ``json`` format. Example::
 
     "A2": {
         "artist": "Richard Egarr, Academy of Ancient Music & Andrew Manze",

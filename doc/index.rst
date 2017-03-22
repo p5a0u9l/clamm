@@ -3,6 +3,7 @@
    :numbered:
 
    readme_include
+   tag_scheme
    code
    audiolib
    streams
