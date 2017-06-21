@@ -171,11 +171,9 @@ class LibTagFileAction(LibTagFile):
             self.instrument_groupings = json.load(fp)
 
         # auto_suggest
-        self.artist_suggest = tags.Suggestor(
-                self.tagdb, category="artist")
+        self.artist_suggest = tags.Suggestor(self.tagdb, category="artist")
 
-        self.composer_suggest = tags.Suggestor(
-                self.tagdb, category="composer")
+        self.composer_suggest = tags.Suggestor(self.tagdb, category="composer")
 
         # wrap methods in dictionary for dynamic access
         self.func = {}
@@ -384,7 +382,7 @@ class LibTagFileAction(LibTagFile):
         """
 
         for name in tags.get_artist_tagset(tagfile):
-            self.tagdb.verify_artist(name)
+            self.tagdb.verify_artist(name, tagfile)
 
     def synchronize_composer(self, tagfile, **kwargs):
         """Verify there is a corresponding entry in ``tags.json`` for

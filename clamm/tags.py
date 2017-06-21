@@ -428,7 +428,7 @@ class TagDatabase:
             self.add_new_perm(key, qname, category="composer")
             return self.match_from_perms(mname, category="composer")
 
-    def verify_artist(self, qname):
+    def verify_artist(self, qname, tagfile):
         """Verify the queried artist is in the database.
 
         Returns the tag database key given the query name found in
@@ -457,23 +457,25 @@ class TagDatabase:
 
         # if above fails, possibly nearest neighbor is correct?
         nearest = get_nearest_name(qname, self.sets["artist"])
+        import bpdb; bpdb.set_trace()
 
-        if not input("Accept {} as matching {}? ".format(nearest, qname)):
+
+        if not input("\nAccept {} as matching {}? ".format(nearest, qname)):
             # fetch actual key and update perms
             key = self.match_from_perms(nearest)
             self.add_new_perm(key, qname)
             return key
 
         # Hook in the new artist process if reach this point
-        if not input("Add new artist? [<CR>]/n: "):
+        if not input("\nAdd new artist? [<CR>]/n: "):
             new_key = self.get_new_item(qname)
             return new_key
 
         # It's also possible that the artist is really a composer
-        if not input("Is Composer Permutation? [<CR>]/n: "):
+        if not input("\nIs Composer Permutation? [<CR>]/n: "):
             cname = get_nearest_name(qname, self.sets["composer"])
 
-            if not input("Accept %s as matching %s? " % (cname, qname)):
+            if not input("\nAccept %s as matching %s? " % (cname, qname)):
                 ckey = self.match_from_perms(cname, category="composer")
             else:
                 ckey = self.suggest["composer"].prompt(
@@ -484,18 +486,18 @@ class TagDatabase:
 
         # Maybe there's an error in the database and we can enter
         # the key manually
-        if not input("Manually enter artist key? [<CR>]/n: "):
+        if not input("\nManually enter artist key? [<CR>]/n: "):
             man_key = self.suggest["artist"].prompt("aight, go 'head: ")
             actual_key = self.match_from_perms(man_key)
             return actual_key
 
         # One more chance to add a new artist
-        if not input("Add new artist? [<CR>]/n: "):
+        if not input("\nAdd new artist? [<CR>]/n: "):
             new_key = self.get_new_item(qname)
             return new_key
 
         # Allow some introspection before dying
-        if not input("debug? [<CR>]/n: "):
+        if not input("\ndebug? [<CR>]/n: "):
             import bpdb
             bpdb.set_trace()
 

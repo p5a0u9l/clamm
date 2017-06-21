@@ -16,7 +16,6 @@ import sys
 from subprocess import Popen
 
 # external
-from numba import vectorize, float64
 from tqdm import trange
 import matplotlib
 import numpy as np
@@ -30,8 +29,8 @@ import clamm
 import audiolib
 
 # constants, globals
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+matplotlib.use("Agg")
 global seconds
 TMPSTREAM = os.path.join(config["path"]["pcm"], "temp.pcm")
 DF = config["streams"]["downsample_factor"]
@@ -47,6 +46,7 @@ class StreamError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
+
 
 class Stream():
     def __init__(self, streampath):
@@ -204,8 +204,8 @@ class Album():
         # +- 5 seconds around projected end frame
         excursion = 5*FS_DEC
         curpos = reference - excursion
-        go_till = np.min([reference + excursion,
-            self.wavstream.getnframes()/DF])
+        go_till = np.min(
+                [reference + excursion, self.wavstream.getnframes()/DF])
         local_min = 1e9
         local_idx = -1
 
@@ -278,7 +278,6 @@ class Album():
         first_nz = np.nonzero(self.envelope)[0][0] - FS_DEC*3
         self.envelope = self.envelope[first_nz:-1]
         self.imageit()
-        import bpdb; bpdb.set_trace()
 
         # test envelope to expected
         n_sec_env = len(self.envelope)/FS_DEC
@@ -344,9 +343,6 @@ def get_mean_stereo(wav, N):
     x = np.fromstring(wav.readframes(N), dtype=np.int16)
     return np.mean(np.reshape(x, (2, -1)), axis=0)
 
-@vectorize([float64(float64)])
-def mabs2(x):
-    return x**2
 
 def wave_envelope(wavstream):
     """wave_envelope
@@ -431,6 +427,7 @@ def dial_itunes(artist, album):
     osa_prog = join(config["path"]["osa"], "play")
     Popen([config['bin']['osascript'], osa_prog])
 
+
 def saveit(name):
     savepath = join(config["path"]["envelopes"], name + ".png")
     print("saving to {}".format(savepath))
@@ -453,18 +450,16 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
     # create image (one inch per minute of audio)
     plt.figure(figsize=(n_min, 10))
     plt.plot(x, marker=".", linestyle='', markersize=0.2)
-    [plt.axvline(x=start, color="b", linestyle="--", linewidth=0.3)
-            for start in starts]
-    [plt.axvline(x=stop, color="r", linestyle="--", linewidth=0.3)
-            for stop in stops]
+    [plt.axvline(
+        x=start, color="b", linestyle="--", linewidth=0.3) for start in starts]
+    [plt.axvline(
+        x=stop, color="r", linestyle="--", linewidth=0.3) for stop in stops]
     saveit(stream.name)
 
 
 # --------------------------
 # Programs
 # --------------------------
-
-
 def listing2streams(listing):
     """a program for batch streaming a ``json`` listing of albums
     from iTunes to raw pcm files via ``shairport-sync``.
@@ -483,7 +478,7 @@ def listing2streams(listing):
     try:
         with open(listing) as b:
             batch = json.load(b)
-    except FileNotFoundError:
+    except:
         sys.exit("ERROR: File with name {} not found".format(listing))
 
     # iterate over albums in the listing
@@ -495,7 +490,8 @@ def listing2streams(listing):
         pcm = "{}; {}.pcm".format(artist, album)
         pcm_path = join(config["path"]["pcm"], pcm)
 
-        print("INFO: {} --> begin listing2streams stream of {}..."
+        print(
+                "INFO: {} --> begin listing2streams stream of {}..."
                 .format(time.ctime(), pcm))
 
         print("INFO: talking to iTunes...")
@@ -504,8 +500,9 @@ def listing2streams(listing):
         # wait for stream to start
         while not is_started(TMPSTREAM):
             time.sleep(1)
-        print("INFO: Stream successfully started, "
-                " now waiting for finish (one dot per minute)...")
+        print(
+                """INFO: Stream successfully started,
+                now waiting for finish (one dot per minute)...""")
 
         # wait for stream to finish
         while not is_finished(TMPSTREAM):
