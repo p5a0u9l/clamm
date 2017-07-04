@@ -457,8 +457,6 @@ class TagDatabase:
 
         # if above fails, possibly nearest neighbor is correct?
         nearest = get_nearest_name(qname, self.sets["artist"])
-        import bpdb; bpdb.set_trace()
-
 
         if not input("\nAccept {} as matching {}? ".format(nearest, qname)):
             # fetch actual key and update perms

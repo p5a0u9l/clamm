@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# __author__ Paul Adams
-
-""" streams module contains classes, programs, tools for creating
+"""
+streams module contains classes, programs, tools for creating
 and processing audio streams.
 """
 
@@ -34,12 +32,12 @@ matplotlib.use("Agg")
 global seconds
 TMPSTREAM = os.path.join(config["path"]["pcm"], "temp.pcm")
 DF = config["streams"]["downsample_factor"]
-DF = 4410*10
+DF = 4410 * 10
 FS = 44100
-FS_DEC = FS/DF
-SAMP2MIN = 1/FS/60
-MS2SEC = 1/1000
-MS2MIN = MS2SEC/60
+FS_DEC = FS / DF
+SAMP2MIN = 1 / FS / 60
+MS2SEC = 1 / 1000
+MS2MIN = MS2SEC / 60
 
 
 class StreamError(Exception):
@@ -113,7 +111,7 @@ class Stream():
         """Use iQuery to populate audio track tags.
         """
         for i, track in enumerate(self.query.get_tracks()):
-            tracknum = "%0.2d" % (i+1)
+            tracknum = "%0.2d" % (i + 1)
             globber = glob(join(self.target, tracknum + "*flac"))
             flac = taglib.File(globber[0])
             flac.tags["ALBUM"] = [self.query.collection_name]
@@ -176,10 +174,10 @@ class Album():
         THRESH = 500
         persistence = 1
         found_count = 0
-        preactivity_offset = 1*FS_DEC
+        preactivity_offset = 1 * FS_DEC
         firstindex = 0
         if self.current > 0:
-            firstindex = self.track[self.current - 1].end_frame/DF
+            firstindex = self.track[self.current - 1].end_frame / DF
 
         index = firstindex
         while found_count <= persistence:
@@ -193,19 +191,19 @@ class Album():
         activity = index - persistence - preactivity_offset
         if activity < firstindex:
             activity = firstindex
-        track.start_frame = activity*DF
+        track.start_frame = activity * DF
 
     def cur_track_stop(self):
         """find the min energy point around a reference
         """
         track = self.track[self.current]
-        n_samp_track = int(track.duration*MS2SEC*FS_DEC)
-        reference = track.start_frame/DF + n_samp_track
+        n_samp_track = int(track.duration * MS2SEC * FS_DEC)
+        reference = track.start_frame / DF + n_samp_track
         # +- 5 seconds around projected end frame
-        excursion = 5*FS_DEC
+        excursion = 5 * FS_DEC
         curpos = reference - excursion
         go_till = np.min(
-                [reference + excursion, self.wavstream.getnframes()/DF])
+            [reference + excursion, self.wavstream.getnframes() / DF])
         local_min = 1e9
         local_idx = -1
 
@@ -215,7 +213,7 @@ class Album():
                 local_idx = curpos
             curpos += 1
 
-        track.end_frame = local_idx*DF
+        track.end_frame = local_idx * DF
         track.n_frame = track.end_frame - track.start_frame
 
     def locate_track(self):
@@ -236,17 +234,17 @@ class Album():
 
         # status prints
         print("{}".format(trackname))
-        self.err["dur"].append(track.n_frame/FS - track.duration/1000)
-        self.err["pos"].append(track.start_frame/FS - self.cumtime)
+        self.err["dur"].append(track.n_frame / FS - track.duration / 1000)
+        self.err["pos"].append(track.start_frame / FS - self.cumtime)
         print("\tESTIMATED duration: %.2f sec         --> position: %.2f sec" %
-              (track.n_frame/FS, track.start_frame/FS))
+              (track.n_frame / FS, track.start_frame / FS))
         print("\tEXPECTED            %.2f sec         -->           %.2f sec" %
-              (track.duration/1000, self.cumtime))
+              (track.duration / 1000, self.cumtime))
         print("\tERROR\t   (%.2f, %.2f) sec \t     --> (%.2f, %.2f) sec" %
               (np.mean(self.err["dur"]), np.std(self.err["dur"]),
                np.mean(self.err["pos"]), np.std(self.err["pos"])))
 
-        self.cumtime += track.duration/1000
+        self.cumtime += track.duration / 1000
 
         return self
 
@@ -254,9 +252,9 @@ class Album():
         with wave.open(self.track.path, 'w') as wavtrack:
             self.wavstream.setpos(self.track.start_frame)
             y = np.fromstring(
-                    self.wavstream.readframes(self.n_frame),
-                    dtype=np.int16)
-            y = np.reshape(y, (int(y.shape[0]/2), 2))
+                self.wavstream.readframes(self.n_frame),
+                dtype=np.int16)
+            y = np.reshape(y, (int(y.shape[0] / 2), 2))
             wavtrack.setnchannels(2)
             wavtrack.setsampwidth(2)
             wavtrack.setnframes(self.n_frame)
@@ -275,14 +273,14 @@ class Album():
         self.envelope = wave_envelope(self.wavstream)
 
         # truncate zeros in beginning
-        first_nz = np.nonzero(self.envelope)[0][0] - FS_DEC*3
+        first_nz = np.nonzero(self.envelope)[0][0] - FS_DEC * 3
         self.envelope = self.envelope[first_nz:-1]
         self.imageit()
 
         # test envelope to expected
-        n_sec_env = len(self.envelope)/FS_DEC
-        n_sec_exp = sum([t.duration*MS2SEC for t in self.track])
-        if abs(1 - n_sec_env/n_sec_exp) > .05:
+        n_sec_env = len(self.envelope) / FS_DEC
+        n_sec_exp = sum([t.duration * MS2SEC for t in self.track])
+        if abs(1 - n_sec_env / n_sec_exp) > .05:
             raise StreamError("envelope does not match expected duration")
 
         # iterate and process tracks
@@ -299,17 +297,17 @@ class Album():
 
     def imageit(self):
         x = self.envelope < 20**2
-        y = self.envelope/(np.max(self.envelope)*0.008)
+        y = self.envelope / (np.max(self.envelope) * 0.008)
         n = np.shape(x)[0]
-        n_min = int(n/FS_DEC/60)
+        n_min = int(n / FS_DEC / 60)
 
-        plt.figure(figsize=(3*n_min, 4))
+        plt.figure(figsize=(3 * n_min, 4))
         plt.plot(x, marker=".", linestyle='')
         # plt.plot(y, marker=".", linestyle='', markersize=3)
         plt.plot(y, marker=".", linestyle='')
         plt.ylim(0, 1.1)
 
-        marks = np.cumsum([t.duration*MS2SEC*FS_DEC for t in self.track])
+        marks = np.cumsum([t.duration * MS2SEC * FS_DEC for t in self.track])
         [plt.axvline(x=mark, color="b", linestyle="--") for mark in marks]
 
         # marks = np.cumsum([t.n_frame/DF for t in self.track])
@@ -334,7 +332,7 @@ class Track():
     def set_path(self, i, root):
         self.index = i
         self.path = join(
-                root, "%0.2d %s.wav" % (self.index + 1, self.name))
+            root, "%0.2d %s.wav" % (self.index + 1, self.name))
 
 
 def get_mean_stereo(wav, N):
@@ -349,7 +347,7 @@ def wave_envelope(wavstream):
     """
 
     print("computing audio energy at {} downsample rate...".format(DF))
-    n_window = int(np.floor(wavstream.getnframes()/DF)) - 1
+    n_window = int(np.floor(wavstream.getnframes() / DF)) - 1
     x = np.zeros(n_window)
     for i in trange(n_window):
         x[i] = np.var(get_mean_stereo(wavstream, DF))
@@ -408,7 +406,7 @@ def is_finished(filepath):
 
 def generate_playlist(artist, album):
     sed_program = 's/SEARCHTERM/"{} {}"/g'.format(
-            artist, album).replace(":", "").replace("&", "")
+        artist, album).replace(":", "").replace("&", "")
     osa_prog = join(config["path"]["osa"], "program.js")
     osa_temp = join(config["path"]["osa"], "template.js")
     with open(osa_prog, "w") as osa:
@@ -441,11 +439,11 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
     x = wave_envelope(stream.wavpath)
 
     ds = config["streams"]["downsample_factor"]
-    efr = 44100/ds
-    starts = [mark[0]/ds for mark in markers]
-    stops = [starts[i] + mark[1]/ds for i, mark in enumerate(markers)]
+    efr = 44100 / ds
+    starts = [mark[0] / ds for mark in markers]
+    stops = [starts[i] + mark[1] / ds for i, mark in enumerate(markers)]
     n = np.shape(x)[0]
-    n_min = int(n/efr/60)
+    n_min = int(n / efr / 60)
 
     # create image (one inch per minute of audio)
     plt.figure(figsize=(n_min, 10))
@@ -491,8 +489,8 @@ def listing2streams(listing):
         pcm_path = join(config["path"]["pcm"], pcm)
 
         print(
-                "INFO: {} --> begin listing2streams stream of {}..."
-                .format(time.ctime(), pcm))
+            "INFO: {} --> begin listing2streams stream of {}..."
+            .format(time.ctime(), pcm))
 
         print("INFO: talking to iTunes...")
         dial_itunes(artist, album)
@@ -500,18 +498,18 @@ def listing2streams(listing):
         # wait for stream to start
         while not is_started(TMPSTREAM):
             time.sleep(1)
-        print(
-                """INFO: Stream successfully started,
-                now waiting for finish (one dot per minute)...""")
+        clamm.printr(
+            "Stream successfully started, " +
+            "waiting for finish (one dot per min.)...")
 
         # wait for stream to finish
         while not is_finished(TMPSTREAM):
             time.sleep(1)
-        print("INFO: Stream successfully finished.")
+        clamm.printr("Stream successfully finished.")
 
         os.rename(TMPSTREAM, pcm_path)
 
-    print("INFO: Batch successfully finished.")
+    clamm.printr("Batch successfully finished.")
 
 
 def stream2tracks(streampath):

@@ -318,7 +318,8 @@ class LibTagFileAction(LibTagFile):
 
         Examples
         --------
-            $ clamm library -d ~/path/to/album/ action --change_tag_by_name -k ALBUMARTIST -v 'Richard Egarr'
+            $ clamm library -d ~/path/to/album/ action \
+                    --change_tag_by_name -k ALBUMARTIST -v 'Richard Egarr'
 
         """
         # apply the change
