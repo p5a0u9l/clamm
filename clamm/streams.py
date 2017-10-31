@@ -22,9 +22,9 @@ from nltk import distance
 import itunespy
 
 # local
-from config import config
+from clamm.config import config
 import clamm
-import audiolib
+import clamm.audiolib
 
 # constants, globals
 import matplotlib.pyplot as plt
@@ -56,7 +56,7 @@ class Stream():
 
     def pcm2wav(self):
         if not os.path.exists(self.wavpath):
-            audiolib.pcm2wav(self.pcmpath, self.wavpath)
+            clamm.audiolib.pcm2wav(self.pcmpath, self.wavpath)
 
     def decode_path(self):
         """artist/album names from stream name
@@ -104,7 +104,8 @@ class Stream():
     def flacify(self):
         """convert all wav files in target directory to flac files
         """
-        [audiolib.wav2flac(wav) for wav in glob(join(self.target, "*wav"))]
+        [clamm.audiolib.wav2flac(wav)
+         for wav in glob(join(self.target, "*wav"))]
         return self
 
     def tagify(self):

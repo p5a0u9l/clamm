@@ -1,7 +1,0 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# __author__ Paul Adams
-
-import clamm
-if __name__ == "__main__":
-    clamm.main()

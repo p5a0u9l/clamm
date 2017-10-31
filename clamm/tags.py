@@ -22,9 +22,9 @@ import wikipedia
 import nltk
 
 # local
-import audiolib
+import clamm.audiolib
 import clamm
-from config import config
+from clamm.config import config
 
 # globals, constants
 artist_tag_names = ["ALBUMARTIST_CREDIT",
@@ -666,7 +666,7 @@ class Arrangement:
             tagfile.tags = {key: val for key, val in tagfile.tags.items()
                             if key not in
                             config["library"]["tags"]["prune_artist"]}
-            audiolib.commit_to_libfile(tagfile)
+            clamm.audiolib.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):
         """ Test if album or artist has changed.

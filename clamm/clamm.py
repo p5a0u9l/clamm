@@ -13,12 +13,12 @@ import os
 import json
 
 # external
-from colorama import Fore
+import colorama
 
 # local
-import audiolib
-import streams
-from config import config
+import clamm.audiolib
+import clamm.streams
+from clamm.config import config
 
 SPLIT_REGEX = '&\s*|,\s*|;\s*| - |:\s*|/\s*| feat. | and '
 
@@ -52,7 +52,9 @@ def printr(func_or_msg, verbosic_precedence=3, caller=True):
         caller_name = inspect.stack()[1][3]
 
     if isinstance(func_or_msg, str):
-        print("\n" + Fore.BLUE + caller_name + Fore.WHITE + ": " + func_or_msg)
+        print("\n" +
+              colorama.Fore.BLUE + caller_name +
+              colorama.Fore.WHITE + ": " + func_or_msg)
     else:
         func_or_msg()
 
@@ -61,13 +63,13 @@ def create_library_parsers(subps):
     """creates library sub-parsers
     """
     lib_p = subps.add_parser(
-            "library",
-            help="""Commands for acting on each audio file in the library,
+        "library",
+        help="""Commands for acting on each audio file in the library,
             or a specified directory under the library.""")
 
     lib_p.add_argument(
-                "-d", "--dir", type=str, default=config["path"]["library"],
-                help="""
+        "-d", "--dir", type=str, default=config["path"]["library"],
+        help="""
                 the target directory (default: config['path']['library'])
                 """)
 
@@ -75,8 +77,8 @@ def create_library_parsers(subps):
 
     # ACTION
     lib_act_p = lib_subps.add_parser(
-            "action",
-            help="""
+        "action",
+        help="""
         Apply one of the many small(er) library actions.
         Actions can be chained together, as in
         $ clamm library action --prune_artist_tags --synchronize_artist
@@ -86,38 +88,38 @@ def create_library_parsers(subps):
     lib_act_p.add_argument("-v", "--val", help="tag value")
 
     lib_act_p.add_argument(
-                "--prune_artist_tags", action="store_true",
-                help="""
+        "--prune_artist_tags", action="store_true",
+        help="""
                 Conform artist/albumartist tag key names by applying
                 config['library']['tags']['prune_artist'] rule.
                 e.g., ALBUMARTIST instead of ALBUM_ARTIST
                 """)
 
     lib_act_p.add_argument(
-                "--recently_added", action="store_true",
-                help="""
+        "--recently_added", action="store_true",
+        help="""
                 Generate a recently_added playlist by looking at the
                 date of the parent directory.
                 """)
 
     lib_act_p.add_argument(
-                "--remove_junk_tags", action="store_true",
-                help="""
+        "--remove_junk_tags", action="store_true",
+        help="""
                 Similar to prune_artist_tags, but indiscriminately
                 removes tags in config['library']['tags']['junk'].
                 """)
 
     lib_act_p.add_argument(
-                "--change_tag_by_name", action="store_true",
-                help="""
+        "--change_tag_by_name", action="store_true",
+        help="""
                 globally change a single tag field, applied to a
                 directory or library. Can also be used to delete
                 a tag by name.
                 """)
 
     lib_act_p.add_argument(
-                "--handle_composer_as_artist", action="store_true",
-                help="""
+        "--handle_composer_as_artist", action="store_true",
+        help="""
                 Test for and handle composer embedded in artist fields.
                 Background:
                     Many taggers/publishers deal with classical music
@@ -126,8 +128,8 @@ def create_library_parsers(subps):
                 """)
 
     lib_act_p.add_argument(
-                "--synchronize_artist", action="store_true",
-                help="""
+        "--synchronize_artist", action="store_true",
+        help="""
                 Verify there is a corresponding entry in tags.json for
                 each artist found in the tag file. If an entry is not
                 found, user is prompted to add a new artist.
@@ -136,8 +138,8 @@ def create_library_parsers(subps):
                 """)
 
     lib_act_p.add_argument(
-                "--synchronize_composer", action="store_true",
-                help="""
+        "--synchronize_composer", action="store_true",
+        help="""
                 Verify there is a corresponding entry in tags.json for
                 the composer found in the tag file.
                 If an entry is not found, user is prompted to add a
@@ -146,37 +148,37 @@ def create_library_parsers(subps):
                 """)
 
     lib_act_p.add_argument(
-                "--get_artist_counts", action="store_true",
-                help="""
+        "--get_artist_counts", action="store_true",
+        help="""
                 Update the occurence count of each artist in tags.json.
                 These are then used for ordering new arrangements.
                 """)
 
     lib_act_p.add_argument(
-                "--get_arrangement_set", action="store_true",
-                help="""
+        "--get_arrangement_set", action="store_true",
+        help="""
                 get the set and counts of all instrumental groupings
                 via sorted arrangements
                 """)
 
     lib_subps.add_parser(
-            "initialize",
-            help="""
+        "initialize",
+        help="""
             Initialize a new folder / library by applying a sequence
             of library actions.
             """)
 
     lib_subps.add_parser(
-             "synchronize",
-             help="""
+        "synchronize",
+        help="""
              synchronize the library file tags with the tags
              database""")
 
     lib_play_p = lib_subps.add_parser("playlist", help="")
 
     lib_play_p.add_argument(
-            "-q", '--query', type=str, nargs='+',
-            help="""structure --> TAG_KEY TRACK_RELATION TAG_VALUE SET_OPERATOR
+        "-q", '--query', type=str, nargs='+',
+        help="""structure --> TAG_KEY TRACK_RELATION TAG_VALUE SET_OPERATOR
             example --> ARRANGMENT contains guitar AND COMPOSER contains
             BACH""")
 
@@ -185,74 +187,74 @@ def create_config_parsers(subps):
     """ creates config sub-parsers
     """
     config_p = subps.add_parser(
-            "config",
-            help="""
+        "config",
+        help="""
             commands providing access to the configuration
             """)
     config_subps = config_p.add_subparsers(dest="sub_cmd")
     config_subps.add_parser(
-            "edit",
-            help="edit the config.json file in $EDITOR")
+        "edit",
+        help="edit the config.json file in $EDITOR")
     config_subps.add_parser(
-            "show",
-            help="pretty print the current configuration to stdout")
+        "show",
+        help="pretty print the current configuration to stdout")
 
 
 def create_database_parsers(subps):
     """ creates tag database sub-parsers
     """
     db_p = subps.add_parser(
-            "tags", help="commands providing access to tag database")
+        "tags", help="commands providing access to tag database")
     db_subps = db_p.add_subparsers(dest="sub_cmd")
     db_subps.add_parser(
-            "edit", help="edit the tags.json file in $EDITOR")
+        "edit", help="edit the tags.json file in $EDITOR")
     db_subps.add_parser(
-            "show", help="pretty print the tags.json file to stdout")
+        "show", help="pretty print the tags.json file to stdout")
 
 
 def create_stream_parsers(subps):
     """creates streams subparsers
     """
     strm_p = subps.add_parser(
-            "streams",
-            help="""
+        "streams",
+        help="""
             commands for working with streams of audio data
             """)
     strm_subps = strm_p.add_subparsers(dest="sub_cmd")
     strm_init_p = strm_subps.add_parser(
-            "listing",
-            help="""
+        "listing",
+        help="""
                  utilize a listing.json file to create a batch of new streams
                  """)
 
     strm_init_p.add_argument(
-                "-l", "--listing", type=str, default="json/listing.json",
-                help="Path to listing.json specification.")
+        "-l", "--listing", type=str, default="json/listing.json",
+        help="Path to listing.json specification.")
 
     strm_trck_p = strm_subps.add_parser(
-            "tracks",
-            help="""
+        "tracks",
+        help="""
                  process a raw pcm stream to tagged album tracks
                  """)
     strm_trck_p.add_argument(
-                "-s", "--streampath", type=str, default="",
-                help=" path to a raw pcm stream file ")
+        "-s", "--streampath", type=str, default="",
+        help=" path to a raw pcm stream file ")
 
     strm_strm_p = strm_subps.add_parser(
-            "stream",
-            help="""
+        "stream",
+        help="""
                  combination of batch listing pcm stream generation and
                  iterative conversion of pcm streams to tagged tracks
                  """)
 
     strm_strm_p.add_argument(
-                "-l", "--listing", type=str, default="listing.json",
-                help="Path to listing.json specification.")
+        "-l", "--listing", type=str, default="listing.json",
+        help="Path to listing.json specification.")
 
     strm_strm_p.add_argument(
-                "-s", "--streamfolder", type=str,
-                default=config["path"]["pcm"],
-                help="""
+        "-s", "--streamfolder", type=str,
+        default=config["path"]["pcm"],
+        help="""
                      path to directory containing 1 or more pcm streams,
                      defaults to path given in config.json
                      """)
@@ -264,8 +266,8 @@ def parse_inputs():
 
     # top-level
     p = argparse.ArgumentParser(
-            prog="CLAMM",
-            description="""
+        prog="CLAMM",
+        description="""
             CLassical Music Manager
             """)
     subps = p.add_subparsers(dest="cmd")
@@ -313,7 +315,7 @@ def streams_tracks(args):
 
        $ clamm streams initialize
     """
-    streams.stream2tracks(args.streampath)
+    clamm.streams.stream2tracks(args.streampath)
 
 
 def streams_listing(args):
@@ -324,17 +326,17 @@ def streams_listing(args):
 
        $ clamm library initialize
     """
-    streams.listing2streams(args.listing)
+    clamm.streams.listing2streams(args.listing)
 
 
 def streams_stream(args):
     """ Calls :func:`~streams.main`
     """
-    streams.main(args)
+    clamm.streams.main(args)
 
 
 def library_action(args):
-    """ calls :func:`~audiolib.AudioLib.walker` with ``args`` provided
+    """ calls :func:`~clamm.audiolib.AudioLib.walker` with ``args`` provided
     at command line.
 
     Example
@@ -343,7 +345,7 @@ def library_action(args):
 
        $ clamm library action --recently_added
     """
-    alib = audiolib.AudioLib(args)
+    alib = clamm.audiolib.AudioLib(args)
     funcdict = {q[0]: q[1] for q in args._get_kwargs()
                 if isinstance(q[1], bool)}
     for funcname, flag in funcdict.items():
@@ -355,7 +357,7 @@ def library_action(args):
 
 
 def library_initialize(args):
-    """ calls :func:`~audiolib.AudioLib.initialize` with ``args`` provided
+    """ calls :func:`~clamm.audiolib.AudioLib.initialize` with ``args`` provided
     at command line.
 
     Example
@@ -364,11 +366,11 @@ def library_initialize(args):
 
        $ clamm library initialize
     """
-    audiolib.AudioLib(args).initialize()
+    clamm.audiolib.AudioLib(args).initialize()
 
 
 def library_synchronize(args):
-    """ calls :func:`~audiolib.AudioLib.synchronize` with ``args``
+    """ calls :func:`~clamm.audiolib.AudioLib.synchronize` with ``args``
     provided at command line.
 
     Example
@@ -377,11 +379,11 @@ def library_synchronize(args):
 
        $ clamm library synchronize
     """
-    audiolib.AudioLib(args).synchronize()
+    clamm.audiolib.AudioLib(args).synchronize()
 
 
 def library_playlist(args):
-    """ calls :func:`~audiolib.AudioLib.playlist` with ``args``
+    """ calls :func:`~clamm.audiolib.AudioLib.playlist` with ``args``
     provided at command line.
 
     Example
@@ -390,7 +392,7 @@ def library_playlist(args):
 
        $ clamm library playlist
     """
-    audiolib.AudioLib(args).playlist()
+    clamm.audiolib.AudioLib(args).playlist()
 
 
 def main():
@@ -408,5 +410,5 @@ def main():
         printr("failed to parse the command {}...".format(full_cmd))
         raise ne
 
-    printr("parsed and executing command {}...".format(full_cmd))
+    printr("parsed and executing {}...".format(full_cmd))
     functor(args)

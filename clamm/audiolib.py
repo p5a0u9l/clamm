@@ -19,8 +19,8 @@ from colorama import Fore
 
 # local
 import clamm
-from config import config
-import tags
+from clamm.config import config
+import clamm.tags
 
 
 class AudioLib():
@@ -62,7 +62,7 @@ class AudioLib():
                 if not is_audio_file(name):
                     continue
                 self.ltfa.count["file"] += 1
-                func(tags.SafeTagFile(join(folder, name)), **kwargs)
+                func(clamm.tags.SafeTagFile(join(folder, name)), **kwargs)
 
         # initiate post-walk follow_up
         self.follow_up()
@@ -134,7 +134,7 @@ class LibTagFile():
     def __init__(self, args):
         # arg unpack
         self.args = args
-        self.tagdb = tags.TagDatabase()
+        self.tagdb = clamm.tags.TagDatabase()
         self.action = self.args.sub_cmd
         self.tagdb.update_sets()
 
@@ -171,9 +171,9 @@ class LibTagFileAction(LibTagFile):
             self.instrument_groupings = json.load(fp)
 
         # auto_suggest
-        self.artist_suggest = tags.Suggestor(self.tagdb, category="artist")
+        self.artist_suggest = clamm.tags.Suggestor(self.tagdb, category="artist")
 
-        self.composer_suggest = tags.Suggestor(self.tagdb, category="composer")
+        self.composer_suggest = clamm.tags.Suggestor(self.tagdb, category="composer")
 
         # wrap methods in dictionary for dynamic access
         self.func = {}
@@ -230,7 +230,7 @@ class LibTagFileAction(LibTagFile):
             if ftags["COMPILATION"][0] == "1":
                 return
         except KeyError:
-            tags.log_missing_tag("COMPILATION", tagfile)
+            clamm.tags.log_missing_tag("COMPILATION", tagfile)
 
         if sq.operators[0] == "AND":
             include = True
@@ -241,7 +241,7 @@ class LibTagFileAction(LibTagFile):
                         include = False
                 except KeyError:
                     include = False
-                    tags.log_missing_tag(key, tagfile)
+                    clamm.tags.log_missing_tag(key, tagfile)
 
         elif sq.operators[0] == "OR":
             include = False
@@ -338,7 +338,7 @@ class LibTagFileAction(LibTagFile):
         """
 
         # existence test
-        aset = tags.get_artist_tagset(tagfile)
+        aset = clamm.tags.get_artist_tagset(tagfile)
         acom = aset.intersection(self.tagdb.sets["composer"])
 
         # null hypothesis --> do nothing
@@ -351,7 +351,7 @@ class LibTagFileAction(LibTagFile):
                 atags = re.split(clamm.SPLIT_REGEX, ', '.join(val))
                 aset = set([val.strip() for val in atags])
                 if aset.difference(acom):
-                    tagfile.tags[key] = tags.messylist2tagstr(
+                    tagfile.tags[key] = clamm.tags.messylist2tagstr(
                             list(aset.difference(acom)))
                 else:
                     tagfile.tags[key] = input('Enter artist name: ')
@@ -363,7 +363,7 @@ class LibTagFileAction(LibTagFile):
         """Find arrangement that is best fit for a given file.
         """
 
-        aset = tags.get_artist_tagset(tagfile)
+        aset = clamm.tags.get_artist_tagset(tagfile)
 
         # arrangement, defined as the pairing of artist to instrument
         arrange = self.tagdb.verify_arrangement(
@@ -382,7 +382,7 @@ class LibTagFileAction(LibTagFile):
         Will not update ARTIST/ALBUMARTIST until arrangement is verified
         """
 
-        for name in tags.get_artist_tagset(tagfile):
+        for name in clamm.tags.get_artist_tagset(tagfile):
             self.tagdb.verify_artist(name, tagfile)
 
     def synchronize_composer(self, tagfile, **kwargs):
@@ -431,7 +431,7 @@ class LibTagFileAction(LibTagFile):
         """count/record artist occurences (to use as ranking)
         """
 
-        aset = tags.get_artist_tagset(tagfile)
+        aset = clamm.tags.get_artist_tagset(tagfile)
 
         for aname in aset:
             artistname = self.tagdb.match_from_perms(aname)
