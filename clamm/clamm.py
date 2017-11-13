@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
 # __author__ Paul Adams
 
-""" clamm is a module containing command line interface implementation
+""" module containing command line interface implementation
 and utilities.
 """
 
-# built-ins
 import inspect
 import argparse
 from subprocess import call
 import os
 import json
 
-# external
 import colorama
 
-# local
 import clamm.audiolib
 import clamm.streams
 from clamm.config import config
@@ -29,7 +26,7 @@ def pretty_dict(d):
 
 
 def printr(func_or_msg, verbosic_precedence=3, caller=True):
-    """a utility that enables callers simplify printing behavior.
+    """a utility that enables callers to simplify printing behavior.
 
         Args:
             func_or_msg: Either a function handle to call or a message string

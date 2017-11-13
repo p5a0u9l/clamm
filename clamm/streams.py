@@ -3,7 +3,6 @@ streams module contains classes, programs, tools for creating
 and processing audio streams.
 """
 
-# built-ins
 import os
 from os.path import join
 import wave
@@ -13,7 +12,6 @@ import time
 import sys
 from subprocess import Popen
 
-# external
 from tqdm import trange
 import matplotlib
 import numpy as np
@@ -21,7 +19,6 @@ import taglib
 from nltk import distance
 import itunespy
 
-# local
 from clamm.config import config
 import clamm
 import clamm.audiolib
@@ -456,9 +453,9 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
     saveit(stream.name)
 
 
-# --------------------------
+# --------
 # Programs
-# --------------------------
+# --------
 def listing2streams(listing):
     """a program for batch streaming a ``json`` listing of albums
     from iTunes to raw pcm files via ``shairport-sync``.

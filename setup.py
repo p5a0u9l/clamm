@@ -5,7 +5,7 @@ import os
 from distutils.core import setup
 
 setup(name='clamm',
-      version='0.1.1',
+      version='0.1.2',
       description='CLAssical Music Manager',
       author='Paul Adams',
       author_email='p5a0u9l@gmail.com',
