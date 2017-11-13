@@ -8,5 +8,6 @@ from os.path import join, expanduser
 
 # bootstrap config file
 cfg_path = join(expanduser('~'), '.config', 'clamm', 'config.json')
+
 with open(cfg_path) as f:
     config = json.load(f)
