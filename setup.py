@@ -8,7 +8,9 @@ setup(name='clamm',
       version='0.1.2',
       description='CLAssical Music Manager',
       author='Paul Adams',
-      author_email='p5a0u9l@gmail.com',
+      url='https://github.com/p5a0u9l/clamm',
+      license='MIT',
+      author_email='p5a0u9l@uw.edu',
       data_files=[
           os.path.expanduser('~/.config/clamm/config.json'),
           ['json/config.json']
@@ -16,4 +18,4 @@ setup(name='clamm',
       entry_points={
           'console_scripts': ['clamm=clamm.clamm:main']
                       },
-      packages=['clamm'])
+      packages=find_packages())
