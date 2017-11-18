@@ -1,59 +1,17 @@
-# -*- coding: utf-8 -*-
-# __author__ Paul Adams
-
-""" module containing command line interface implementation
+"""
+module containing command line interface implementation
 and utilities.
 """
 
-import inspect
 import argparse
 from subprocess import call
 import os
 import json
 
-import colorama
-
-import clamm.audiolib
-import clamm.streams
-from clamm.config import config
-
-SPLIT_REGEX = '&\s*|,\s*|;\s*| - |:\s*|/\s*| feat. | and '
-
-
-def pretty_dict(d):
-    for k, v in d.items():
-        print("\t{}: {}".format(k, v))
-
-
-def printr(func_or_msg, verbosic_precedence=3, caller=True):
-    """a utility that enables callers to simplify printing behavior.
-
-        Args:
-            func_or_msg: Either a function handle to call or a message string
-            to print.
-
-        Kwargs:
-            verbosic_precedence: Integer setting verbosity level.
-            If not set, the message is printed if the config value
-            `verbosity` is higher than the default value.
-            The caller can short-circuit the config value by setting
-            the kwarg.
-            caller: Bool indicating whether or not to print the caller name.
-    """
-
-    if int(config["verbosity"]) > verbosic_precedence:
-        return
-
-    caller_name = ""
-    if caller:
-        caller_name = inspect.stack()[1][3]
-
-    if isinstance(func_or_msg, str):
-        print("\n" +
-              colorama.Fore.BLUE + caller_name +
-              colorama.Fore.WHITE + ": " + func_or_msg)
-    else:
-        func_or_msg()
+from clamm import audiolib
+from clamm import utils
+from clamm import streams
+from clamm.utils import CONFIG
 
 
 def create_library_parsers(subps):
@@ -65,9 +23,9 @@ def create_library_parsers(subps):
             or a specified directory under the library.""")
 
     lib_p.add_argument(
-        "-d", "--dir", type=str, default=config["path"]["library"],
+        "-d", "--dir", type=str, default=CONFIG["path"]["library"],
         help="""
-                the target directory (default: config['path']['library'])
+                the target directory (default: CONFIG['path']['library'])
                 """)
 
     lib_subps = lib_p.add_subparsers(dest="sub_cmd")
@@ -88,7 +46,7 @@ def create_library_parsers(subps):
         "--prune_artist_tags", action="store_true",
         help="""
                 Conform artist/albumartist tag key names by applying
-                config['library']['tags']['prune_artist'] rule.
+                CONFIG['library']['tags']['prune_artist'] rule.
                 e.g., ALBUMARTIST instead of ALBUM_ARTIST
                 """)
 
@@ -103,7 +61,7 @@ def create_library_parsers(subps):
         "--remove_junk_tags", action="store_true",
         help="""
                 Similar to prune_artist_tags, but indiscriminately
-                removes tags in config['library']['tags']['junk'].
+                removes tags in CONFIG['library']['tags']['junk'].
                 """)
 
     lib_act_p.add_argument(
@@ -250,7 +208,7 @@ def create_stream_parsers(subps):
 
     strm_strm_p.add_argument(
         "-s", "--streamfolder", type=str,
-        default=config["path"]["pcm"],
+        default=CONFIG["path"]["pcm"],
         help="""
                      path to directory containing 1 or more pcm streams,
                      defaults to path given in config.json
@@ -262,12 +220,12 @@ def parse_inputs():
     """
 
     # top-level
-    p = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         prog="CLAMM",
         description="""
             CLassical Music Manager
             """)
-    subps = p.add_subparsers(dest="cmd")
+    subps = parser.add_subparsers(dest="cmd")
 
     # sub-levels
     create_database_parsers(subps)
@@ -275,33 +233,33 @@ def parse_inputs():
     create_stream_parsers(subps)
     create_library_parsers(subps)
 
-    return p
+    return parser
 
 
-def tags_show(args):
+def tags_show(_):
     """Dump tags database to ``STDOUT``
     """
-    with open(config["path"]["database"]) as db:
-        tags = json.load(db)
+    with open(CONFIG["path"]["database"]) as database:
+        tags = json.load(database)
     print(json.dumps(tags, ensure_ascii=False, indent=4))
 
 
-def tags_edit(args):
+def tags_edit(_):
     """Open tag database in ``$EDITOR``
     """
-    call([os.environ["EDITOR"], config["path"]["database"]])
+    call([os.environ["EDITOR"], CONFIG["path"]["database"]])
 
 
-def config_show(args):
+def config_show(_):
     """Dump config.json to ``STDOUT``
     """
-    print(json.dumps(config, ensure_ascii=False, indent=4))
+    print(json.dumps(CONFIG, ensure_ascii=False, indent=4))
 
 
-def config_edit(args):
+def config_edit(_):
     """Open config.json in ``$EDITOR``.
     """
-    call([os.environ["EDITOR"], config["path"]["config"]])
+    call([os.environ["EDITOR"], CONFIG["path"]["config"]])
 
 
 def streams_tracks(args):
@@ -312,7 +270,7 @@ def streams_tracks(args):
 
        $ clamm streams initialize
     """
-    clamm.streams.stream2tracks(args.streampath)
+    streams.stream2tracks(args.streampath)
 
 
 def streams_listing(args):
@@ -323,13 +281,13 @@ def streams_listing(args):
 
        $ clamm library initialize
     """
-    clamm.streams.listing2streams(args.listing)
+    streams.listing2streams(args.listing)
 
 
 def streams_stream(args):
     """ Calls :func:`~streams.main`
     """
-    clamm.streams.main(args)
+    streams.main(args)
 
 
 def library_action(args):
@@ -342,12 +300,12 @@ def library_action(args):
 
        $ clamm library action --recently_added
     """
-    alib = clamm.audiolib.AudioLib(args)
+    alib = audiolib.AudioLib(args)
     funcdict = {q[0]: q[1] for q in args._get_kwargs()
                 if isinstance(q[1], bool)}
     for funcname, flag in funcdict.items():
         if flag:
-            printr(funcname)
+            utils.printr(funcname)
             alib.func = funcname
             func = eval("alib.ltfa.{}".format(funcname))
             alib.walker(func)
@@ -363,7 +321,7 @@ def library_initialize(args):
 
        $ clamm library initialize
     """
-    clamm.audiolib.AudioLib(args).initialize()
+    audiolib.AudioLib(args).initialize()
 
 
 def library_synchronize(args):
@@ -376,7 +334,7 @@ def library_synchronize(args):
 
        $ clamm library synchronize
     """
-    clamm.audiolib.AudioLib(args).synchronize()
+    audiolib.AudioLib(args).synchronize()
 
 
 def library_playlist(args):
@@ -389,7 +347,7 @@ def library_playlist(args):
 
        $ clamm library playlist
     """
-    clamm.audiolib.AudioLib(args).playlist()
+    audiolib.LibTagFileAction(args).make_playlist()
 
 
 def main():
@@ -403,9 +361,9 @@ def main():
     full_cmd = "{}_{}".format(args.cmd, args.sub_cmd)
     try:
         functor = eval(full_cmd)
-    except NameError as ne:
-        printr("failed to parse the command {}...".format(full_cmd))
-        raise ne
+    except NameError:
+        utils.printr("failed to parse the command {}...".format(full_cmd))
+        raise NameError
 
-    printr("parsed and executing {}...".format(full_cmd))
+    utils.printr("parsed and executing {}...".format(full_cmd))
     functor(args)

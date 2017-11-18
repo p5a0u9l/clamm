@@ -10,7 +10,7 @@ setup(name='clamm',
       author='Paul Adams',
       url='https://github.com/p5a0u9l/clamm',
       license='MIT',
-      author_email='p5a0u9l@uw.edu',
+      author_email='p5a0u9l@gmail.com',
       data_files=[
           os.path.expanduser('~/.config/clamm/config.json'),
           ['json/config.json']
@@ -18,4 +18,4 @@ setup(name='clamm',
       entry_points={
           'console_scripts': ['clamm=clamm.clamm:main']
                       },
-      packages=find_packages())
+      packages=['clamm'])

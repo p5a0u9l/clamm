@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-# __author__ Paul Adams
-
-""" the tags module contains classes and functions that create an
+"""
+the tags module contains classes and functions that create an
 interface to the clamm's tag database.
 """
 
-# built-ins
 from __future__ import unicode_literals, print_function
 import json
 from collections import OrderedDict
@@ -13,7 +10,6 @@ import copy
 from subprocess import call
 import re
 
-# external
 from translate import Translator
 import prompt_toolkit as ptk
 from nltk import distance
@@ -21,18 +17,9 @@ import taglib
 import wikipedia
 import nltk
 
-# local
-import clamm.audiolib
-import clamm
-from clamm.config import config
-
-# globals, constants
-artist_tag_names = ["ALBUMARTIST_CREDIT",
-                    "ALBUM ARTIST",
-                    "ARTIST",
-                    "ARTIST_CREDIT",
-                    "ALBUMARTIST"]
-tk = nltk.tokenize.WordPunctTokenizer()
+from clamm import audiolib
+from clamm import utils
+from clamm.utils import CONFIG
 
 
 class SafeTagFile(taglib.File):
@@ -61,11 +48,11 @@ class StructuredQuery():
     def __init__(self, querystr):
         self.query = querystr
         self.keys = [key for key in self.query
-                     if key in config["playlist"]["tag_keys"]]
+                     if key in CONFIG["playlist"]["tag_keys"]]
         relations = [key for key in self.query
-                     if key in config["playlist"]["relations"]]
+                     if key in CONFIG["playlist"]["relations"]]
         self.operators = [key for key in self.query
-                          if key in config["playlist"]["operators"]]
+                          if key in CONFIG["playlist"]["operators"]]
         self.tag_vals = [key for key in self.query if
                          key not in self.keys and
                          key not in relations and
@@ -121,7 +108,7 @@ class TagDatabase:
     Attributes
     ----------
     path: str
-        path to ``tags.json`` file, set via ``config["path"]["database"]``
+        path to ``tags.json`` file, set via ``CONFIG["path"]["database"]``
 
     arange: Arrangement
         Arrangement instance used for verifying track instrumental
@@ -133,10 +120,11 @@ class TagDatabase:
     """
 
     def __init__(self):
-        self.path = config["path"]["database"]
+        self.path = CONFIG["path"]["database"]
         self.load()
         self.arange = Arrangement()
         self.new_item = {}
+        self.tokenizr = nltk.tokenize.WordPunctTokenizer()
 
         # auto_suggest
         self.suggest = {
@@ -150,12 +138,12 @@ class TagDatabase:
 
     def dump(self):
         """ dump """
-        with open(self.path, "w") as f:
-            json.dump(self._db, f, ensure_ascii=False, indent=4)
+        with open(self.path, "w") as fptr:
+            json.dump(self._db, fptr, ensure_ascii=False, indent=4)
 
     def load(self):
-        with open(self.path, "r") as f:
-            self._db = json.load(f)
+        with open(self.path, "r") as fptr:
+            self._db = json.load(fptr)
 
         self.artist = self._db["artist"]
         self.composer = self._db["composer"]
@@ -223,7 +211,7 @@ class TagDatabase:
         add a new name permutation to the item's permutation list
         """
 
-        clamm.printr("Adding to permutations and updating db...")
+        utils.printr("Adding to permutations and updating db...")
         self._db[category][key]["permutations"].append(perm)
         self.refresh()
 
@@ -233,8 +221,8 @@ class TagDatabase:
         for approval
         """
         # on approval, add the new artist/composer to the database
-        clamm.printr("proposed item for database:")
-        clamm.pretty_dict(self.new_item)
+        utils.printr("proposed item for database:")
+        utils.pretty_dict(self.new_item)
         if not input("Accept? [y]/n: "):
             self._db[category][self.new_item["full_name"]] = self.new_item
             self.refresh()
@@ -249,7 +237,7 @@ class TagDatabase:
         returns the database key of the new item
         """
 
-        clamm.printr("Searching for information on %s..." % (item))
+        utils.printr("Searching for information on %s..." % (item))
 
         # attempt to match the item to a wiki entry
         page = wiki_query(item)
@@ -477,7 +465,7 @@ class TagDatabase:
                 ckey = self.match_from_perms(cname, category="composer")
             else:
                 ckey = self.suggest["composer"].prompt(
-                        "Manually enter composer key... ")
+                    "Manually enter composer key... ")
 
             self.add_new_perm(ckey, qname, category="composer")
             return []
@@ -496,8 +484,7 @@ class TagDatabase:
 
         # Allow some introspection before dying
         if not input("\ndebug? [<CR>]/n: "):
-            import bpdb
-            bpdb.set_trace()
+            pass
 
         # Declare a misfit and walk away in disgust
         else:
@@ -528,7 +515,7 @@ class TagDatabase:
                 self.artist[aname]["count"]) for aname in artist_set}
         else:
             artist_set = get_artist_tagset(tagfile)
-            sar = {}
+            sar = OrderedDict()
             for aname in artist_set:
                 akey = self.match_from_perms(aname)
                 if akey is not None:
@@ -560,20 +547,22 @@ class TagDatabase:
             The value for the sought field.
         """
         known_set = self.sets[category]
-        guess = [word for word in tk.tokenize(summary) if word in known_set]
+        guess = [word
+                 for word in self.tokenizr.tokenize(summary)
+                 if word in known_set]
         guess = list(set(guess))    # make sure entries are unique
         result = None
 
         while guess:
-            g = guess.pop(0)
-            resp = input("guessing, accept %s? [y]/n: " % (g))
+            current_guess = guess.pop(0)
+            resp = input("guessing, accept %s? [y]/n: " % (current_guess))
             if not resp:
-                result = g
+                result = current_guess
                 break
 
         if result is None:
             result = self.suggest[category].prompt(
-                    "Enter {}: ".format(category))
+                "Enter {}: ".format(category))
 
         return result
 
@@ -617,7 +606,7 @@ class Arrangement:
         self.commit_flag = False
         self.prima = 0
         self.arrangement = ""
-        self.sar = ""  # sorted arrangement
+        self.sar = OrderedDict()  # sorted arrangement
         self.trackc = 1
         self.artist = ""
         self.albumartist = ""
@@ -628,7 +617,7 @@ class Arrangement:
         The default value for ``prima`` corresponds to the highest
         ranking (via ARTIST frequency count) ``artist``. This behavior
         can be changed via
-        ``config["database"]["prompt_for_album_artist"]`` to prompt
+        ``CONFIG["database"]["prompt_for_album_artist"]`` to prompt
         for a custom ordering.
         """
         self.sar = sar
@@ -639,9 +628,9 @@ class Arrangement:
             self.prima = 0  # default value
 
             if len(self.sar.keys()) > 1 and \
-                    config["database"]["prompt_for_album_artist"]:
+                    CONFIG["database"]["prompt_for_album_artist"]:
 
-                clamm.printr("ranking arrangement:")
+                utils.printr("ranking arrangement:")
                 print("\n\tarrangement: {}\n\ttitle: {}\n\talbum: {}"
                       .format(
                           self.sar,
@@ -653,20 +642,21 @@ class Arrangement:
                 if isinstance(eval(response), int):
                     self.prima = int(response)
                 else:
-                    clamm.printr(
-                            "Unable to parse response, using default ordering")
+                    utils.printr(
+                        "Unable to parse response, using default ordering")
 
         self.unpack()
 
     def apply(self, tagfile):
+        """ apply """
         if self.commit_flag:
             tagfile.tags["ARRANGEMENT"] = self.arrangement
             tagfile.tags["ALBUMARTIST"] = self.albumartist
             tagfile.tags["ARTIST"] = self.artist
             tagfile.tags = {key: val for key, val in tagfile.tags.items()
                             if key not in
-                            config["library"]["tags"]["prune_artist"]}
-            clamm.audiolib.commit_to_libfile(tagfile)
+                            CONFIG["library"]["tags"]["prune_artist"]}
+            audiolib.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):
         """ Test if album or artist has changed.
@@ -682,6 +672,7 @@ class Arrangement:
         return is_diff_album or is_delta_sar
 
     def unpack(self):
+        """ unpack """
         alist = [item for item in self.sar.keys()]
         self.albumartist = str(alist[self.prima])
         self.artist = messylist2tagstr(alist)
@@ -690,12 +681,14 @@ class Arrangement:
 
 
 class KeyNotFoundError(Exception):
+    """ KeyNotFoundError """
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
 
 
 class TagDatabaseError(Exception):
+    """ TagDatabaseError """
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
@@ -718,20 +711,20 @@ def get_borndied(summary):
         Dates of subject birth and death. Example format is 1910-1990.
     """
 
-    m = re.findall("\d{4}", summary)
+    result = re.findall("\d{4}", summary)
 
-    if len(m) >= 2:
-        borndied = m[0] + "-" + m[1]
+    if len(result) >= 2:
+        borndied = result[0] + "-" + result[1]
         if not input("Accept %s? [y]/n: " % (borndied)):
             return borndied
 
         else:
-            borndied = m[0] + "-"
+            borndied = result[0] + "-"
             if not input("Accept %s? [y]/n: " % (borndied)):
                 return borndied
 
-    elif len(m) >= 1:
-        borndied = m[0] + "-"
+    elif len(result) >= 1:
+        borndied = result[0] + "-"
 
         resp = input("Accept %s? [y]/n: " % (borndied))
         if not resp:
@@ -762,14 +755,14 @@ def wiki_query(search):
     results = wikipedia.search(search)
 
     # print options
-    clamm.printr("options: ")
+    utils.printr("options: ")
     print("\t\t-3: Translate\n\t\t-2: New string\n\t\t-1: Die\n")
 
     # print query results
-    clamm.printr("query returns: ")
+    utils.printr("query returns: ")
     if results:
-        for i, r in enumerate(results):
-            print("\t\t{}: {}".format(i, r))
+        for i, result in enumerate(results):
+            print("\t\t{}: {}".format(i, result))
 
     # prompt action
     idx = input("Enter choice (default to 0):")
@@ -808,15 +801,18 @@ def get_translation(search):
     search string translated to Latin characters.
     """
 
-    tr = Translator(input("Enter from language: "), 'en')
-    return tr.translate(search)
+    xlater = Translator(input("Enter from language: "), 'en')
+    return xlater.translate(search)
 
 
 def get_artist_tagset(tagfile):
+    """ get_artist_tagset """
     tags = tagfile.tags
-    atags = {t: re.split(clamm.SPLIT_REGEX,
-             ', '.join(tags[t])) for t in artist_tag_names
-             if t in tags.keys()}
+    atags = {
+        t: re.split(
+            utils.SPLIT_REGEX,
+            ', '.join(tags[t]))
+        for t in utils.ARTIST_TAG_NAMES if t in tags.keys()}
     aset = set([v.strip() for val in atags.values() for v in val])
     return aset
 
@@ -848,6 +844,7 @@ def get_nearest_name(qname, name_set):
 
 
 def perms2set(D):
+    """ perms2set """
     clist = list(D.keys())
     blist = [D[c]["permutations"] for c in clist]
     # flatten
@@ -860,20 +857,21 @@ def perms2set(D):
 def messylist2set(alist):
     """owing to laziness, these lists may contain gotchas
     """
-    y = [item for item in alist if item.__class__ is str and len(item) > 0]
-    return set(y)
+    clean = [item for item in alist if item.__class__ is str and len(item) > 0]
+    return set(clean)
 
 
 def messylist2tagstr(alist):
-    s, delim = "", "; "
+    """ messylist2tagstr """
+    result, delim = "", "; "
     for i, item in enumerate(alist):
         if isinstance(item, list):
             item = item[0]
         if i == len(alist) - 1:
             delim = ""
-        s += "{}{}".format(item, delim)
+        result += "{}{}".format(item, delim)
 
-    return s
+    return result
 
 
 def swap_first_last_name(name_str):
@@ -902,14 +900,15 @@ def swap_first_last_name(name_str):
 
 
 def log_missing_tag(key, tagfile):
-    with open(config["path"]["troubled_tracks"]) as f:
-        tt = json.load(f)
-        tpath = tagfile.path.replace(config["path"]["library"], "$LIBRARY")
-        if key in tt["missing_tag"].keys():
-            if tpath not in tt["missing_tag"][key]:
-                tt["missing_tag"][key].append(tpath)
+    """ log_missing_tag """
+    with open(CONFIG["path"]["troubled_tracks"]) as fptr:
+        trouble = json.load(fptr)
+        tpath = tagfile.path.replace(CONFIG["path"]["library"], "$LIBRARY")
+        if key in trouble["missing_tag"].keys():
+            if tpath not in trouble["missing_tag"][key]:
+                trouble["missing_tag"][key].append(tpath)
         else:
-            tt["missing_tag"][key] = [tpath]
+            trouble["missing_tag"][key] = [tpath]
 
-    with open(config["path"]["troubled_tracks"], mode="w") as f:
-        json.dump(tt, f, ensure_ascii=False, indent=4)
+    with open(CONFIG["path"]["troubled_tracks"], mode="w") as fptr:
+        json.dump(trouble, fptr, ensure_ascii=False, indent=4)

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-# __author__ Paul Adams
-
 """ an interface to a classical music audio library.
 """
 
-# built-ins
 import re
 from os.path import splitext, join
 from os import walk
@@ -14,13 +10,11 @@ from subprocess import Popen, call
 import sys
 import json
 
-# external
 from colorama import Fore
 
-# local
-import clamm
-from clamm.config import config
-import clamm.tags
+from clamm import tags
+from clamm import utils
+from clamm.utils import CONFIG
 
 
 class AudioLib():
@@ -48,11 +42,11 @@ class AudioLib():
             if not files:
                 continue
 
-            if config["verbosity"] > 2:
-                clamm.printr("walked into {}...".format(
-                    folder.replace(config["path"]["library"], "$LIBRARY")))
+            if CONFIG["verbosity"] > 2:
+                utils.printr("walked into {}...".format(
+                    folder.replace(CONFIG["path"]["library"], "$LIBRARY")))
             else:
-                clamm.printr(lambda: [
+                utils.printr(lambda: [
                     sys.stdout.write(Fore.GREEN + "." + Fore.WHITE),
                     sys.stdout.flush()])
 
@@ -62,12 +56,13 @@ class AudioLib():
                 if not is_audio_file(name):
                     continue
                 self.ltfa.count["file"] += 1
-                func(clamm.tags.SafeTagFile(join(folder, name)), **kwargs)
+                func(tags.SafeTagFile(join(folder, name)), **kwargs)
 
         # initiate post-walk follow_up
         self.follow_up()
 
     def follow_up(self, **kwargs):
+        """ follow up """
         after_action_review(self.ltfa.count)
 
         if self.func == "playlist":
@@ -76,15 +71,15 @@ class AudioLib():
         elif self.func == "recently_added":
             # now, write the accumulated list to a simple pls file format
             pl_name = "recently-added-{}".format(time.ctime()[:10])
-            pl_path = os.path.join(config["path"]["playlist"], pl_name)
-            with open(pl_path, mode="w") as pl:
-                [pl.write("{}\n".format(track))
-                    for track in self.ltfa._playlist]
+            pl_path = os.path.join(CONFIG["path"]["playlist"], pl_name)
+            with open(pl_path, mode="w") as playlist_file:
+                _ = [playlist_file.write("{}\n".format(track))
+                     for track in self.ltfa.the_playlist]
 
             # finally, tell cmus to add the playlist to its catalog
             call([
-                config["bin"]["cmus-remote"],
-                config["opt"]["cmus-remote"],
+                CONFIG["bin"]["cmus-remote"],
+                CONFIG["opt"]["cmus-remote"],
                 "pl-import " + pl_path])
 
         elif self.func == "get_artist_counts":
@@ -94,8 +89,8 @@ class AudioLib():
             self.ltfa.tagdb.refresh()
 
         elif self.func == "get_arrangement_set":
-            with open(config["path"]["config"]) as fp:
-                json.dump(self.ltfa.instrument_groupings, fp, indent=4)
+            with open(CONFIG["path"]["CONFIG"]) as fptr:
+                json.dump(self.ltfa.instrument_groupings, fptr, indent=4)
 
     def synchronize(self):
         """
@@ -134,7 +129,7 @@ class LibTagFile():
     def __init__(self, args):
         # arg unpack
         self.args = args
-        self.tagdb = clamm.tags.TagDatabase()
+        self.tagdb = tags.TagDatabase()
         self.action = self.args.sub_cmd
         self.tagdb.update_sets()
 
@@ -142,12 +137,14 @@ class LibTagFile():
         self.count = {"tag": 0, "track": 0, "album": 0, "file": 0}
 
     def write2tagfile(self, tagfile):
-        (a, b) = commit_to_libfile(tagfile)
-        self.count["track"] += a
-        self.count["tag"] += b
+        """ write2tagfile """
+        (atrack, atag) = commit_to_libfile(tagfile)
+        self.count["track"] += atrack
+        self.count["tag"] += atag
 
 
 class LibTagFileAction(LibTagFile):
+    """ LibTagFileAction """
     def __init__(self, args):
         """a collection of library tag file _action_ methods.
 
@@ -163,17 +160,17 @@ class LibTagFileAction(LibTagFile):
         LibTagFile.__init__(self, args)
 
         # helper attrs
-        self._playlist = []         # persistent storage for playlist
+        self.the_playlist = []         # persistent storage for playlist
         self.last_composer = ""     # persistent storage for last composer
         self.artist_count = {}      # persistent storage for count of artist
 
-        with open(config["path"]["config"]) as fp:
-            self.instrument_groupings = json.load(fp)
+        with open(CONFIG["path"]["CONFIG"]) as fptr:
+            self.instrument_groupings = json.load(fptr)
 
         # auto_suggest
-        self.artist_suggest = clamm.tags.Suggestor(self.tagdb, category="artist")
+        self.artist_suggest = tags.Suggestor(self.tagdb, category="artist")
 
-        self.composer_suggest = clamm.tags.Suggestor(self.tagdb, category="composer")
+        self.composer_suggest = tags.Suggestor(self.tagdb, category="composer")
 
         # wrap methods in dictionary for dynamic access
         self.func = {}
@@ -193,70 +190,70 @@ class LibTagFileAction(LibTagFile):
         fext = os.path.splitext(tagfile.path)
 
         # short-circuit if file is already preferred_type
-        if fext == config["file"]["preferred_type"]:
+        if fext == CONFIG["file"]["preferred_type"]:
             return
 
         # otherwise, proceed
         print("converting {} to {}...".format(fname, fext))
         src = tagfile.path
         dst = join(
-                fpath, fname.replace(fext, config["file"]["preferred_type"]))
+            fpath, fname.replace(fext, CONFIG["file"]["preferred_type"]))
 
         # and the conversion itself
         with open("/dev/null", "w") as redirect:
-            Popen([config["bin"]["ffmpeg"],
-                  config["opt"]["ffmpeg"], "-i", src, dst],
-                  stdout=redirect)
+            Popen(
+                [CONFIG["bin"]["ffmpeg"],
+                 CONFIG["opt"]["ffmpeg"],
+                 "-i", src, dst], stdout=redirect)
 
     def recently_added(self, tagfile, **kwargs):
         """generate a recently added playlist by looking at the
         date of the parent directory.
         """
         parent = os.path.split(tagfile.path)[0]
-        SEC_PER_DAY = 60*60*24
-        age_in_days = (time.time() - os.stat(parent).st_ctime)/SEC_PER_DAY
-        if age_in_days < config["library"]["recently_added_day_age"]:
-            self._playlist.append(tagfile.path)
+        age_in_days = (time.time() - os.stat(parent).st_ctime)/utils.SEC_PER_DAY
+        if age_in_days < CONFIG["library"]["recently_added_day_age"]:
+            self.the_playlist.append(tagfile.path)
 
-    def playlist(self, tagfile, **kwargs):
+    def make_playlist(self, tagfile, **kwargs):
         """ playlist filter
         """
 
         # unpack
         ftags = tagfile.tags
-        sq = kwargs["sq"]
+        query = kwargs["query"]
 
         try:
             if ftags["COMPILATION"][0] == "1":
                 return
         except KeyError:
-            clamm.tags.log_missing_tag("COMPILATION", tagfile)
+            tags.log_missing_tag("COMPILATION", tagfile)
 
-        if sq.operators[0] == "AND":
+        if query.operators[0] == "AND":
             include = True
-            for i, filt in enumerate(sq.filters):
-                key = sq.keys[i]
+            for i, filt in enumerate(query.filters):
+                key = query.keys[i]
                 try:
                     if filt[key] not in ftags[key]:
                         include = False
                 except KeyError:
                     include = False
-                    clamm.tags.log_missing_tag(key, tagfile)
+                    tags.log_missing_tag(key, tagfile)
 
-        elif sq.operators[0] == "OR":
+        elif query.operators[0] == "OR":
             include = False
 
-            for i, filt in enumerate(sq.filters):
-                key = sq.keys[i]
+            for i, filt in enumerate(query.filters):
+                key = query.keys[i]
                 if filt[key] in ftags[key]:
                     include = True
 
         if include:
-            self.playlist.append(tagfile.path)
+            self.the_playlist.append(tagfile.path)
 
     def prune_artist_tags(self, tagfile, **kwargs):
         """Conform artist/albumartist tag key names by applying
-        config['library']['tags']['prune_artist'] rules
+        CONFIG['library']['tags']['prune_artist'] rules
 
         Example
             ALBUMARTIST instead of ALBUM_ARTIST
@@ -266,31 +263,31 @@ class LibTagFileAction(LibTagFile):
 
         # make sure we have at least the basics
         has_minimal_artist_set = set(
-                config["library"]["tags"]["keep_artist"]).intersection(
-                        set(ftags))
+            CONFIG["library"]["tags"]["keep_artist"]).intersection(
+                set(ftags))
         if not has_minimal_artist_set:
             return
 
         # apply deletion
         tagfile.tags = {key: val for key, val in ftags.items()
                         if key not in
-                        config["library"]["tags"]["prune_artist"]}
+                        CONFIG["library"]["tags"]["prune_artist"]}
 
         # write to file
         self.write2tagfile(tagfile)
 
     def remove_junk_tags(self, tagfile, **kwargs):
         """similar to prune_artist_tags, but removes all tags that
-        are in ``config["library"]["tags"]["junk"]``
+        are in ``CONFIG["library"]["tags"]["junk"]``
         """
 
         ftags = tagfile.tags
 
         # apply deletion
         tagfile.ftags = {
-                key: val for key, val in ftags.items()
-                if key not in config["library"]["tags"]["junk"]
-                }
+            key: val for key, val in ftags.items()
+            if key not in CONFIG["library"]["tags"]["junk"]
+            }
 
         # write to file
         self.write2tagfile(tagfile)
@@ -298,7 +295,7 @@ class LibTagFileAction(LibTagFile):
     def delete_tag_globber(self, tagfile, **kwargs):
         """Unlike ``remove_junk_tags``, allows removing as glob of
         similarly named tags, as in the MUSICBRAINZ_* tags, without
-        cluttering  ``config["library"]["tags"]["junk"]`` with
+        cluttering  ``CONFIG["library"]["tags"]["junk"]`` with
         excessive entries.
         """
 
@@ -338,7 +335,7 @@ class LibTagFileAction(LibTagFile):
         """
 
         # existence test
-        aset = clamm.tags.get_artist_tagset(tagfile)
+        aset = tags.get_artist_tagset(tagfile)
         acom = aset.intersection(self.tagdb.sets["composer"])
 
         # null hypothesis --> do nothing
@@ -348,11 +345,11 @@ class LibTagFileAction(LibTagFile):
         # detection action (check each ARTIST field and diff where found)
         for key, val, in tagfile.tags.items():
             if key.find("ARTIST") > -1:
-                atags = re.split(clamm.SPLIT_REGEX, ', '.join(val))
+                atags = re.split(utils.SPLIT_REGEX, ', '.join(val))
                 aset = set([val.strip() for val in atags])
                 if aset.difference(acom):
-                    tagfile.tags[key] = clamm.tags.messylist2tagstr(
-                            list(aset.difference(acom)))
+                    tagfile.tags[key] = tags.messylist2tagstr(
+                        list(aset.difference(acom)))
                 else:
                     tagfile.tags[key] = input('Enter artist name: ')
 
@@ -363,13 +360,13 @@ class LibTagFileAction(LibTagFile):
         """Find arrangement that is best fit for a given file.
         """
 
-        aset = clamm.tags.get_artist_tagset(tagfile)
+        aset = tags.get_artist_tagset(tagfile)
 
         # arrangement, defined as the pairing of artist to instrument
         arrange = self.tagdb.verify_arrangement(
-                aset,
-                tagfile,
-                skipflag=config["database"]["skip_existing_arrangements"])
+            aset,
+            tagfile,
+            skipflag=CONFIG["database"]["skip_existing_arrangements"])
 
         if not arrange:
             return
@@ -382,7 +379,7 @@ class LibTagFileAction(LibTagFile):
         Will not update ARTIST/ALBUMARTIST until arrangement is verified
         """
 
-        for name in clamm.tags.get_artist_tagset(tagfile):
+        for name in tags.get_artist_tagset(tagfile):
             self.tagdb.verify_artist(name, tagfile)
 
     def synchronize_composer(self, tagfile, **kwargs):
@@ -396,7 +393,7 @@ class LibTagFileAction(LibTagFile):
         # and bootstrap from there
         if "COMPOSER" not in tagfile.tags.keys():
             # print the fields for context
-            clamm.pretty_dict(tagfile.tags)
+            utils.pretty_dict(tagfile.tags)
 
             # attempt to use last_composer (speeds up when adding new album)
             fmt = "Accept last input: {}? [CR] ".format(self.last_composer)
@@ -431,7 +428,7 @@ class LibTagFileAction(LibTagFile):
         """count/record artist occurences (to use as ranking)
         """
 
-        aset = clamm.tags.get_artist_tagset(tagfile)
+        aset = tags.get_artist_tagset(tagfile)
 
         for aname in aset:
             artistname = self.tagdb.match_from_perms(aname)
@@ -452,7 +449,7 @@ class LibTagFileAction(LibTagFile):
 
         # init/increment arrangement
         found = False
-        for key, val in self.instrument_groupings.items():
+        for key, _ in self.instrument_groupings.items():
             if sar == key:
                 found = True
                 self.instrument_groupings[key] += 1
@@ -462,13 +459,12 @@ class LibTagFileAction(LibTagFile):
 
 
 def after_action_review(count):
-    clamm.printr(
-            "\n%15s: %5d %10s: %5d\n%15s: %5d %10s: %5d"
-            % (
-                "changed tags", count["tag"],
-                "tracks", count["track"],
-                "counted folder", count["album"],
-                "files", count["file"]))
+    """ after_action_review """
+    utils.printr(
+        "\n%15s: %5d %10s: %5d\n%15s: %5d %10s: %5d"
+        % ("changed tags", count["tag"],
+           "tracks", count["track"], "counted folder",
+           count["album"], "files", count["file"]))
 
 
 def pcm2wav(pcm_name, wav_name):
@@ -477,12 +473,12 @@ def pcm2wav(pcm_name, wav_name):
     """
 
     call(
-            [config["bin"]["ffmpeg"],
-                "-hide_banner",
-                "-y", "-f", "s16le", "-ar", "44.1k", "-ac", "2", "-i",
-                pcm_name, wav_name])
+        [CONFIG["bin"]["ffmpeg"],
+         "-hide_banner", "-y", "-f",
+         "s16le", "-ar", "44.1k",
+         "-ac", "2", "-i", pcm_name, wav_name])
 
-    keep_pcms = config["library"]["keep_pcms_once_wavs_made"]
+    keep_pcms = CONFIG["library"]["keep_pcms_once_wavs_made"]
     if not keep_pcms and os.path.exists(wav_name):
         os.remove(pcm_name)
 
@@ -491,19 +487,19 @@ def wav2flac(wav_name):
     """utility for using ``ffmpeg`` to convert a wav file to a flac file
     """
     call(
-            [config["bin"]["ffmpeg"],
-                "-hide_banner", "-y", "-i",
-                wav_name, wav_name.replace(".wav", ".flac")])
+        [CONFIG["bin"]["ffmpeg"],
+         "-hide_banner", "-y", "-i",
+         wav_name, wav_name.replace(".wav", ".flac")])
 
-    if not config["library"]["keep_wavs_once_flacs_made"]:
+    if not CONFIG["library"]["keep_wavs_once_flacs_made"]:
         os.remove(wav_name)
 
 
 def is_audio_file(name):
     """readability short-cut for testing whether file contains a known
-    audio file extension as defined in ``config["file"]["known_types"]``
+    audio file extension as defined in ``CONFIG["file"]["known_types"]``
     """
-    return splitext(name)[1] in config["file"]["known_types"]
+    return splitext(name)[1] in CONFIG["file"]["known_types"]
 
 
 def commit_to_libfile(tagfile):
@@ -513,7 +509,7 @@ def commit_to_libfile(tagfile):
 
     # check if differences (or newness) exists
     n_delta_fields, n_tracks_updated = 0, 0
-    for k, v in tagfile.tags.items():
+    for k, _ in tagfile.tags.items():
         is_new = k not in tagfile.tag_copy.keys()
         if not is_new:
             is_dif = tagfile.tags[k][0] != tagfile.tag_copy[k][0]
@@ -526,18 +522,18 @@ def commit_to_libfile(tagfile):
 
     n_tracks_updated += 1
     # prompted or automatic write
-    if config["database"]["require_prompt_when_committing"]:
-        clamm.printr("Proposed: ")
-        clamm.pretty_dict(sorted(tagfile.tags))
+    if CONFIG["database"]["require_prompt_when_committing"]:
+        utils.printr("Proposed: ")
+        utils.pretty_dict(sorted(tagfile.tags))
 
         if not input("Accept? [y]/n: "):
             tagfile.save()
 
     else:
         tagfile.save()
-        clamm.printr(
-                lambda: [
-                    sys.stdout.write(Fore.RED + "." + Fore.WHITE),
-                    sys.stdout.flush()])
+        utils.printr(
+            lambda: [
+                sys.stdout.write(Fore.RED + "." + Fore.WHITE),
+                sys.stdout.flush()])
 
     return (n_tracks_updated, n_delta_fields)
