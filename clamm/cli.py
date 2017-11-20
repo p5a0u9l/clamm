@@ -7,11 +7,15 @@ import argparse
 from subprocess import call
 import os
 import json
+import filecmp
 
+import colorama
+
+import clamm
 from clamm import audiolib
 from clamm import utils
 from clamm import streams
-from clamm.utils import CONFIG
+from clamm import CONFIG
 
 
 def create_library_parsers(subps):
@@ -23,7 +27,8 @@ def create_library_parsers(subps):
             or a specified directory under the library.""")
 
     lib_p.add_argument(
-        "-d", "--dir", type=str, default=CONFIG["path"]["library"],
+        "-d", "--dir", type=str,
+        default=utils.resolve(CONFIG["path"]["library"]),
         help="""
                 the target directory (default: CONFIG['path']['library'])
                 """)
@@ -208,11 +213,25 @@ def create_stream_parsers(subps):
 
     strm_strm_p.add_argument(
         "-s", "--streamfolder", type=str,
-        default=CONFIG["path"]["pcm"],
+        default=utils.resolve(CONFIG["path"]["pcm"]),
         help="""
                      path to directory containing 1 or more pcm streams,
                      defaults to path given in config.json
                      """)
+
+
+def create_setup_parsers(subps):
+    """ create_setup_parsers """
+    strm_p = subps.add_parser(
+        "setup",
+        help="""
+            commands for setting up clamm for first time use
+            """)
+    strm_subps = strm_p.add_subparsers(dest="sub_cmd")
+    strm_init_p = strm_subps.add_parser(
+        "files",
+        help=""" Copy configuration file and initial tag database to
+        persistent location. """)
 
 
 def parse_inputs():
@@ -228,6 +247,7 @@ def parse_inputs():
     subps = parser.add_subparsers(dest="cmd")
 
     # sub-levels
+    create_setup_parsers(subps)
     create_database_parsers(subps)
     create_config_parsers(subps)
     create_stream_parsers(subps)
@@ -239,7 +259,7 @@ def parse_inputs():
 def tags_show(_):
     """Dump tags database to ``STDOUT``
     """
-    with open(CONFIG["path"]["database"]) as database:
+    with open(utils.resolve(CONFIG["path"]["database"])) as database:
         tags = json.load(database)
     print(json.dumps(tags, ensure_ascii=False, indent=4))
 
@@ -247,7 +267,9 @@ def tags_show(_):
 def tags_edit(_):
     """Open tag database in ``$EDITOR``
     """
-    call([os.environ["EDITOR"], CONFIG["path"]["database"]])
+    call(
+        [os.environ["EDITOR"],
+         utils.resolve(CONFIG["path"]["database"])])
 
 
 def config_show(_):
@@ -259,7 +281,7 @@ def config_show(_):
 def config_edit(_):
     """Open config.json in ``$EDITOR``.
     """
-    call([os.environ["EDITOR"], CONFIG["path"]["config"]])
+    call([os.environ["EDITOR"], utils.resolve(CONFIG["path"]["config"])])
 
 
 def streams_tracks(args):
@@ -349,6 +371,39 @@ def library_playlist(args):
     """
     audiolib.LibTagFileAction(args).make_playlist()
 
+def setup_files(_):
+    """ setup for first use """
+
+    def safe_copy(filepath, name):
+        """ safe_copy """
+        if not os.path.exists(filepath):
+            call(["mkdir", path])
+        initialpath = os.path.join(clamm.PKG_ROOT, "templates", name)
+        targetpath = os.path.join(filepath, name)
+        if os.path.exists(targetpath):
+            if not filecmp.cmp(targetpath, initialpath):
+                utils.printr(
+                    "%s already exists and differs from the stock file..."
+                    % (targetpath))
+                if input("Confirm overwrite [Y]/n: "):
+                    utils.printr("Got it. peace")
+                    exit(1)
+
+        utils.printr("copying %s to %s..." % (initialpath, targetpath))
+        call(["cp", initialpath, targetpath])
+
+    utils.printr("setting up clamm for first use...")
+    path = os.path.join(os.environ["HOME"], ".config", "clamm")
+    utils.printr(
+        "Propose copying files to %s..." % (path))
+
+    if input("Accept? [y]/n: "):
+        utils.printr("That's cool. peace")
+        exit(1)
+    else:
+        safe_copy(path, "config.json")
+        safe_copy(path, "tags.json")
+
 
 def main():
     """clamm entrance point.
@@ -357,13 +412,29 @@ def main():
     """
     args = parse_inputs().parse_args()
 
+    functor = {
+        "setup_files": setup_files,
+        "tags_show": tags_show,
+        "config_edit": config_edit,
+        "config_show": config_show,
+        "library_action": library_action,
+        "library_playlist": library_playlist,
+        "library_initialize": library_initialize,
+        "library_synchronize": library_synchronize,
+        "streams_stream": streams_stream,
+        "streams_tracks": streams_tracks,
+        "streams_listing": streams_listing,
+        "tags_edit": tags_edit
+    }
+
     # retrieve the parsed cmd/sub/... and evaluate
     full_cmd = "{}_{}".format(args.cmd, args.sub_cmd)
-    try:
-        functor = eval(full_cmd)
-    except NameError:
+    if not full_cmd in functor.keys():
         utils.printr("failed to parse the command {}...".format(full_cmd))
-        raise NameError
+        exit(1)
 
-    utils.printr("parsed and executing {}...".format(full_cmd))
-    functor(args)
+    utils.printr(
+        "parsed and executing " + colorama.Fore.MAGENTA +
+        full_cmd + colorama.Fore.WHITE + "...")
+
+    functor[full_cmd](args)

@@ -12,23 +12,21 @@ import time
 import sys
 from subprocess import Popen
 
+import matplotlib.pyplot as plt
 from tqdm import trange
-import matplotlib
 import numpy as np
 import taglib
 from nltk import distance
 import itunespy
 
-from clamm.config import config
-import clamm
-import clamm.audiolib
+from clamm import CONFIG
+from clamm import utils
+from clamm import audiolib
 
 # constants, globals
-import matplotlib.pyplot as plt
-matplotlib.use("Agg")
-global seconds
-TMPSTREAM = os.path.join(config["path"]["pcm"], "temp.pcm")
-DF = config["streams"]["downsample_factor"]
+plt.switch_backend("agg")
+TMPSTREAM = os.path.join(utils.resolve(CONFIG["path"]["pcm"]), "temp.pcm")
+DF = CONFIG["streams"]["downsample_factor"]
 DF = 4410 * 10
 FS = 44100
 FS_DEC = FS / DF
@@ -38,48 +36,54 @@ MS2MIN = MS2SEC / 60
 
 
 class StreamError(Exception):
+    """ StreamError """
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
 
 
 class Stream():
+    """ Stream """
     def __init__(self, streampath):
         """ """
         self.pcmpath = streampath
         self.wavpath = streampath.replace("pcm", "wav")
         self.query = []
-        self.THRESH = 8
+        self.artist = []
+        self.album = []
+        self.name = []
+        self.threshold = 8
 
     def pcm2wav(self):
+        """ pcm2wav """
         if not os.path.exists(self.wavpath):
-            clamm.audiolib.pcm2wav(self.pcmpath, self.wavpath)
+            audiolib.pcm2wav(self.pcmpath, self.wavpath)
 
     def decode_path(self):
         """artist/album names from stream name
         """
         tmp = self.pcmpath.replace(".pcm", "")
-        [artist, album] = tmp.split(";")
+        _ = [artist, album] = tmp.split(";")
         self.artist, self.album = os.path.split(artist)[-1], album.strip()
-        clamm.printr("Found and Parsed {} --> {} as target...".format(
+        utils.printr("Found and Parsed {} --> {} as target...".format(
             self.artist, self.album))
         self.name = "{}; {}".format(self.artist, self.album)
 
         return self
 
-    def iQuery(self):
+    def itunes_query(self):
         """seek an iTunes ``collection_id`` by iterating over albums
         of from a search artist and finding the minimum
         ``nltk.distance.edit_distance``
         """
         min_dist = 10000
         for aquery in itunespy.search_album(self.artist):
-            d = distance.edit_distance(aquery.collection_name, self.album)
-            if d < min_dist:
-                min_dist = d
+            dist = distance.edit_distance(aquery.collection_name, self.album)
+            if dist < min_dist:
+                min_dist = dist
                 min_query = aquery
 
-        if min_dist < self.THRESH:
+        if min_dist < self.threshold:
             self.query = itunespy.lookup(id=min_query.collection_id)[0]
 
         if not self.query:
@@ -88,7 +92,9 @@ class Stream():
         return self
 
     def prepare_target(self):
-        artist_dir = join(config["path"]["library"], self.query.artist_name)
+        artist_dir = join(
+            utils.resolve(CONFIG["path"]["library"]),
+            self.query.artist_name)
         self.target = join(artist_dir, self.query.collection_name)
 
         if not os.path.exists(artist_dir):
@@ -101,12 +107,13 @@ class Stream():
     def flacify(self):
         """convert all wav files in target directory to flac files
         """
-        [clamm.audiolib.wav2flac(wav)
-         for wav in glob(join(self.target, "*wav"))]
+        map(
+            audiolib.wav2flac,
+            glob(join(self.target, "*wav")))
         return self
 
     def tagify(self):
-        """Use iQuery to populate audio track tags.
+        """Use itunes_query to populate audio track tags.
         """
         for i, track in enumerate(self.query.get_tracks()):
             tracknum = "%0.2d" % (i + 1)
@@ -169,7 +176,7 @@ class Album():
         call this the start frame of a track
         """
         track = self.track[self.current]
-        THRESH = 500
+        threshold = 500
         persistence = 1
         found_count = 0
         preactivity_offset = 1 * FS_DEC
@@ -179,7 +186,7 @@ class Album():
 
         index = firstindex
         while found_count <= persistence:
-            if self.envelope[index] > THRESH:
+            if self.envelope[index] > threshold:
                 found_count += 1
             else:
                 found_count = 0
@@ -227,6 +234,7 @@ class Album():
         return self
 
     def status(self):
+        """ status """
         track = self.track[self.current]
         trackname = track.name.strip().replace("/", ";")
 
@@ -247,6 +255,7 @@ class Album():
         return self
 
     def finalize(self):
+        """ finalize """
         with wave.open(self.track.path, 'w') as wavtrack:
             self.wavstream.setpos(self.track.start_frame)
             y = np.fromstring(
@@ -294,22 +303,23 @@ class Album():
         return self
 
     def imageit(self):
-        x = self.envelope < 20**2
+        """ imageit """
+        x_data = self.envelope < 20**2
         y = self.envelope / (np.max(self.envelope) * 0.008)
-        n = np.shape(x)[0]
+        n = np.shape(x_data)[0]
         n_min = int(n / FS_DEC / 60)
 
         plt.figure(figsize=(3 * n_min, 4))
-        plt.plot(x, marker=".", linestyle='')
+        plt.plot(x_data, marker=".", linestyle='')
         # plt.plot(y, marker=".", linestyle='', markersize=3)
         plt.plot(y, marker=".", linestyle='')
         plt.ylim(0, 1.1)
 
         marks = np.cumsum([t.duration * MS2SEC * FS_DEC for t in self.track])
-        [plt.axvline(x=mark, color="b", linestyle="--") for mark in marks]
+        [plt.axvline(x_data=mark, color="b", linestyle="--") for mark in marks]
 
         # marks = np.cumsum([t.n_frame/DF for t in self.track])
-        # [plt.axvline(x=mark, color="r", linestyle="--") for mark in marks]
+        # [plt.axvline(x_data=mark, color="r", linestyle="--") for mark in marks]
 
         saveit('image')
 
@@ -336,8 +346,8 @@ class Track():
 def get_mean_stereo(wav, N):
     """grab samples from one channel (every other sample) of frame
     """
-    x = np.fromstring(wav.readframes(N), dtype=np.int16)
-    return np.mean(np.reshape(x, (2, -1)), axis=0)
+    x_data = np.fromstring(wav.readframes(N), dtype=np.int16)
+    return np.mean(np.reshape(x_data, (2, -1)), axis=0)
 
 
 def wave_envelope(wavstream):
@@ -346,11 +356,11 @@ def wave_envelope(wavstream):
 
     print("computing audio energy at {} downsample rate...".format(DF))
     n_window = int(np.floor(wavstream.getnframes() / DF)) - 1
-    x = np.zeros(n_window)
+    x_data = np.zeros(n_window)
     for i in trange(n_window):
-        x[i] = np.var(get_mean_stereo(wavstream, DF))
+        x_data[i] = np.var(get_mean_stereo(wavstream, DF))
 
-    return x
+    return x_data
 
 
 def start_shairport(filepath):
@@ -358,25 +368,14 @@ def start_shairport(filepath):
     """
 
     Popen(['killall', 'shairport-sync'])
-    time.sleep(5)
+    time.sleep(2)
 
     Popen(['{} {} > "{}"'.format(
-        config['bin']['shairport-sync'], "-o=stdout", filepath)], shell=True)
+        CONFIG['bin']['shairport-sync'], "-o=stdout", filepath)], shell=True)
 
     time.sleep(1)
 
     print("INFO: shairport up and running.")
-
-
-def size_sampler(filepath):
-    """ return the file size, sampled with a 1 second gap to
-    determine if the file is being written to.
-    """
-
-    s0 = os.path.getsize(filepath)
-    time.sleep(1)
-    s1 = os.path.getsize(filepath)
-    return (s0, s1)
 
 
 def is_started(filepath):
@@ -386,31 +385,45 @@ def is_started(filepath):
     # reset seconds counter
     global seconds
     seconds = 0
-    (s0, s1) = size_sampler(filepath)
-    return s1 > s0
+    (init_size, last_size) = size_sampler(filepath)
+    return last_size > init_size
 
+class SimpleState(object):
+    def __init__(self, filepath):
+        self.count = 0
+        self.filepath = filepath
 
-def is_finished(filepath):
-    (s0, s1) = size_sampler(filepath)
-    global seconds
+    def get_state(self, state):
+        """ return the file size, sampled with a 1 second gap to
+        determine if the file is being written to.
+        """
 
-    seconds += 2    # one for size_sampler and one for main loop
-    if seconds % 60 == 0:
-        sys.stdout.write(".")
-        sys.stdout.flush()
+        init_size = os.path.getsize(self.filepath)
+        time.sleep(1)
+        last_size = os.path.getsize(self.filepath)
 
-    return s1 == s0
+        self.count += 2    # one for size_sampler and one for main loop
+        if self.count % 60 == 0:
+            sys.stdout.write(".")
+            sys.stdout.flush()
+
+        if state == "finishd":
+            return last_size == init_size
+
+        elif state == "startd":
+            return last_size > init_size
 
 
 def generate_playlist(artist, album):
+    """ generate_playlist """
     sed_program = 's/SEARCHTERM/"{} {}"/g'.format(
         artist, album).replace(":", "").replace("&", "")
-    osa_prog = join(config["path"]["osa"], "program.js")
-    osa_temp = join(config["path"]["osa"], "template.js")
+    osa_prog = join(utils.resolve(CONFIG["path"]["osa"]), "program.js")
+    osa_temp = join(utils.resolve(CONFIG["path"]["osa"]), "template.js")
     with open(osa_prog, "w") as osa:
-        Popen([config['bin']['sed'], sed_program, osa_temp], stdout=osa)
+        Popen([CONFIG['bin']['sed'], sed_program, osa_temp], stdout=osa)
 
-    Popen([config['bin']['osascript'], osa_prog])
+    Popen([CONFIG['bin']['osascript'], osa_prog])
 
 
 def dial_itunes(artist, album):
@@ -420,12 +433,13 @@ def dial_itunes(artist, album):
 
     generate_playlist(artist, album)
     time.sleep(2)   # allow time to build playlist
-    osa_prog = join(config["path"]["osa"], "play")
-    Popen([config['bin']['osascript'], osa_prog])
+    osa_prog = join(utils.resolve(CONFIG["path"]["osa"]), "play")
+    Popen([CONFIG['bin']['osascript'], osa_prog])
 
 
 def saveit(name):
-    savepath = join(config["path"]["envelopes"], name + ".png")
+    """ saveit """
+    savepath = join(utils.resolve(CONFIG["path"]["envelopes"]), name + ".png")
     print("saving to {}".format(savepath))
     plt.savefig(savepath, bbox_inches='tight')
 
@@ -434,22 +448,24 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
     """track-splitting validation image
     """
 
-    x = wave_envelope(stream.wavpath)
+    x_data = wave_envelope(stream.wavpath)
 
-    ds = config["streams"]["downsample_factor"]
-    efr = 44100 / ds
-    starts = [mark[0] / ds for mark in markers]
-    stops = [starts[i] + mark[1] / ds for i, mark in enumerate(markers)]
-    n = np.shape(x)[0]
+    downsamp = CONFIG["streams"]["downsample_factor"]
+    efr = 44100 / downsamp
+    starts = [mark[0] / downsamp for mark in markers]
+    stops = [starts[i] + mark[1] / downsamp for i, mark in enumerate(markers)]
+    n = np.shape(x_data)[0]
     n_min = int(n / efr / 60)
 
     # create image (one inch per minute of audio)
     plt.figure(figsize=(n_min, 10))
-    plt.plot(x, marker=".", linestyle='', markersize=0.2)
-    [plt.axvline(
-        x=start, color="b", linestyle="--", linewidth=0.3) for start in starts]
-    [plt.axvline(
-        x=stop, color="r", linestyle="--", linewidth=0.3) for stop in stops]
+    plt.plot(x_data, marker=".", linestyle='', markersize=0.2)
+    _ = [plt.axvline(
+        x_data=start, color="b", linestyle="--",
+        linewidth=0.3) for start in starts]
+    _ = [plt.axvline(
+        x_data=stop, color="r", linestyle="--",
+        linewidth=0.3) for stop in stops]
     saveit(stream.name)
 
 
@@ -472,19 +488,20 @@ def listing2streams(listing):
 
     # fetch the album listing
     try:
-        with open(listing) as b:
-            batch = json.load(b)
-    except:
+        with open(listing) as fptr:
+            batch = json.load(fptr)
+    except OSError:
         sys.exit("ERROR: File with name {} not found".format(listing))
 
     # iterate over albums in the listing
-    for key, val in batch.items():
+    monitor = SimpleState(TMPSTREAM)
+    for _, val in batch.items():
 
         start_shairport(TMPSTREAM)
 
         artist, album = val['artist'], val['album']
         pcm = "{}; {}.pcm".format(artist, album)
-        pcm_path = join(config["path"]["pcm"], pcm)
+        pcm_path = join(utils.resolve(CONFIG["path"]["pcm"]), pcm)
 
         print(
             "INFO: {} --> begin listing2streams stream of {}..."
@@ -494,31 +511,33 @@ def listing2streams(listing):
         dial_itunes(artist, album)
 
         # wait for stream to start
-        while not is_started(TMPSTREAM):
+        while not monitor.get_state("startd"):
             time.sleep(1)
-        clamm.printr(
+
+        utils.printr(
             "Stream successfully started, " +
             "waiting for finish (one dot per min.)...")
 
         # wait for stream to finish
-        while not is_finished(TMPSTREAM):
+        while not monitor.get_state("finishd"):
             time.sleep(1)
-        clamm.printr("Stream successfully finished.")
+
+        utils.printr("Stream successfully finished.")
 
         os.rename(TMPSTREAM, pcm_path)
 
-    clamm.printr("Batch successfully finished.")
+    utils.printr("Batch successfully finished.")
 
 
 def stream2tracks(streampath):
     """process raw pcm stream to tagged album tracks.
     """
 
-    clamm.printr("Begin stream2tracks...")
+    utils.printr("Begin stream2tracks...")
 
     # initialize the stream
     stream = Stream(streampath)
-    stream.decode_path().iQuery().prepare_target().pcm2wav()
+    stream.decode_path().itunes_query().prepare_target().pcm2wav()
 
     # process the stream into an album
     album = Album(stream).process()
@@ -541,11 +560,7 @@ def main(args):
     # create a batch of pcm streams by interfacing with iTunes
     listing2streams(args.listing)
 
-    # iterate over streams found in config["path"]["pcm"]
-    streams = glob(os.path.join(config["path"]["pcm"], "*pcm"))
+    # iterate over streams found in CONFIG["path"]["pcm"]
+    streams = glob(os.path.join(utils.resolve(CONFIG["path"]["pcm"]), "*pcm"))
     for streampath in streams:
         stream2tracks(streampath)
-
-
-if __name__ == '__main__':
-    main()

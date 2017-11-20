@@ -12,9 +12,9 @@ import json
 
 from colorama import Fore
 
+from clamm import CONFIG
 from clamm import tags
 from clamm import utils
-from clamm.utils import CONFIG
 
 
 class AudioLib():
@@ -44,7 +44,9 @@ class AudioLib():
 
             if CONFIG["verbosity"] > 2:
                 utils.printr("walked into {}...".format(
-                    folder.replace(CONFIG["path"]["library"], "$LIBRARY")))
+                    folder.replace(
+                        utils.resolve(CONFIG["path"]["library"]),
+                        "$LIBRARY")))
             else:
                 utils.printr(lambda: [
                     sys.stdout.write(Fore.GREEN + "." + Fore.WHITE),
@@ -71,7 +73,8 @@ class AudioLib():
         elif self.func == "recently_added":
             # now, write the accumulated list to a simple pls file format
             pl_name = "recently-added-{}".format(time.ctime()[:10])
-            pl_path = os.path.join(CONFIG["path"]["playlist"], pl_name)
+            pl_path = os.path.join(
+                utils.resolve(CONFIG["path"]["playlist"]), pl_name)
             with open(pl_path, mode="w") as playlist_file:
                 _ = [playlist_file.write("{}\n".format(track))
                      for track in self.ltfa.the_playlist]
@@ -87,10 +90,6 @@ class AudioLib():
                 self.ltfa.tagdb.artist[key]["count"] = val
 
             self.ltfa.tagdb.refresh()
-
-        elif self.func == "get_arrangement_set":
-            with open(CONFIG["path"]["CONFIG"]) as fptr:
-                json.dump(self.ltfa.instrument_groupings, fptr, indent=4)
 
     def synchronize(self):
         """

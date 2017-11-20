@@ -10,16 +10,16 @@ import copy
 from subprocess import call
 import re
 
-from translate import Translator
+from translate import translator
 import prompt_toolkit as ptk
 from nltk import distance
 import taglib
 import wikipedia
 import nltk
 
+from clamm import CONFIG
 from clamm import audiolib
 from clamm import utils
-from clamm.utils import CONFIG
 
 
 class SafeTagFile(taglib.File):
@@ -120,7 +120,7 @@ class TagDatabase:
     """
 
     def __init__(self):
-        self.path = CONFIG["path"]["database"]
+        self.path = utils.resolve(CONFIG["path"]["database"])
         self.load()
         self.arange = Arrangement()
         self.new_item = {}
@@ -801,7 +801,7 @@ def get_translation(search):
     search string translated to Latin characters.
     """
 
-    xlater = Translator(input("Enter from language: "), 'en')
+    xlater = translator(input("Enter from language: "), 'en')
     return xlater.translate(search)
 
 
@@ -901,14 +901,17 @@ def swap_first_last_name(name_str):
 
 def log_missing_tag(key, tagfile):
     """ log_missing_tag """
-    with open(CONFIG["path"]["troubled_tracks"]) as fptr:
+    with open(utils.resolves(CONFIG["path"]["troubled_tracks"])) as fptr:
         trouble = json.load(fptr)
-        tpath = tagfile.path.replace(CONFIG["path"]["library"], "$LIBRARY")
+        tpath = tagfile.path.replace(
+            utils.resolves(CONFIG["path"]["library"]), "$LIBRARY")
         if key in trouble["missing_tag"].keys():
             if tpath not in trouble["missing_tag"][key]:
                 trouble["missing_tag"][key].append(tpath)
         else:
             trouble["missing_tag"][key] = [tpath]
 
-    with open(CONFIG["path"]["troubled_tracks"], mode="w") as fptr:
+    with open(
+            utils.resolves(CONFIG["path"]["troubled_tracks"]),
+            mode="w") as fptr:
         json.dump(trouble, fptr, ensure_ascii=False, indent=4)
