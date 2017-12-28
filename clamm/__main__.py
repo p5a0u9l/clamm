@@ -145,6 +145,10 @@ def create_config_parsers(subps):
             """)
     config_subps = config_p.add_subparsers(dest="sub_cmd")
     config_subps.add_parser(
+        "init",
+        help="Copy the config template to config location")
+
+    config_subps.add_parser(
         "edit",
         help="edit the config.json file in $EDITOR")
     config_subps.add_parser(
