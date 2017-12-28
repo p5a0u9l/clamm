@@ -1,38 +1,25 @@
-""" utils
+""" utilities
 """
-
 import os
-import time
 import inspect
 
 import colorama
 
-from clamm.config import config
+from clamm import CONFIG
 
-SPLIT_REGEX = '&\s*|,\s*|;\s*| - |:\s*|/\s*| feat. | and '
 ARTIST_TAG_NAMES = ["ALBUMARTIST_CREDIT",
                     "ALBUM ARTIST",
                     "ARTIST",
                     "ARTIST_CREDIT",
                     "ALBUMARTIST"]
+SPLIT_REGEX = r'&\s*|,\s*|;\s*| - |:\s*|/\s*| feat. | and '
 SEC_PER_DAY = 60*60*24
 
 
-def size_sampler(filepath):
-    """
-    return the file size, sampled with a 1 second gap to determine
-    if the file is being written to and thus growing
-    """
-
-    s0 = os.path.getsize(filepath)
-    time.sleep(1)
-    s1 = os.path.getsize(filepath)
-    return (s0, s1)
-
-
-def pretty_dict(d):
-    for k, v in d.items():
-        print("\t{}: {}".format(k, v))
+def pretty_dict(dict_):
+    """ lazy """
+    for key, val in dict_.items():
+        print("\t{}: {}".format(key, val))
 
 
 def printr(func_or_msg, verbosic_precedence=3, caller=True):
@@ -51,7 +38,7 @@ def printr(func_or_msg, verbosic_precedence=3, caller=True):
             caller: Bool indicating whether or not to print the caller name.
     """
 
-    if int(config["verbosity"]) > verbosic_precedence:
+    if int(CONFIG["library"]["verbosity"]) > verbosic_precedence:
         return
 
     caller_name = ""
@@ -64,7 +51,6 @@ def printr(func_or_msg, verbosic_precedence=3, caller=True):
               colorama.Fore.WHITE + ": " + func_or_msg)
     else:
         func_or_msg()
-
 
 def resolve(config_path):
     """ resolve config paths """

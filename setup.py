@@ -1,3 +1,6 @@
+"""
+setup
+"""
 from distutils.core import setup
 
 setup(name='clamm',
@@ -11,4 +14,4 @@ setup(name='clamm',
       entry_points={
           'console_scripts': ['clamm=clamm.__main__:main']
       },
-      )
+      packages=['clamm'])
