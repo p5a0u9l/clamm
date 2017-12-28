@@ -1,5 +1,25 @@
-streams module
-==============
+##############
+Python Modules
+##############
+
+********
+audiolib
+********
+
+.. automodule:: clamm.audiolib
+    :members:
+
+
+****
+tags
+****
+
+.. automodule:: clamm.tags
+    :members:
+
+*******
+streams
+*******
 
 The streams module provides two programs for working with raw audio streams.
 

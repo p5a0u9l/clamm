@@ -10,7 +10,7 @@ import json
 import clamm.util
 import clamm.audiolib
 import clamm.streams
-from clamm import config, get_config_path
+from clamm import config, get_config_path, installed_location
 
 
 def create_library_parsers(subps):
@@ -247,6 +247,17 @@ def tags_edit(args):
     """Open tag database in ``$EDITOR``
     """
     call([os.environ["EDITOR"], config["path"]["database"]])
+
+
+def config_init(args):
+    """copy config template to ``$HOME/.config/clamm/config.json``
+    """
+    call([
+        'cp',
+        os.path.join(
+            installed_location, 'clamm', 'templates', 'config.json'),
+        get_config_path()
+    ])
 
 
 def config_show(args):

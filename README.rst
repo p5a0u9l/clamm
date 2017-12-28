@@ -2,8 +2,9 @@
 .. image:: clam.png
 .. inclusion-marker-do-not-remove
 
-README
-======
+#####
+ClaMM
+#####
 
 *the classical music manager you never knew you needed, until now...*
 
@@ -13,8 +14,8 @@ README
 * provides tools for working with raw audio streams of (you guessed it!) classical music
 * generate playlists using iTunes-like combination logic.
 
-INSTALLATION
-^^^^^^^^^^^^
+Installation
+************
 
 Most (if not all) of the software listed below can be installed using common package managers like brew, apt, pacman, yum, ...
 
@@ -33,7 +34,7 @@ The dependencies for adding to a library require macOS first of all. Also,
 2. osascript_ for controlling iTunes
 
 FAQ
-^^^
+***
 
 Aren't there libraries that do this already?
 ''''''''''''''''''''''''''''''''''''''''''''
@@ -49,4 +50,3 @@ I tried beets and still have a use for it, but it didn't have the support for cl
 .. _flac: https://xiph.org/flac/
 .. _shairport-sync: https://github.com/mikebrady/shairport-sync
 .. _osascript: https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man1/osascript.1.html
-

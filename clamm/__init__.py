@@ -3,6 +3,9 @@ import os
 import json
 
 
+installed_location = os.path.split(__file__)[0]
+
+
 def get_config_path():
     """ get_config_path """
     return os.path.join(os.environ["HOME"], '.config', 'clamm', 'config.json')
@@ -10,8 +13,11 @@ def get_config_path():
 
 def get_config():
     """ get_config """
-    with open(get_config_path()) as fptr:
-        config = json.load(fptr)
+    try:
+        with open(get_config_path()) as fptr:
+            config = json.load(fptr)
+    except OSError:
+        config = {}
 
     return config
 
