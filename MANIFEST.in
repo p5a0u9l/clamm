@@ -1,4 +1,3 @@
-recursive-include clamm *.py
-include README
-include LICENSE
-include requirements.txt
+include README.rst
+include clamm/templates/config.json
+include clamm/templates/osa-template.js

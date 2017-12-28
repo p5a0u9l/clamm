@@ -89,3 +89,9 @@ ENV/
 .ropeproject
 zz
 doc/_build
+bin
+lib
+include
+man
+pip-selfcheck.json
+share

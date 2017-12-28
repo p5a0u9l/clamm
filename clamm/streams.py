@@ -20,7 +20,7 @@ from nltk import distance
 import itunespy
 
 from clamm.config import config
-import clamm
+import clamm.util
 import clamm.audiolib
 
 # constants, globals
@@ -61,7 +61,7 @@ class Stream():
         tmp = self.pcmpath.replace(".pcm", "")
         [artist, album] = tmp.split(";")
         self.artist, self.album = os.path.split(artist)[-1], album.strip()
-        clamm.printr("Found and Parsed {} --> {} as target...".format(
+        clamm.util.printr("Found and Parsed {} --> {} as target...".format(
             self.artist, self.album))
         self.name = "{}; {}".format(self.artist, self.album)
 
@@ -474,7 +474,7 @@ def listing2streams(listing):
     try:
         with open(listing) as b:
             batch = json.load(b)
-    except:
+    except IOError:
         sys.exit("ERROR: File with name {} not found".format(listing))
 
     # iterate over albums in the listing
@@ -496,25 +496,25 @@ def listing2streams(listing):
         # wait for stream to start
         while not is_started(TMPSTREAM):
             time.sleep(1)
-        clamm.printr(
+        clamm.util.printr(
             "Stream successfully started, " +
             "waiting for finish (one dot per min.)...")
 
         # wait for stream to finish
         while not is_finished(TMPSTREAM):
             time.sleep(1)
-        clamm.printr("Stream successfully finished.")
+        clamm.util.printr("Stream successfully finished.")
 
         os.rename(TMPSTREAM, pcm_path)
 
-    clamm.printr("Batch successfully finished.")
+    clamm.util.printr("Batch successfully finished.")
 
 
 def stream2tracks(streampath):
     """process raw pcm stream to tagged album tracks.
     """
 
-    clamm.printr("Begin stream2tracks...")
+    clamm.util.printr("Begin stream2tracks...")
 
     # initialize the stream
     stream = Stream(streampath)
