@@ -8,7 +8,7 @@ import os
 import json
 
 from clamm import config, get_config_path, installed_location
-import clamm.util
+from clamm import util
 
 
 def create_library_parsers(subps):
@@ -282,6 +282,7 @@ def streams_tracks(args):
 
        $ clamm streams initialize
     """
+    import clamm.streams
     clamm.streams.stream2tracks(args.streampath)
 
 
@@ -293,12 +294,14 @@ def streams_listing(args):
 
        $ clamm library initialize
     """
+    import clamm.streams
     clamm.streams.listing2streams(args.listing)
 
 
 def streams_stream(args):
     """ Calls :func:`~streams.main`
     """
+    import clamm.streams
     clamm.streams.main(args)
 
 
@@ -312,12 +315,13 @@ def library_action(args):
 
        $ clamm library action --recently_added
     """
+    import clamm.audiolib
     alib = clamm.audiolib.AudioLib(args)
     funcdict = {q[0]: q[1] for q in args._get_kwargs()
                 if isinstance(q[1], bool)}
     for funcname, flag in funcdict.items():
         if flag:
-            clamm.util.printr(funcname)
+            util.printr(funcname)
             alib.func = funcname
             func = eval("alib.ltfa.{}".format(funcname))
             alib.walker(func)
@@ -333,6 +337,7 @@ def library_initialize(args):
 
        $ clamm library initialize
     """
+    import clamm.audiolib
     clamm.audiolib.AudioLib(args).initialize()
 
 
@@ -346,6 +351,7 @@ def library_synchronize(args):
 
        $ clamm library synchronize
     """
+    import clamm.audiolib
     clamm.audiolib.AudioLib(args).synchronize()
 
 
@@ -359,6 +365,7 @@ def library_playlist(args):
 
        $ clamm library playlist
     """
+    import clamm.audiolib
     clamm.audiolib.AudioLib(args).playlist()
 
 
@@ -369,18 +376,13 @@ def main():
     """
     args = parse_inputs().parse_args()
 
-    if args.cmd == "library":
-        import clamm.audiolib
-    elif args.cmd == "streams":
-        import clamm.streams
-
     # retrieve the parsed cmd/sub/... and evaluate
     full_cmd = "{}_{}".format(args.cmd, args.sub_cmd)
     try:
         functor = eval(full_cmd)
     except NameError as ne:
-        clamm.util.printr("failed to parse the command {}...".format(full_cmd))
+        util.printr("failed to parse the command {}...".format(full_cmd))
         raise ne
 
-    clamm.util.printr("parsed and executing {}...".format(full_cmd))
+    util.printr("parsed and executing {}...".format(full_cmd))
     functor(args)
