@@ -1,118 +1,63 @@
 {
-    "opt": {
-        "cmus-remote": "-C",
-        "shairport-sync": "-o=stdout",
-        "ffmpeg": [
-            "-hide-banner",
-            "-y",
-            "-f",
-            "s16le",
-            "-ar",
-            "44.1k",
-            "-ac",
-            "2"
-        ]
-    },
-    "bin": {
-        "metaflac":"/usr/local/bin/metaflac",
-        "osascript": "/usr/bin/osascript",
-        "cmus-remote": "/usr/local/bin/cmus-remote",
-        "ffmpeg": "/usr/local/bin/ffmpeg",
-        "shairport-sync": "/usr/local/bin/shairport-sync",
-        "sed": "/usr/bin/sed"
-    },
-    "database": {
-        "require_prompt_when_committing": false,
-        "skip_existing_arrangements": true,
-        "sync_to_library": true
-    },
+    "verbosity": 2,
     "library": {
-        "keep_pcms_once_wavs_made": false,
-        "verbosity": 3,
-        "playlist": {
-            "operators": [
-                "AND",
-                "OR",
-                "XOR"
-            ],
-            "relations": [
-                "contains",
-                "is",
-                "is not",
-                "does not contain"
-            ],
-            "tag_keys": [
-                "ARRANGEMENT",
-                "COMPOSER",
-                "ARTIST",
-                "ALBUMARTIST",
-                "LABEL"
-            ]
-        },
-        "keep_wavs_once_flacs_made": false,
+        "recently_added_day_age": 20,
+        "keep_wavs_once_flacs_made": true,
+        "keep_pcms_once_wavs_made": true,
         "tags": {
-            "junk": [
-                "ASIN",
-                "CATALOGNUMBER",
-                "LANGUAGE",
-                "MEDIA",
-                "MUSICBRAINZ_ALBUMARTISTID",
-                "MUSICBRAINZ_ALBUMID",
-                "MUSICBRAINZ_ALBUMSTATUS",
-                "MUSICBRAINZ_ALBUMTYPE",
-                "MUSICBRAINZ_ARTISTID",
-                "MUSICBRAINZ_RELEASEGROUPID",
-                "MUSICBRAINZ_TRACKID",
-                "RELEASECOUNTRY",
-                "SCRIPT",
-                "ACOUSTID FINGERPRINT",
-                "ITUNNORM",
-                "COMPATIBLE_BRANDS",
-                "ITUNSMPB",
-                "MAJOR_BRAND",
-                "MEDIA_TYPE",
-                "MINOR_VERSION",
-                "MUSICBRAINZ ALBUM ARTIST ID"
-            ],
-            "keep_artist": [
-                "ARTIST",
-                "ALBUMARTIST"
-            ],
+            "keep_artist": ["ARTIST", "ALBUMARTIST"],
             "prune_artist": [
-                "ARTISTSORT",
-                "ALBUMARTIST_CREDIT",
-                "ALBUM ARTIST",
-                "SORT_ARTIST",
-                "ALBUMARTISTSORT",
-                "SORT_ALBUM_ARTIST",
-                "ARTIST_CREDIT",
-                "ALBUM ARTIST",
-                "ALBUMARTIST_CREDIT",
-                "ARTISTSORT"
-            ]
+                "ARTISTSORT", "ALBUMARTIST_CREDIT",
+                "ALBUM ARTIST", "SORT_ARTIST",
+                "ALBUMARTISTSORT", "SORT_ALBUM_ARTIST",
+                "ARTIST_CREDIT", "ALBUM ARTIST",
+                "ALBUMARTIST_CREDIT", "ARTISTSORT"],
+                "junk": [
+                    "ASIN", "CATALOGNUMBER", "LANGUAGE", "MEDIA",
+                    "MUSICBRAINZ_ALBUMARTISTID", "MUSICBRAINZ_ALBUMID",
+                    "MUSICBRAINZ_ALBUMSTATUS", "MUSICBRAINZ_ALBUMTYPE",
+                    "MUSICBRAINZ_ARTISTID", "MUSICBRAINZ_RELEASEGROUPID",
+                    "MUSICBRAINZ_TRACKID", "RELEASECOUNTRY", "SCRIPT",
+                    "ACOUSTID FINGERPRINT", "ITUNNORM",
+                    "COMPATIBLE_BRANDS", "ITUNSMPB", "MAJOR_BRAND",
+                    "MEDIA_TYPE", "MINOR_VERSION", "MUSICBRAINZ ALBUM ARTIST ID"]
+        },
+        "playlist": {
+            "tag_keys": ["ARRANGEMENT", "COMPOSER", "ARTIST", "ALBUMARTIST", "LABEL"],
+            "relations": ["contains", "is", "is not", "does not contain"],
+            "operators": ["AND", "OR", "XOR"]
         }
     },
-    "streams": {
-        "downsample_factor": 1000
+
+    "database": {
+        "prompt_for_album_artist": false,
+        "sync_to_library": true,
+        "skip_existing_arrangements": true,
+        "require_prompt_when_committing": false
     },
+
     "file": {
-        "known_types": [
-            ".flac",
-            ".m4a",
-            ".mp3",
-            ".wma",
-            ".wav"
-        ],
+        "known_types": [".flac", ".m4a", ".mp3", ".wma", ".wav"],
         "preferred_type": ".flac"
     },
-    "path": {
-        "playlist": ["home", "music", "playlists"],
-        "database": ["home", ".config", "clamm", "tags.json"],
-        "pcm": ["root", "tmp", "clamm", "pcm"],
-        "library": ["home", "music", "classical"],
-        "streams": ["home", "code", "python", "clamm", "clamm", "streams"],
-        "scripts": ["home", ".config", "clamm", "scripts"],
-        "wav": ["root", "tmp", "clamm", "wav"],
-        "troubled_tracks": ["home", ".config", "clamm", "troubled_tracks.json"]
+
+    "opt":{
+        "ffmpeg": ["-hide-banner", "-y", "-f", "s16le", "-ar", "44.1k", "-ac", "2"],
+        "shairport-sync": "-o=stdout",
+        "cmus-remote": "-C"
+    },
+
+    "bin":{
+        "ffmpeg": "/usr/local/bin/ffmpeg",
+        "sed": "/usr/bin/sed",
+        "osascript": "/usr/bin/osascript",
+        "shairport-sync": "/usr/local/bin/shairport-sync",
+        "metaflac": "/usr/local/bin/metaflac",
+        "cmus-remote": "/usr/local/bin/cmus-remote"
+    },
+
+    "streams": {
+        "downsample_factor": 882
     }
 }
+
