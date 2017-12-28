@@ -5,7 +5,7 @@ import json
 
 installed_location = os.path.split(__file__)[0]
 config_template = os.path.join(
-    installed_location, "clamm", "templates", "config.json")
+    installed_location, "templates", "config.json")
 
 
 def get_config_path():
