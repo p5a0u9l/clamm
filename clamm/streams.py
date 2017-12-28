@@ -19,7 +19,7 @@ import taglib
 from nltk import distance
 import itunespy
 
-from clamm.config import config
+from clamm import config
 from clamm import util
 from clamm import audiolib
 
