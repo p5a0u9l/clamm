@@ -4,6 +4,8 @@ import json
 
 
 installed_location = os.path.split(__file__)[0]
+config_template = os.path.join(
+    installed_location, "clamm", "templates", "config.json")
 
 
 def get_config_path():
@@ -17,8 +19,9 @@ def get_config():
         with open(get_config_path()) as fptr:
             config = json.load(fptr)
     except IOError:
-        print("Run config init, using empty config for now...")
-        config = {}
+        print("Run config init, using default config for now...")
+        with open(config_template) as fptr:
+            config = json.load(fptr)
 
     return config
 

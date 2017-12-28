@@ -7,7 +7,7 @@ from subprocess import call
 import os
 import json
 
-from clamm import config, get_config_path, installed_location
+from clamm import config, get_config_path, config_template
 from clamm import util
 
 
@@ -254,12 +254,7 @@ def tags_edit(args):
 def config_init(args):
     """copy config template to ``$HOME/.config/clamm/config.json``
     """
-    call([
-        'cp',
-        os.path.join(
-            installed_location, 'clamm', 'templates', 'config.json'),
-        get_config_path()
-    ])
+    call(['cp', config_template, get_config_path()])
 
 
 def config_show(args):
