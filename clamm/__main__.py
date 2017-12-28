@@ -7,10 +7,8 @@ from subprocess import call
 import os
 import json
 
-import clamm.util
-import clamm.audiolib
-import clamm.streams
 from clamm import config, get_config_path, installed_location
+import clamm.util
 
 
 def create_library_parsers(subps):
@@ -366,6 +364,11 @@ def main():
     Parses and executes the action specified by the command line inputs.
     """
     args = parse_inputs().parse_args()
+
+    if args.cmd == "library":
+        import clamm.audiolib
+    elif args.cmd == "streams":
+        import clamm.streams
 
     # retrieve the parsed cmd/sub/... and evaluate
     full_cmd = "{}_{}".format(args.cmd, args.sub_cmd)
