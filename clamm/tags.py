@@ -4,22 +4,21 @@ interface to the clamm's tag database.
 """
 
 from __future__ import unicode_literals, print_function
-import json
-from collections import OrderedDict
-import copy
-from subprocess import call
 import re
+import json
+import copy
+from collections import OrderedDict
+from subprocess import call
 
-from translate import translator
+from translate import Translator
 import prompt_toolkit as ptk
 from nltk import distance
 import taglib
 import wikipedia
 import nltk
 
-from clamm import CONFIG
-from clamm import audiolib
-from clamm import utils
+from clamm import config
+from clamm import util
 
 
 class SafeTagFile(taglib.File):
@@ -48,11 +47,11 @@ class StructuredQuery():
     def __init__(self, querystr):
         self.query = querystr
         self.keys = [key for key in self.query
-                     if key in CONFIG["playlist"]["tag_keys"]]
+                     if key in config["playlist"]["tag_keys"]]
         relations = [key for key in self.query
-                     if key in CONFIG["playlist"]["relations"]]
+                     if key in config["playlist"]["relations"]]
         self.operators = [key for key in self.query
-                          if key in CONFIG["playlist"]["operators"]]
+                          if key in config["playlist"]["operators"]]
         self.tag_vals = [key for key in self.query if
                          key not in self.keys and
                          key not in relations and
@@ -108,7 +107,7 @@ class TagDatabase:
     Attributes
     ----------
     path: str
-        path to ``tags.json`` file, set via ``CONFIG["path"]["database"]``
+        path to ``tags.json`` file, set via ``config["path"]["database"]``
 
     arange: Arrangement
         Arrangement instance used for verifying track instrumental
@@ -120,7 +119,7 @@ class TagDatabase:
     """
 
     def __init__(self):
-        self.path = utils.resolve(CONFIG["path"]["database"])
+        self.path = config["path"]["database"]
         self.load()
         self.arange = Arrangement()
         self.new_item = {}
@@ -211,7 +210,7 @@ class TagDatabase:
         add a new name permutation to the item's permutation list
         """
 
-        utils.printr("Adding to permutations and updating db...")
+        util.printr("Adding to permutations and updating db...")
         self._db[category][key]["permutations"].append(perm)
         self.refresh()
 
@@ -221,8 +220,8 @@ class TagDatabase:
         for approval
         """
         # on approval, add the new artist/composer to the database
-        utils.printr("proposed item for database:")
-        utils.pretty_dict(self.new_item)
+        util.printr("proposed item for database:")
+        util.pretty_dict(self.new_item)
         if not input("Accept? [y]/n: "):
             self._db[category][self.new_item["full_name"]] = self.new_item
             self.refresh()
@@ -237,7 +236,7 @@ class TagDatabase:
         returns the database key of the new item
         """
 
-        utils.printr("Searching for information on %s..." % (item))
+        util.printr("Searching for information on %s..." % (item))
 
         # attempt to match the item to a wiki entry
         page = wiki_query(item)
@@ -617,7 +616,7 @@ class Arrangement:
         The default value for ``prima`` corresponds to the highest
         ranking (via ARTIST frequency count) ``artist``. This behavior
         can be changed via
-        ``CONFIG["database"]["prompt_for_album_artist"]`` to prompt
+        ``config["database"]["prompt_for_album_artist"]`` to prompt
         for a custom ordering.
         """
         self.sar = sar
@@ -628,9 +627,9 @@ class Arrangement:
             self.prima = 0  # default value
 
             if len(self.sar.keys()) > 1 and \
-                    CONFIG["database"]["prompt_for_album_artist"]:
+                    config["database"]["prompt_for_album_artist"]:
 
-                utils.printr("ranking arrangement:")
+                util.printr("ranking arrangement:")
                 print("\n\tarrangement: {}\n\ttitle: {}\n\talbum: {}"
                       .format(
                           self.sar,
@@ -642,7 +641,7 @@ class Arrangement:
                 if isinstance(eval(response), int):
                     self.prima = int(response)
                 else:
-                    utils.printr(
+                    util.printr(
                         "Unable to parse response, using default ordering")
 
         self.unpack()
@@ -655,8 +654,8 @@ class Arrangement:
             tagfile.tags["ARTIST"] = self.artist
             tagfile.tags = {key: val for key, val in tagfile.tags.items()
                             if key not in
-                            CONFIG["library"]["tags"]["prune_artist"]}
-            audiolib.commit_to_libfile(tagfile)
+                            config["library"]["tags"]["prune_artist"]}
+            util.commit_to_libfile(tagfile)
 
     def is_changed(self, tagfile, sar):
         """ Test if album or artist has changed.
@@ -755,11 +754,11 @@ def wiki_query(search):
     results = wikipedia.search(search)
 
     # print options
-    utils.printr("options: ")
+    util.printr("options: ")
     print("\t\t-3: Translate\n\t\t-2: New string\n\t\t-1: Die\n")
 
     # print query results
-    utils.printr("query returns: ")
+    util.printr("query returns: ")
     if results:
         for i, result in enumerate(results):
             print("\t\t{}: {}".format(i, result))
@@ -801,7 +800,7 @@ def get_translation(search):
     search string translated to Latin characters.
     """
 
-    xlater = translator(input("Enter from language: "), 'en')
+    xlater = Translator(input("Enter from language: "), 'en')
     return xlater.translate(search)
 
 
@@ -810,9 +809,9 @@ def get_artist_tagset(tagfile):
     tags = tagfile.tags
     atags = {
         t: re.split(
-            utils.SPLIT_REGEX,
+            util.SPLIT_REGEX,
             ', '.join(tags[t]))
-        for t in utils.ARTIST_TAG_NAMES if t in tags.keys()}
+        for t in util.ARTIST_TAG_NAMES if t in tags.keys()}
     aset = set([v.strip() for val in atags.values() for v in val])
     return aset
 
@@ -901,17 +900,15 @@ def swap_first_last_name(name_str):
 
 def log_missing_tag(key, tagfile):
     """ log_missing_tag """
-    with open(utils.resolves(CONFIG["path"]["troubled_tracks"])) as fptr:
+    with open(config["path"]["troubled_tracks"]) as fptr:
         trouble = json.load(fptr)
         tpath = tagfile.path.replace(
-            utils.resolves(CONFIG["path"]["library"]), "$LIBRARY")
+            config["path"]["library"], "$LIBRARY")
         if key in trouble["missing_tag"].keys():
             if tpath not in trouble["missing_tag"][key]:
                 trouble["missing_tag"][key].append(tpath)
         else:
             trouble["missing_tag"][key] = [tpath]
 
-    with open(
-            utils.resolves(CONFIG["path"]["troubled_tracks"]),
-            mode="w") as fptr:
+    with open(config["path"]["troubled_tracks"], mode="w") as fptr:
         json.dump(trouble, fptr, ensure_ascii=False, indent=4)

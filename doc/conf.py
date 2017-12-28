@@ -19,20 +19,7 @@
 #
 import os
 import sys
-import sphinx_rtd_theme
-from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath('../clamm'))
-
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return MagicMock()
-
-
-MOCK_MODULES = ['pytaglib', 'appscript']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
 
 # -- General configuration ------------------------------------------------
 
@@ -102,10 +89,7 @@ todo_include_todos = False
 # a list of builtin themes.
 #
 
-html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
-# html_theme = 'alabaster'
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

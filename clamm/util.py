@@ -2,12 +2,13 @@
 """
 
 import os
+import sys
 import time
 import inspect
 
 import colorama
 
-from clamm.config import config
+from clamm import config
 
 SPLIT_REGEX = '&\s*|,\s*|;\s*| - |:\s*|/\s*| feat. | and '
 ARTIST_TAG_NAMES = ["ALBUMARTIST_CREDIT",
@@ -16,6 +17,44 @@ ARTIST_TAG_NAMES = ["ALBUMARTIST_CREDIT",
                     "ARTIST_CREDIT",
                     "ALBUMARTIST"]
 SEC_PER_DAY = 60*60*24
+
+
+def commit_to_libfile(tagfile):
+    """common entry point for writing values from tag database into
+    an audiofile.
+    """
+
+    # check if differences (or newness) exists
+    n_delta_fields, n_tracks_updated = 0, 0
+    for k, _ in tagfile.tags.items():
+        is_new = k not in tagfile.tag_copy.keys()
+        if not is_new:
+            is_dif = tagfile.tags[k][0] != tagfile.tag_copy[k][0]
+        if is_new or is_dif:
+            n_delta_fields += 1
+
+    # short-circuit if no changes to be made
+    if n_delta_fields == 0:
+        return (n_tracks_updated, n_delta_fields)
+
+    n_tracks_updated += 1
+    # prompted or automatic write
+    if config["database"]["require_prompt_when_committing"]:
+        printr("Proposed: ")
+        pretty_dict(sorted(tagfile.tags))
+
+        if not input("Accept? [y]/n: "):
+            tagfile.save()
+
+    else:
+        tagfile.save()
+        printr(
+            lambda: [
+                sys.stdout.write(
+                    colorama.Fore.RED + "." + colorama.Fore.WHITE),
+                sys.stdout.flush()])
+
+    return (n_tracks_updated, n_delta_fields)
 
 
 def size_sampler(filepath):
@@ -64,12 +103,3 @@ def printr(func_or_msg, verbosic_precedence=3, caller=True):
               colorama.Fore.WHITE + ": " + func_or_msg)
     else:
         func_or_msg()
-
-
-def resolve(config_path):
-    """ resolve config paths """
-    head = config_path[0]
-    tail = config_path[1:]
-    head = {True: "/", False: os.environ["HOME"]}[head == "root"]
-    tail = os.path.sep.join(tail)
-    return os.path.join(head, tail)

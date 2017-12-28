@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# __author__ Paul Adams
-
 """ module containing command line interface implementation
 and utilities.
 """
@@ -13,7 +10,7 @@ import json
 import clamm.util
 import clamm.audiolib
 import clamm.streams
-from clamm.config import config
+from clamm import config, get_config_path
 
 
 def create_library_parsers(subps):
@@ -261,7 +258,7 @@ def config_show(args):
 def config_edit(args):
     """Open config.json in ``$EDITOR``.
     """
-    call([os.environ["EDITOR"], config["path"]["config"]])
+    call([os.environ["EDITOR"], get_config_path()])
 
 
 def streams_tracks(args):

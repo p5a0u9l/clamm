@@ -1,9 +1,9 @@
 streams module
 ==============
 
-The streams module provides two programs for working with raw audio streams. 
+The streams module provides two programs for working with raw audio streams.
 
-. The second processes a stream into an album. 
+. The second processes a stream into an album.
 
 listing2streams
 ^^^^^^^^^^^^^^^
@@ -16,7 +16,6 @@ The first use case automates generating raw ``pcm`` files from iTunes using a li
 
 See also batch_album_listing_ under the ``templates`` directory.
 
-.. autofunction:: listing2streams
 .. automodule:: streams
     :members:
 

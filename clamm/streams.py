@@ -25,7 +25,7 @@ from clamm import audiolib
 
 # constants, globals
 plt.switch_backend("agg")
-TMPSTREAM = os.path.join(util.resolve(config["path"]["pcm"]), "temp.pcm")
+TMPSTREAM = os.path.join(config["path"]["pcm"], "temp.pcm")
 DF = config["streams"]["downsample_factor"]
 DF = 4410 * 10
 FS = 44100
@@ -93,7 +93,7 @@ class Stream():
 
     def prepare_target(self):
         artist_dir = join(
-            util.resolve(config["path"]["library"]),
+            config["path"]["library"],
             self.query.artist_name)
         self.target = join(artist_dir, self.query.collection_name)
 
@@ -416,8 +416,8 @@ def generate_playlist(artist, album):
     """ generate_playlist """
     sed_program = 's/SEARCHTERM/"{} {}"/g'.format(
         artist, album).replace(":", "").replace("&", "")
-    osa_prog = join(util.resolve(config["path"]["osa"]), "program.js")
-    osa_temp = join(util.resolve(config["path"]["osa"]), "template.js")
+    osa_prog = join(config["path"]["osa"], "program.js")
+    osa_temp = join(config["path"]["osa"], "template.js")
     with open(osa_prog, "w") as osa:
         Popen([config['bin']['sed'], sed_program, osa_temp], stdout=osa)
 
@@ -431,13 +431,13 @@ def dial_itunes(artist, album):
 
     generate_playlist(artist, album)
     time.sleep(2)   # allow time to build playlist
-    osa_prog = join(util.resolve(config["path"]["osa"]), "play")
+    osa_prog = join(config["path"]["osa"], "play")
     Popen([config['bin']['osascript'], osa_prog])
 
 
 def saveit(name):
     """ saveit """
-    savepath = join(util.resolve(config["path"]["envelopes"]), name + ".png")
+    savepath = join(config["path"]["envelopes"], name + ".png")
     print("saving to {}".format(savepath))
     plt.savefig(savepath, bbox_inches='tight')
 
@@ -535,6 +535,6 @@ def main(args):
     listing2streams(args.listing)
 
     # iterate over streams found in config["path"]["pcm"]
-    streams = glob(os.path.join(util.resolve(config["path"]["pcm"]), "*pcm"))
+    streams = glob(os.path.join(config["path"]["pcm"], "*pcm"))
     for streampath in streams:
         stream2tracks(streampath)

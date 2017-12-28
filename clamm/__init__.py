@@ -2,8 +2,6 @@
 import os
 import json
 
-PKG_ROOT = os.path.abspath(os.path.dirname(__file__))
-
 
 def get_config_path():
     """ get_config_path """
@@ -18,4 +16,15 @@ def get_config():
     return config
 
 
-CONFIG = get_config()   # static at run-time
+config = get_config()
+lib_home = os.path.join(os.environ['HOME'], "music")
+cfg_home = os.path.join(os.environ['HOME'], ".config", "clamm")
+config['path'] = {
+        "pcm": os.path.join(lib_home, "streams", "pcm"),
+        "wav": os.path.join(lib_home, "streams", "wav"),
+        "playlist": os.path.join(lib_home, "playlists"),
+        "osa": os.path.join(cfg_home, "osa"),
+        "envelopes": os.path.join(cfg_home, "envelopes"),
+        "database": os.path.join(cfg_home, "tags.json"),
+        "troubled_tracks": os.path.join(cfg_home, "troubled_tracks.json")
+    }

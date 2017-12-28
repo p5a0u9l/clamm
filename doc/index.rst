@@ -4,14 +4,23 @@
 
    readme_include
    tag_scheme
-   code
    audiolib
    streams
+
+.. automodule:: tags
+    :members:
+
+.. automodule:: audiolib
+    :members:
+
+.. automodule:: streams
+    :members:
+
 
 notes
 =====
 
-By *classical*, I mean any piece of music characterized by having an associated 
+By *classical*, I mean any piece of music characterized by having an associated
 
 * composer
 
@@ -24,7 +33,7 @@ By *classical*, I mean any piece of music characterized by having an associated
 .. _`Max Richter`: https://en.wikipedia.org/wiki/Max_Richter
 .. _`Steve Reich`: https://en.wikipedia.org/wiki/Steve_Reich
 
-Which, for my library, includes traditional classical composers, like `J.S. Bach`_ and `Beethoven`_, as well as newer, harder to categorize composers, like `Max Richter`_ and `Steve Reich`_.  
+Which, for my library, includes traditional classical composers, like `J.S. Bach`_ and `Beethoven`_, as well as newer, harder to categorize composers, like `Max Richter`_ and `Steve Reich`_.
 
 Indices and tables
 ==================
