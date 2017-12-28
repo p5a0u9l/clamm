@@ -16,7 +16,7 @@ def get_config():
     try:
         with open(get_config_path()) as fptr:
             config = json.load(fptr)
-    except OSError:
+    except IOError:
         print("Run config init, using empty config for now...")
         config = {}
 
