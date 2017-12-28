@@ -20,6 +20,8 @@ config = get_config()
 lib_home = os.path.join(os.environ['HOME'], "music")
 cfg_home = os.path.join(os.environ['HOME'], ".config", "clamm")
 config['path'] = {
+        "library": lib_home,
+        "config": cfg_home,
         "pcm": os.path.join(lib_home, "streams", "pcm"),
         "wav": os.path.join(lib_home, "streams", "wav"),
         "playlist": os.path.join(lib_home, "playlists"),
