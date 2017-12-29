@@ -527,8 +527,7 @@ def stream2tracks(streampath):
 
 
 def main(args):
-    """
-    main is a concatenation of listing2streams and stream2tracks
+    """ main is a concatenation of listing2streams and stream2tracks
     """
 
     # create a batch of pcm streams by interfacing with iTunes

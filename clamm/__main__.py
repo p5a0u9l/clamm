@@ -224,7 +224,7 @@ def parse_inputs():
     p = argparse.ArgumentParser(
         prog="CLAMM",
         description="""
-            CLassical Music Manager
+            CLAssical Music Manager
             """)
     subps = p.add_subparsers(dest="cmd")
 

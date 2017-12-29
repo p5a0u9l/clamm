@@ -37,6 +37,7 @@ class AudioLib():
         func: function
             action to apply to audio files.
         """
+        util.printr("walking with %s..." % (str(func)))
 
         for folder, _, files in walk(self.root, topdown=False):
             if not files:
@@ -348,7 +349,7 @@ class LibTagFileAction(LibTagFile):
                     tagfile.tags[key] = tags.messylist2tagstr(
                         list(aset.difference(acom)))
                 else:
-                    tagfile.tags[key] = input('Enter artist name: ')
+                    tagfile.tags[key] = raw_input('Enter artist name: ')
 
         # write to file
         self.write2tagfile(tagfile)
@@ -394,7 +395,7 @@ class LibTagFileAction(LibTagFile):
 
             # attempt to use last_composer (speeds up when adding new album)
             fmt = "Accept last input: {}? [CR] ".format(self.last_composer)
-            if not input(fmt):
+            if not raw_input(fmt):
                 cname = self.last_composer
             else:
                 cname = self.composer_suggest.prompt("Enter composer name: ")

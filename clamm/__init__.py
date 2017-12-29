@@ -27,7 +27,7 @@ def get_config():
 
 
 config = get_config()
-lib_home = os.path.join(os.environ['HOME'], "music")
+lib_home = os.path.join(os.environ['HOME'], "music", "classical")
 cfg_home = os.path.join(os.environ['HOME'], ".config", "clamm")
 config['path'] = {
         "library": lib_home,

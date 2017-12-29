@@ -222,7 +222,7 @@ class TagDatabase:
         # on approval, add the new artist/composer to the database
         util.printr("proposed item for database:")
         util.pretty_dict(self.new_item)
-        if not input("Accept? [y]/n: "):
+        if not raw_input("Accept? [y]/n: "):
             self._db[category][self.new_item["full_name"]] = self.new_item
             self.refresh()
         else:
@@ -263,7 +263,7 @@ class TagDatabase:
         print(page.summary)
 
         # NAME
-        resp = input("Enter name (keep/[t]itle): ")
+        resp = raw_input("Enter name (keep/[t]itle): ")
 
         if item != page.title:
             new["permutations"].append(page.title)
@@ -279,7 +279,7 @@ class TagDatabase:
         # category specific
         if category == "artist":
             new["count"] = 1    # initial value
-            if input("[I]ndividual or Ensemble?"):
+            if raw_input("[I]ndividual or Ensemble?"):
                 new["ordinality"] = "Ensemble"
             else:
                 new["ordinality"] = "Individual"
@@ -303,7 +303,7 @@ class TagDatabase:
 
         fetches new item fields manually with help from auto-suggestion
         """
-        resp = input("Translate/skip/continue: t/s/[<cr>]")
+        resp = raw_input("Translate/skip/continue: t/s/[<cr>]")
         if resp:
             if resp == "t":
                 item = get_translation(item)
@@ -314,7 +314,7 @@ class TagDatabase:
 
         new = {"permutations": [item]}
 
-        resp = input("Enter name ([k]eep): ")
+        resp = raw_input("Enter name ([k]eep): ")
         if not resp:
             new["full_name"] = item
         else:
@@ -325,7 +325,7 @@ class TagDatabase:
         item = new["full_name"]
 
         if category == "artist":
-            resp = input("[I]ndividual or Ensemble?")
+            resp = raw_input("[I]ndividual or Ensemble?")
             if resp:
                 new["ordinality"] = "Ensemble"
             else:
@@ -338,7 +338,7 @@ class TagDatabase:
             new["sort"] = swap_first_last_name(new["full_name"])
             new["abbreviated"] = new["full_name"].split(" ")[1]
 
-        new["borndied"] = input("Enter dates: ")
+        new["borndied"] = raw_input("Enter dates: ")
         new["nationality"] = self.suggest["nationality"].prompt(
                 "Enter nationality: ")
 
@@ -394,7 +394,7 @@ class TagDatabase:
 
         # otherwise, try to find an existing edit_distance match
         mname = get_nearest_name(qname, self.sets["composer"])
-        response = input(
+        response = raw_input(
                 "Given: {}\tClosest Match: {}. Accept? [<CR>]/n: "
                 .format(qname, mname))
 
@@ -405,12 +405,12 @@ class TagDatabase:
             return key
 
         # fall back 1, `add_new_item` to tags
-        if not input("Add new composer? [<CR>]/n: "):
+        if not raw_input("Add new composer? [<CR>]/n: "):
             new_key = self.get_new_item(qname, category="composer")
             return new_key
 
         # fall back 2, enter key manully (assuming something has gone wrong)
-        if not input("Manually enter key lookup? [<CR>]/n: "):
+        if not raw_input("Manually enter key lookup? [<CR>]/n: "):
             key = self.suggest["composer"].prompt("aight, go 'head: ")
             self.add_new_perm(key, qname, category="composer")
             return self.match_from_perms(mname, category="composer")
@@ -445,22 +445,23 @@ class TagDatabase:
         # if above fails, possibly nearest neighbor is correct?
         nearest = get_nearest_name(qname, self.sets["artist"])
 
-        if not input("\nAccept {} as matching {}? ".format(nearest, qname)):
+        if not raw_input(
+                "\nAccept {} as matching {}? ".format(nearest, qname)):
             # fetch actual key and update perms
             key = self.match_from_perms(nearest)
             self.add_new_perm(key, qname)
             return key
 
         # Hook in the new artist process if reach this point
-        if not input("\nAdd new artist? [<CR>]/n: "):
+        if not raw_input("\nAdd new artist? [<CR>]/n: "):
             new_key = self.get_new_item(qname)
             return new_key
 
         # It's also possible that the artist is really a composer
-        if not input("\nIs Composer Permutation? [<CR>]/n: "):
+        if not raw_input("\nIs Composer Permutation? [<CR>]/n: "):
             cname = get_nearest_name(qname, self.sets["composer"])
 
-            if not input("\nAccept %s as matching %s? " % (cname, qname)):
+            if not raw_input("\nAccept %s as matching %s? " % (cname, qname)):
                 ckey = self.match_from_perms(cname, category="composer")
             else:
                 ckey = self.suggest["composer"].prompt(
@@ -471,18 +472,18 @@ class TagDatabase:
 
         # Maybe there's an error in the database and we can enter
         # the key manually
-        if not input("\nManually enter artist key? [<CR>]/n: "):
+        if not raw_input("\nManually enter artist key? [<CR>]/n: "):
             man_key = self.suggest["artist"].prompt("aight, go 'head: ")
             actual_key = self.match_from_perms(man_key)
             return actual_key
 
         # One more chance to add a new artist
-        if not input("\nAdd new artist? [<CR>]/n: "):
+        if not raw_input("\nAdd new artist? [<CR>]/n: "):
             new_key = self.get_new_item(qname)
             return new_key
 
         # Allow some introspection before dying
-        if not input("\ndebug? [<CR>]/n: "):
+        if not raw_input("\ndebug? [<CR>]/n: "):
             pass
 
         # Declare a misfit and walk away in disgust
@@ -554,7 +555,7 @@ class TagDatabase:
 
         while guess:
             current_guess = guess.pop(0)
-            resp = input("guessing, accept %s? [y]/n: " % (current_guess))
+            resp = raw_input("guessing, accept %s? [y]/n: " % (current_guess))
             if not resp:
                 result = current_guess
                 break
@@ -636,7 +637,7 @@ class Arrangement:
                           tagfile.tags["TITLE"],
                           tagfile.tags["ALBUM"]))
 
-                response = input("[#]ordering, [s]kip, ... ? ")
+                response = raw_input("[#]ordering, [s]kip, ... ? ")
 
                 if isinstance(eval(response), int):
                     self.prima = int(response)
@@ -714,23 +715,23 @@ def get_borndied(summary):
 
     if len(result) >= 2:
         borndied = result[0] + "-" + result[1]
-        if not input("Accept %s? [y]/n: " % (borndied)):
+        if not raw_input("Accept %s? [y]/n: " % (borndied)):
             return borndied
 
         else:
             borndied = result[0] + "-"
-            if not input("Accept %s? [y]/n: " % (borndied)):
+            if not raw_input("Accept %s? [y]/n: " % (borndied)):
                 return borndied
 
     elif len(result) >= 1:
         borndied = result[0] + "-"
 
-        resp = input("Accept %s? [y]/n: " % (borndied))
+        resp = raw_input("Accept %s? [y]/n: " % (borndied))
         if not resp:
             return borndied
 
     else:
-        return input("Enter Dates: ")
+        return raw_input("Enter Dates: ")
 
 
 def wiki_query(search):
@@ -764,7 +765,7 @@ def wiki_query(search):
             print("\t\t{}: {}".format(i, result))
 
     # prompt action
-    idx = input("Enter choice (default to 0):")
+    idx = raw_input("Enter choice (default to 0):")
 
     # default, accept the first result
     if not idx:
@@ -777,7 +778,7 @@ def wiki_query(search):
     elif (idx) == -1:
         return []
     elif (idx) == -2:
-        return wiki_query(input("Try a new search string: "))
+        return wiki_query(raw_input("Try a new search string: "))
     elif (idx) == -3:
         wiki_query(get_translation(search))
     else:
@@ -800,7 +801,7 @@ def get_translation(search):
     search string translated to Latin characters.
     """
 
-    xlater = Translator(input("Enter from language: "), 'en')
+    xlater = Translator(raw_input("Enter from language: "), 'en')
     return xlater.translate(search)
 
 
@@ -838,7 +839,6 @@ def get_nearest_name(qname, name_set):
         if score < min_score:
             min_score = score
             mname = sname
-
     return mname
 
 
@@ -856,7 +856,10 @@ def perms2set(D):
 def messylist2set(alist):
     """owing to laziness, these lists may contain gotchas
     """
-    clean = [item for item in alist if item.__class__ is str and len(item) > 0]
+    clean = [item
+             for item in alist
+             if isinstance(item, str) or isinstance(item, unicode)
+             and len(item) > 0]
     return set(clean)
 
 
