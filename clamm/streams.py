@@ -4,13 +4,12 @@ and processing audio streams.
 """
 
 import os
-from os.path import join
 import wave
 from glob import glob
 import json
 import time
 import sys
-from subprocess import Popen
+import subprocess
 
 import matplotlib.pyplot as plt
 from tqdm import trange
@@ -25,7 +24,7 @@ from clamm import audiolib
 
 # constants, globals
 plt.switch_backend("agg")
-TMPSTREAM = os.path.join(config["path"]["pcm"], "temp.pcm")
+TMPSTREAM = os.path.join(config["path"]["wav"], "temp.wav")
 DF = config["streams"]["downsample_factor"]
 DF = 4410 * 10
 FS = 44100
@@ -94,10 +93,10 @@ class Stream():
         return self
 
     def prepare_target(self):
-        artist_dir = join(
+        artist_dir = os.path.join(
             config["path"]["library"],
             self.query.artist_name)
-        self.target = join(artist_dir, self.query.collection_name)
+        self.target = os.path.join(artist_dir, self.query.collection_name)
 
         if not os.path.exists(artist_dir):
             os.mkdir(artist_dir)
@@ -110,8 +109,8 @@ class Stream():
         """convert all wav files in target directory to flac files
         """
         map(
-            audiolib.wav2flac,
-            glob(join(self.target, "*wav")))
+            util.wav2flac,
+            glob(os.path.join(self.target, "*wav")))
         return self
 
     def tagify(self):
@@ -119,7 +118,7 @@ class Stream():
         """
         for i, track in enumerate(self.query.get_tracks()):
             tracknum = "%0.2d" % (i + 1)
-            globber = glob(join(self.target, tracknum + "*flac"))
+            globber = glob(os.path.join(self.target, tracknum + "*flac"))
             flac = taglib.File(globber[0])
             flac.tags["ALBUM"] = [self.query.collection_name]
             flac.tags["ALBUMARTIST"] = [self.query.artist_name]
@@ -338,7 +337,7 @@ class Track():
 
     def set_path(self, i, root):
         self.index = i
-        self.path = join(
+        self.path = os.path.join(
             root, "%0.2d %s.wav" % (self.index + 1, self.name))
 
 
@@ -367,15 +366,16 @@ def dial_itunes(artist, album):
     artist/album pair.
     """
 
+    util.printr("talking to iTunes...")
     util.generate_playlist(artist, album)
     time.sleep(2)   # allow time to build playlist
-    osa_prog = join(config["path"]["osa"], "play")
-    Popen([config['bin']['osascript'], osa_prog])
+    osa_prog = os.path.join(config["path"]["osa"], "play")
+    subprocess.Popen(['osascript', osa_prog])
 
 
 def saveit(name):
     """ saveit """
-    savepath = join(config["path"]["envelopes"], name + ".png")
+    savepath = os.path.join(config["path"]["envelopes"], name + ".png")
     util.printr("saving to {}".format(savepath))
     plt.savefig(savepath, bbox_inches='tight')
 
@@ -432,28 +432,27 @@ def listing2streams(listing):
         util.start_shairport(TMPSTREAM)
 
         artist, album = val['artist'], val['album']
-        pcm = "{}; {}.pcm".format(artist, album)
-        pcm_path = join(config["path"]["pcm"], pcm)
+        wav = "{}; {}.wav".format(artist, album)
+        wav_path = os.path.join(config["path"]["wav"], wav)
 
         util.printr("{} --> begin listing2streams stream of {}..."
-                    .format(time.ctime(), pcm))
+                    .format(time.ctime(), wav))
 
-        util.printr("talking to iTunes...")
         dial_itunes(artist, album)
-        monitor = util.SimpleState(TMPSTREAM)
 
-        # wait for stream to start
+        monitor = util.SimpleState(TMPSTREAM)
         while not monitor.get_state("startd"):
             time.sleep(1)
 
         util.printr("Stream successfully started, "
                     " now waiting for finish (one dot per minute)...")
-        # wait for stream to finish
+
         while not monitor.get_state("finishd"):
             time.sleep(1)
+
         util.printr("Stream successfully finished.")
 
-        os.rename(TMPSTREAM, pcm_path)
+        os.rename(TMPSTREAM, wav_path)
 
     util.printr("Batch successfully finished.")
 

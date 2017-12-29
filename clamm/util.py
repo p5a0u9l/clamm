@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import inspect
-from subprocess import Popen
+import subprocess
 
 import colorama
 
@@ -98,15 +98,26 @@ def start_shairport(filepath):
     """make sure no duplicate processes and start up shairport-sync
     """
 
-    Popen(['killall', 'shairport-sync'])
-    time.sleep(1)
-
-    Popen(['{} {} > "{}"'.format(
-        'shairport-sync', "-o=stdout", filepath)], shell=True)
+    subprocess.Popen(['killall', 'shairport-sync'])
 
     time.sleep(1)
+
+    shair_proc = subprocess.Popen(
+        ['shairport-sync', '-o=stdout'], stdout=subprocess.PIPE)
+
+    subprocess.Popen(
+        ["ffmpeg", "-hide_banner", "-y", "-f",
+         "s16le", "-ar", "44.1k", "-ac", "2", filepath], stdin=shair_proc)
 
     printr("shairport up and running.")
+
+
+def wav2flac(wav_name):
+    """utility for using ``ffmpeg`` to convert a wav file to a flac file
+    """
+    subprocess.call(
+        ["ffmpeg", "-hide_banner", "-y", "-i",
+         wav_name, wav_name.replace(".wav", ".flac")])
 
 
 def generate_playlist(artist, album):
@@ -116,9 +127,9 @@ def generate_playlist(artist, album):
     osa_prog = os.path.join(config["path"]["osa"], "program.js")
     osa_temp = os.path.join(config["path"]["osa"], "template.js")
     with open(osa_prog, "w") as osa:
-        Popen([config['bin']['sed'], sed_program, osa_temp], stdout=osa)
+        subprocess.Popen(['sed', sed_program, osa_temp], stdout=osa)
 
-    Popen([config['bin']['osascript'], osa_prog])
+    subprocess.Popen(['osascript', osa_prog])
 
 
 class SimpleState(object):
@@ -145,3 +156,33 @@ class SimpleState(object):
 
         elif state == "startd":
             return last_size > init_size
+
+
+def is_audio_file(name):
+    """readability short-cut for testing whether file contains a known
+    audio file extension as defined in ``config["file"]["known_types"]``
+    """
+    return os.path.splitext(name)[1] in config["file"]["known_types"]
+
+
+class StructuredQuery():
+    def __init__(self, querystr):
+        self.query = querystr
+        self.keys = [key for key in self.query
+                     if key in config["playlist"]["tag_keys"]]
+        relations = [key for key in self.query
+                     if key in config["playlist"]["relations"]]
+        self.operators = [key for key in self.query
+                          if key in config["playlist"]["operators"]]
+        self.tag_vals = [key for key in self.query if
+                         key not in self.keys and
+                         key not in relations and
+                         key not in self.operators]
+
+        self.filters = [{self.keys[i]: self.tag_vals[i], "rel": relations[i]}
+                        for i in range(len(self.operators) + 1)]
+        if not self.operators:
+            self.operators.append("AND")
+
+    def __repr__(self):
+        return str(["{}".format(filt) for filt in self.filters])

@@ -2,12 +2,11 @@
 """
 
 import re
-from os.path import splitext, join
-from os import walk
 import os
-import time
-from subprocess import Popen, call
+from os.path import join
 import sys
+import time
+import subprocess
 
 from colorama import Fore
 
@@ -39,7 +38,7 @@ class AudioLib():
         """
         util.printr("walking with %s..." % (str(func)))
 
-        for folder, _, files in walk(self.root, topdown=False):
+        for folder, _, files in os.walk(self.root, topdown=False):
             if not files:
                 continue
 
@@ -54,7 +53,7 @@ class AudioLib():
             self.ltfa.count["album"] += 1
 
             for name in files:
-                if not is_audio_file(name):
+                if not util.is_audio_file(name):
                     continue
                 self.ltfa.count["file"] += 1
                 func(tags.SafeTagFile(join(folder, name)), **kwargs)
@@ -78,9 +77,8 @@ class AudioLib():
                  for track in self.ltfa.the_playlist]
 
             # finally, tell cmus to add the playlist to its catalog
-            call([
-                config["bin"]["cmus-remote"],
-                config["opt"]["cmus-remote"],
+            subprocess.call([
+                "cmus-remote", config["opt"]["cmus-remote"],
                 "pl-import " + pl_path])
 
         elif self.func == "get_artist_counts":
@@ -198,9 +196,8 @@ class LibTagFileAction(LibTagFile):
 
         # and the conversion itself
         with open("/dev/null", "w") as redirect:
-            Popen(
-                [config["bin"]["ffmpeg"],
-                 config["opt"]["ffmpeg"],
+            subprocess.Popen(
+                ["ffmpeg", config["opt"]["ffmpeg"],
                  "-i", src, dst], stdout=redirect)
 
     def recently_added(self, tagfile, **kwargs):
@@ -463,37 +460,3 @@ def after_action_review(count):
         % ("changed tags", count["tag"],
            "tracks", count["track"], "counted folder",
            count["album"], "files", count["file"]))
-
-
-def pcm2wav(pcm_name, wav_name):
-    """utility for calling ``ffmpeg`` to convert a pcm file to a wav
-    file
-    """
-
-    call(
-        ["ffmpeg",
-         "-hide_banner", "-y", "-f",
-         "s16le", "-ar", "44.1k",
-         "-ac", "2", "-i", pcm_name, wav_name])
-
-    if os.path.exists(wav_name):
-        os.remove(pcm_name)
-
-
-def wav2flac(wav_name):
-    """utility for using ``ffmpeg`` to convert a wav file to a flac file
-    """
-    call(
-        [config["bin"]["ffmpeg"],
-         "-hide_banner", "-y", "-i",
-         wav_name, wav_name.replace(".wav", ".flac")])
-
-    if not config["library"]["keep_wavs_once_flacs_made"]:
-        os.remove(wav_name)
-
-
-def is_audio_file(name):
-    """readability short-cut for testing whether file contains a known
-    audio file extension as defined in ``config["file"]["known_types"]``
-    """
-    return splitext(name)[1] in config["file"]["known_types"]

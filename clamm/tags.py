@@ -29,45 +29,11 @@ class SafeTagFile(taglib.File):
 
     Subclasses ``taglib.File`` and creates a deep copy of a
     ``taglib.File`` objects
-
-    Parameters
-    ----------
-    filepath: str
-        the absolute file path to the audio file.
-
-    Attributes
-    ----------
-    tag_copy: taglib.File
-        a copy that allows for before/after comparison.
-
     """
 
     def __init__(self, filepath):
         taglib.File.__init__(self, filepath)
         self.tag_copy = copy.deepcopy(self.tags)
-
-
-class StructuredQuery():
-    def __init__(self, querystr):
-        self.query = querystr
-        self.keys = [key for key in self.query
-                     if key in config["playlist"]["tag_keys"]]
-        relations = [key for key in self.query
-                     if key in config["playlist"]["relations"]]
-        self.operators = [key for key in self.query
-                          if key in config["playlist"]["operators"]]
-        self.tag_vals = [key for key in self.query if
-                         key not in self.keys and
-                         key not in relations and
-                         key not in self.operators]
-
-        self.filters = [{self.keys[i]: self.tag_vals[i], "rel": relations[i]}
-                        for i in range(len(self.operators) + 1)]
-        if not self.operators:
-            self.operators.append("AND")
-
-    def __repr__(self):
-        return str(["{}".format(filt) for filt in self.filters])
 
 
 class Suggestor():
@@ -725,16 +691,6 @@ def get_borndied(summary):
 
     Use a regexp to extract artist/composer date(s) from a wikipedia
     summary string. If regexp fails, fall back on user prompt.
-
-    Parameters
-    ----------
-    summary: str
-        the summary corresponding to a wikipedia query.
-
-    Returns
-    -------
-    borndied: str
-        Dates of subject birth and death. Example format is 1910-1990.
     """
 
     result = re.findall("\d{4}", summary)
@@ -765,16 +721,6 @@ def wiki_query(search):
 
     Fetches a result from wikipedia and prompts user to select correct
     page, if one exists.
-
-    Parameters
-    ----------
-    search: str
-        The query
-
-    Returns
-    -------
-    if query is successful, returns a wikipedia.page object
-    otherwise, returns None
     """
 
     # call out to wikipedia
@@ -816,15 +762,6 @@ def get_translation(search):
 
     occasionally artist name will be in non-Latin characters. Prompts
     the user to supply the *From* language.
-
-    Parameters
-    ----------
-    search: str
-        the search string
-
-    Returns
-    -------
-    search string translated to Latin characters.
     """
 
     xlater = Translator(raw_input("Enter from language: "), 'en')
@@ -846,18 +783,6 @@ def get_artist_tagset(tagfile):
 def get_nearest_name(qname, name_set):
     """return closest match by finding minimum
     ``nltk.distance.edit_distance``
-
-    Parameters
-    ----------
-    qname: str
-        query name against which seeking match
-
-    name_set: set
-        set of names of which qname is possible member
-
-    Returns
-    -------
-    the element from ``name_set`` which minimizes distance to ``qname``.
     """
     min_score = 100
     for sname in name_set:
@@ -904,16 +829,6 @@ def messylist2tagstr(alist):
 
 def swap_first_last_name(name_str):
     """ Toggle first/last name order
-
-    Parameters
-    ----------
-    name_str (str)
-        Name formatted as either "First Last" or "Last, First"
-
-    Returns
-    -------
-    swapd (str)
-        Name format toggled
     """
 
     comma_idx = name_str.find(",")
