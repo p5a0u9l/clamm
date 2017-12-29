@@ -4,12 +4,15 @@ interface to the clamm's tag database.
 """
 
 from __future__ import unicode_literals, print_function
+import os
 import re
 import json
 import copy
 from collections import OrderedDict
 from subprocess import call
+import codecs
 
+import ipdb
 from translate import Translator
 import prompt_toolkit as ptk
 from nltk import distance
@@ -17,7 +20,7 @@ import taglib
 import wikipedia
 import nltk
 
-from clamm import config
+from clamm import config, installed_location
 from clamm import util
 
 
@@ -38,6 +41,7 @@ class SafeTagFile(taglib.File):
         a copy that allows for before/after comparison.
 
     """
+
     def __init__(self, filepath):
         taglib.File.__init__(self, filepath)
         self.tag_copy = copy.deepcopy(self.tags)
@@ -83,6 +87,7 @@ class Suggestor():
         with, one of {artist, composer, instrument, nationality, period}.
         Default is *artist*.
     """
+
     def __init__(self, tagdb, category="artist"):
         self.history = ptk.history.InMemoryHistory()
         for item in tagdb.sets[category]:
@@ -90,11 +95,11 @@ class Suggestor():
 
     def prompt(self, pmsg):
         r = ptk.prompt(
-                pmsg,
-                history=self.history,
-                auto_suggest=ptk.auto_suggest.AutoSuggestFromHistory(),
-                enable_history_search=True,
-                on_abort=ptk.interface.AbortAction.RETRY)
+            pmsg,
+            history=self.history,
+            auto_suggest=ptk.auto_suggest.AutoSuggestFromHistory(),
+            enable_history_search=True,
+            on_abort=ptk.interface.AbortAction.RETRY)
         return r
 
 
@@ -127,22 +132,28 @@ class TagDatabase:
 
         # auto_suggest
         self.suggest = {
-                "artist": Suggestor(self, category="artist"),
-                "composer": Suggestor(self, category="composer"),
-                "period": Suggestor(self, category="period"),
-                "instrument": Suggestor(self, category="instrument"),
-                "nationality": Suggestor(self, category="nationality")}
+            "artist": Suggestor(self, category="artist"),
+            "composer": Suggestor(self, category="composer"),
+            "period": Suggestor(self, category="period"),
+            "instrument": Suggestor(self, category="instrument"),
+            "nationality": Suggestor(self, category="nationality")}
 
         self.update_sets()
 
     def dump(self):
         """ dump """
-        with open(self.path, "w") as fptr:
+        with codecs.open(self.path, "w", encoding="utf-8") as fptr:
             json.dump(self._db, fptr, ensure_ascii=False, indent=4)
 
     def load(self):
         with open(self.path, "r") as fptr:
             self._db = json.load(fptr)
+
+        # make a back up
+        call([
+            'cp',
+            self.path,
+            os.path.join(installed_location, "templates", "tags.json")])
 
         self.artist = self._db["artist"]
         self.composer = self._db["composer"]
@@ -191,11 +202,11 @@ class TagDatabase:
 
         # compile and write to disk
         self.sets = {
-                "period": periods,
-                "artist": artists,
-                "composer": composers,
-                "nationality": nationalities,
-                "instrument": instruments}
+            "period": periods,
+            "artist": artists,
+            "composer": composers,
+            "nationality": nationalities,
+            "instrument": instruments}
         self._db['sets'] = {key: list(val) for key, val in self.sets.items()}
 
     def match_from_perms(self, name, category="artist"):
@@ -203,7 +214,7 @@ class TagDatabase:
             if name in val["permutations"]:
                 return key
         raise KeyNotFoundError(
-                "No match from permutations for {}...".format(name))
+            "No match from permutations for {}...".format(name))
 
     def add_new_perm(self, key, perm, category="artist"):
         """
@@ -274,7 +285,7 @@ class TagDatabase:
 
         new["borndied"] = get_borndied(page.summary)
         new["nationality"] = self.get_field(
-                page.summary, category="nationality")
+            page.summary, category="nationality")
 
         # category specific
         if category == "artist":
@@ -285,11 +296,11 @@ class TagDatabase:
                 new["ordinality"] = "Individual"
 
             new["instrument"] = self.get_field(
-                    page.summary, category="instrument")
+                page.summary, category="instrument")
 
         else:
             new["period"] = self.suggest["period"].prompt(
-                    "Enter composer period: ")
+                "Enter composer period: ")
             new["sort"] = swap_first_last_name(new["full_name"])
             new["abbreviated"] = new["full_name"].split(" ")[1]
 
@@ -331,16 +342,16 @@ class TagDatabase:
             else:
                 new["ordinality"] = "Individual"
             new["instrument"] = self.suggest["instrument"].prompt(
-                    "Enter instrument: ")
+                "Enter instrument: ")
         else:
             new["period"] = self.suggest["period"].prompt(
-                    "Enter composer period: ")
+                "Enter composer period: ")
             new["sort"] = swap_first_last_name(new["full_name"])
             new["abbreviated"] = new["full_name"].split(" ")[1]
 
         new["borndied"] = raw_input("Enter dates: ")
         new["nationality"] = self.suggest["nationality"].prompt(
-                "Enter nationality: ")
+            "Enter nationality: ")
 
         # store the result
         self.new_item = new
@@ -395,8 +406,8 @@ class TagDatabase:
         # otherwise, try to find an existing edit_distance match
         mname = get_nearest_name(qname, self.sets["composer"])
         response = raw_input(
-                "Given: {}\tClosest Match: {}. Accept? [<CR>]/n: "
-                .format(qname, mname))
+            "Given: {}\tClosest Match: {}. Accept? [<CR>]/n: "
+            .format(qname, mname))
 
         # fetch actual key and update perms
         if not response:
@@ -444,21 +455,25 @@ class TagDatabase:
 
         # if above fails, possibly nearest neighbor is correct?
         nearest = get_nearest_name(qname, self.sets["artist"])
+        util.printr("Failed to match the following tagfile automatically...")
+        util.pretty_dict(tagfile.tags)
 
         if not raw_input(
-                "\nAccept {} as matching {}? ".format(nearest, qname)):
+                "\nAccept {} as matching {}? [<CR>]/n: ".format(
+                    nearest, qname)):
             # fetch actual key and update perms
             key = self.match_from_perms(nearest)
             self.add_new_perm(key, qname)
             return key
 
         # Hook in the new artist process if reach this point
-        if not raw_input("\nAdd new artist? [<CR>]/n: "):
+        if not raw_input("\nAdd %s as new artist? [<CR>]/n: " % (qname)):
             new_key = self.get_new_item(qname)
             return new_key
 
         # It's also possible that the artist is really a composer
-        if not raw_input("\nIs Composer Permutation? [<CR>]/n: "):
+        if not raw_input(
+                "\nIs %s a Composer Permutation? [<CR>]/n: " % (qname)):
             cname = get_nearest_name(qname, self.sets["composer"])
 
             if not raw_input("\nAccept %s as matching %s? " % (cname, qname)):
@@ -477,14 +492,23 @@ class TagDatabase:
             actual_key = self.match_from_perms(man_key)
             return actual_key
 
-        # One more chance to add a new artist
-        if not raw_input("\nAdd new artist? [<CR>]/n: "):
-            new_key = self.get_new_item(qname)
+        # manually edit the file
+        if not raw_input(
+                "\nEdit the tagfile with %s? [<CR>]/n: "
+                % (os.environ['EDITOR'])):
+
+            call(["metaflac", "--export-tags-to=tmp.txt", tagfile.path])
+            call([os.environ["EDITOR"], "tmp.txt"])
+            call([
+                "metaflac",
+                "--remove-all-tags",
+                "--import-tags-from=tmp.txt", tagfile.path])
+            call(["rm", "tmp.txt"])
             return new_key
 
         # Allow some introspection before dying
         if not raw_input("\ndebug? [<CR>]/n: "):
-            pass
+            ipdb.set_trace()
 
         # Declare a misfit and walk away in disgust
         else:
@@ -682,6 +706,7 @@ class Arrangement:
 
 class KeyNotFoundError(Exception):
     """ KeyNotFoundError """
+
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
@@ -689,6 +714,7 @@ class KeyNotFoundError(Exception):
 
 class TagDatabaseError(Exception):
     """ TagDatabaseError """
+
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message

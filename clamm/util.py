@@ -97,7 +97,7 @@ def printr(func_or_msg, verbosic_precedence=3, caller=True):
     if caller:
         caller_name = inspect.stack()[1][3]
 
-    if isinstance(func_or_msg, str):
+    if isinstance(func_or_msg, unicode) or isinstance(func_or_msg, str):
         print("\n" +
               colorama.Fore.BLUE + caller_name +
               colorama.Fore.WHITE + ": " + func_or_msg)
