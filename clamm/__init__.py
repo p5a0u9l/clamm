@@ -32,9 +32,9 @@ cfg_home = os.path.join(os.environ['HOME'], ".config", "clamm")
 config['path'] = {
         "library": lib_home,
         "config": cfg_home,
-        "pcm": os.path.join(lib_home, "streams", "pcm"),
-        "wav": os.path.join(lib_home, "streams", "wav"),
-        "playlist": os.path.join(lib_home, "playlists"),
+        "pcm": os.path.join(lib_home, "..", "streams", "pcm"),
+        "wav": os.path.join(lib_home, "..", "streams", "wav"),
+        "playlist": os.path.join(lib_home, "..", "playlists"),
         "osa": os.path.join(cfg_home, "osa"),
         "envelopes": os.path.join(cfg_home, "envelopes"),
         "database": os.path.join(cfg_home, "tags.json"),

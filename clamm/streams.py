@@ -37,6 +37,7 @@ MS2MIN = MS2SEC / 60
 
 class StreamError(Exception):
     """ StreamError """
+
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
@@ -44,6 +45,7 @@ class StreamError(Exception):
 
 class Stream():
     """ Stream """
+
     def __init__(self, streampath):
         """ """
         self.pcmpath = streampath
@@ -351,7 +353,7 @@ def wave_envelope(wavstream):
     """wave_envelope
     """
 
-    print("computing audio energy at {} downsample rate...".format(DF))
+    util.printr("computing audio energy at {} downsample rate...".format(DF))
     n_window = int(np.floor(wavstream.getnframes() / DF)) - 1
     x_data = np.zeros(n_window)
     for i in trange(n_window):
@@ -360,76 +362,12 @@ def wave_envelope(wavstream):
     return x_data
 
 
-def start_shairport(filepath):
-    """make sure no duplicate processes and start up shairport-sync
-    """
-
-    Popen(['killall', 'shairport-sync'])
-    time.sleep(2)
-
-    Popen(['{} {} > "{}"'.format(
-        config['bin']['shairport-sync'], "-o=stdout", filepath)], shell=True)
-
-    time.sleep(1)
-
-    print("INFO: shairport up and running.")
-
-
-def is_started(filepath):
-    """test to see if recording has started
-    """
-
-    # reset seconds counter
-    global seconds
-    seconds = 0
-    (init_size, last_size) = util.size_sampler(filepath)
-    return last_size > init_size
-
-
-class SimpleState(object):
-    def __init__(self, filepath):
-        self.count = 0
-        self.filepath = filepath
-
-    def get_state(self, state):
-        """ return the file size, sampled with a 1 second gap to
-        determine if the file is being written to.
-        """
-
-        init_size = os.path.getsize(self.filepath)
-        time.sleep(1)
-        last_size = os.path.getsize(self.filepath)
-
-        self.count += 2    # one for size_sampler and one for main loop
-        if self.count % 60 == 0:
-            sys.stdout.write(".")
-            sys.stdout.flush()
-
-        if state == "finishd":
-            return last_size == init_size
-
-        elif state == "startd":
-            return last_size > init_size
-
-
-def generate_playlist(artist, album):
-    """ generate_playlist """
-    sed_program = 's/SEARCHTERM/"{} {}"/g'.format(
-        artist, album).replace(":", "").replace("&", "")
-    osa_prog = join(config["path"]["osa"], "program.js")
-    osa_temp = join(config["path"]["osa"], "template.js")
-    with open(osa_prog, "w") as osa:
-        Popen([config['bin']['sed'], sed_program, osa_temp], stdout=osa)
-
-    Popen([config['bin']['osascript'], osa_prog])
-
-
 def dial_itunes(artist, album):
     """run apple script and attempt to uniquely locate the
     artist/album pair.
     """
 
-    generate_playlist(artist, album)
+    util.generate_playlist(artist, album)
     time.sleep(2)   # allow time to build playlist
     osa_prog = join(config["path"]["osa"], "play")
     Popen([config['bin']['osascript'], osa_prog])
@@ -438,7 +376,7 @@ def dial_itunes(artist, album):
 def saveit(name):
     """ saveit """
     savepath = join(config["path"]["envelopes"], name + ".png")
-    print("saving to {}".format(savepath))
+    util.printr("saving to {}".format(savepath))
     plt.savefig(savepath, bbox_inches='tight')
 
 
@@ -482,23 +420,39 @@ def listing2streams(listing):
     to a collection of flac tracks.
     """
 
-    print("INFO: Begin listing2streams...")
+    util.printr("Begin listing2streams...")
 
     # fetch the album listing
-    try:
-        with open(listing) as fptr:
-            batch = json.load(fptr)
-    except OSError:
-        util.printr(
-            "Stream successfully started, " +
-            "waiting for finish (one dot per min.)...")
+    with open(listing) as fptr:
+        batch = json.load(fptr)
 
+    # iterate over albums in the listing
+    for key, val in batch.items():
+
+        util.start_shairport(TMPSTREAM)
+
+        artist, album = val['artist'], val['album']
+        pcm = "{}; {}.pcm".format(artist, album)
+        pcm_path = join(config["path"]["pcm"], pcm)
+
+        util.printr("{} --> begin listing2streams stream of {}..."
+                    .format(time.ctime(), pcm))
+
+        util.printr("talking to iTunes...")
+        dial_itunes(artist, album)
+        monitor = util.SimpleState(TMPSTREAM)
+
+        # wait for stream to start
+        while not monitor.get_state("startd"):
+            time.sleep(1)
+
+        util.printr("Stream successfully started, "
+                    " now waiting for finish (one dot per minute)...")
         # wait for stream to finish
         while not monitor.get_state("finishd"):
             time.sleep(1)
         util.printr("Stream successfully finished.")
 
-        os.rename(TMPSTREAM, pcm_path)
         os.rename(TMPSTREAM, pcm_path)
 
     util.printr("Batch successfully finished.")
@@ -523,7 +477,7 @@ def stream2tracks(streampath):
     # have been located
     image_audio_envelope_with_tracks_markers(album.splits, stream)
 
-    print("INFO: Finish stream2tracks.")
+    util.printr("Finish stream2tracks.")
 
 
 def main(args):

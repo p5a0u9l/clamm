@@ -184,7 +184,7 @@ def create_stream_parsers(subps):
                  """)
 
     strm_init_p.add_argument(
-        "-l", "--listing", type=str, default="json/listing.json",
+        "-l", "--listing", type=str, default="templates/listing.json",
         help="Path to listing.json specification.")
 
     strm_trck_p = strm_subps.add_parser(

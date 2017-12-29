@@ -471,13 +471,12 @@ def pcm2wav(pcm_name, wav_name):
     """
 
     call(
-        [config["bin"]["ffmpeg"],
+        ["ffmpeg",
          "-hide_banner", "-y", "-f",
          "s16le", "-ar", "44.1k",
          "-ac", "2", "-i", pcm_name, wav_name])
 
-    keep_pcms = config["library"]["keep_pcms_once_wavs_made"]
-    if not keep_pcms and os.path.exists(wav_name):
+    if os.path.exists(wav_name):
         os.remove(pcm_name)
 
 

@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import inspect
+from subprocess import Popen
 
 import colorama
 
@@ -57,18 +58,6 @@ def commit_to_libfile(tagfile):
     return (n_tracks_updated, n_delta_fields)
 
 
-def size_sampler(filepath):
-    """
-    return the file size, sampled with a 1 second gap to determine
-    if the file is being written to and thus growing
-    """
-
-    s0 = os.path.getsize(filepath)
-    time.sleep(1)
-    s1 = os.path.getsize(filepath)
-    return (s0, s1)
-
-
 def pretty_dict(d):
     for k, v in d.items():
         print("\t{}: {}".format(k, v))
@@ -103,3 +92,56 @@ def printr(func_or_msg, verbosic_precedence=3, caller=True):
               colorama.Fore.WHITE + ": " + func_or_msg)
     else:
         func_or_msg()
+
+
+def start_shairport(filepath):
+    """make sure no duplicate processes and start up shairport-sync
+    """
+
+    Popen(['killall', 'shairport-sync'])
+    time.sleep(1)
+
+    Popen(['{} {} > "{}"'.format(
+        'shairport-sync', "-o=stdout", filepath)], shell=True)
+
+    time.sleep(1)
+
+    printr("shairport up and running.")
+
+
+def generate_playlist(artist, album):
+    """ generate_playlist """
+    sed_program = 's/SEARCHTERM/"{} {}"/g'.format(
+        artist, album).replace(":", "").replace("&", "")
+    osa_prog = os.path.join(config["path"]["osa"], "program.js")
+    osa_temp = os.path.join(config["path"]["osa"], "template.js")
+    with open(osa_prog, "w") as osa:
+        Popen([config['bin']['sed'], sed_program, osa_temp], stdout=osa)
+
+    Popen([config['bin']['osascript'], osa_prog])
+
+
+class SimpleState(object):
+    def __init__(self, filepath):
+        self.count = 0
+        self.filepath = filepath
+
+    def get_state(self, state):
+        """ return the file size, sampled with a 1 second gap to
+        determine if the file is being written to.
+        """
+
+        init_size = os.path.getsize(self.filepath)
+        time.sleep(1)
+        last_size = os.path.getsize(self.filepath)
+
+        self.count += 2
+        if self.count % 60 == 0:
+            sys.stdout.write(".")
+            sys.stdout.flush()
+
+        if state == "finishd":
+            return last_size == init_size
+
+        elif state == "startd":
+            return last_size > init_size
