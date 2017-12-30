@@ -10,8 +10,8 @@ import subprocess
 
 from colorama import Fore
 
-from clamm import config
 from clamm import tags
+from clamm import config
 from clamm import util
 
 

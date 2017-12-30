@@ -102,12 +102,12 @@ def start_shairport(filepath):
 
     time.sleep(1)
 
-    shair_proc = subprocess.Popen(
+    p1 = subprocess.Popen(
         ['shairport-sync', '-o=stdout'], stdout=subprocess.PIPE)
 
     subprocess.Popen(
         ["ffmpeg", "-hide_banner", "-y", "-f",
-         "s16le", "-ar", "44.1k", "-ac", "2", filepath], stdin=shair_proc)
+         "s16le", "-ar", "44.1k", "-ac", "2", filepath], stdin=p1.stdout)
 
     printr("shairport up and running.")
 
