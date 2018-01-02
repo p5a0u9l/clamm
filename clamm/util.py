@@ -102,14 +102,17 @@ def start_shairport(filepath):
 
     time.sleep(1)
 
-    p1 = subprocess.Popen(
-        ['shairport-sync', '-o=stdout'], stdout=subprocess.PIPE)
-
-    subprocess.Popen(
-        ["ffmpeg", "-hide_banner", "-y", "-f",
-         "s16le", "-ar", "44.1k", "-ac", "2", filepath], stdin=p1.stdout)
+    with open(filepath, "w") as fptr:
+        subprocess.Popen(
+            ['shairport-sync', '-o=stdout'], stdout=fptr)
 
     printr("shairport up and running.")
+
+
+def pcm2wav(pcm_name, wav_name):
+    subprocess.call(
+        ["ffmpeg", "-hide_banner", "-y", "-f",
+         "s16le", "-ar", "44.1k", "-ac", "2", "-i", pcm_name, wav_name])
 
 
 def wav2flac(wav_name):

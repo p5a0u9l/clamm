@@ -20,7 +20,6 @@ import itunespy
 
 from clamm import config
 from clamm import util
-from clamm import audiolib
 
 # constants, globals
 plt.switch_backend("agg")
@@ -58,7 +57,7 @@ class Stream():
     def pcm2wav(self):
         """ pcm2wav """
         if not os.path.exists(self.wavpath):
-            audiolib.pcm2wav(self.pcmpath, self.wavpath)
+            util.pcm2wav(self.pcmpath, self.wavpath)
 
     def decode_path(self):
         """artist/album names from stream name
