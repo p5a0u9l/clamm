@@ -6,10 +6,7 @@ and processing audio streams.
 import os
 import wave
 from glob import glob
-import json
-import time
 import sys
-import subprocess
 
 import matplotlib.pyplot as plt
 from tqdm import trange
@@ -23,7 +20,6 @@ from clamm import util
 
 # constants, globals
 plt.switch_backend("agg")
-TMPSTREAM = os.path.join(config["path"]["wav"], "temp.wav")
 DF = config["streams"]["downsample_factor"]
 DF = 4410 * 10
 FS = 44100
@@ -360,18 +356,6 @@ def wave_envelope(wavstream):
     return x_data
 
 
-def dial_itunes(artist, album):
-    """run apple script and attempt to uniquely locate the
-    artist/album pair.
-    """
-
-    util.printr("talking to iTunes...")
-    util.generate_playlist(artist, album)
-    time.sleep(2)   # allow time to build playlist
-    osa_prog = os.path.join(config["path"]["osa"], "play")
-    subprocess.Popen(['osascript', osa_prog])
-
-
 def saveit(name):
     """ saveit """
     savepath = os.path.join(config["path"]["envelopes"], name + ".png")
@@ -404,58 +388,6 @@ def image_audio_envelope_with_tracks_markers(markers, stream):
     saveit(stream.name)
 
 
-# --------
-# Programs
-# --------
-def listing2streams(listing):
-    """a program for batch streaming a ``json`` listing of albums
-    from iTunes to raw pcm files via ``shairport-sync``.
-
-    iTunes is controlled using macos' built-in ``osascript`` tool and
-    simple javascript request templates.
-
-    When the listings have finished streaming, the pcm files (streams)
-    can be processed by ``stream2tracks`` and converted from streams
-    to a collection of flac tracks.
-    """
-
-    util.printr("Begin listing2streams...")
-
-    # fetch the album listing
-    with open(listing) as fptr:
-        batch = json.load(fptr)
-
-    # iterate over albums in the listing
-    for key, val in batch.items():
-
-        util.start_shairport(TMPSTREAM)
-
-        artist, album = val['artist'], val['album']
-        wav = "{}; {}.wav".format(artist, album)
-        wav_path = os.path.join(config["path"]["wav"], wav)
-
-        util.printr("{} --> begin listing2streams stream of {}..."
-                    .format(time.ctime(), wav))
-
-        dial_itunes(artist, album)
-
-        monitor = util.SimpleState(TMPSTREAM)
-        while not monitor.get_state("startd"):
-            time.sleep(1)
-
-        util.printr("Stream successfully started, "
-                    " now waiting for finish (one dot per minute)...")
-
-        while not monitor.get_state("finishd"):
-            time.sleep(1)
-
-        util.printr("Stream successfully finished.")
-
-        os.rename(TMPSTREAM, wav_path)
-
-    util.printr("Batch successfully finished.")
-
-
 def stream2tracks(streampath):
     """process raw pcm stream to tagged album tracks.
     """
@@ -479,13 +411,14 @@ def stream2tracks(streampath):
 
 
 def main(args):
-    """ main is a concatenation of listing2streams and stream2tracks
+    """ main
     """
-
-    # create a batch of pcm streams by interfacing with iTunes
-    listing2streams(args.listing)
 
     # iterate over streams found in config["path"]["pcm"]
     streams = glob(os.path.join(config["path"]["pcm"], "*pcm"))
     for streampath in streams:
         stream2tracks(streampath)
+
+
+if __name__ == "__main__":
+    main()

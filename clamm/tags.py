@@ -23,7 +23,6 @@ import nltk
 from clamm import config, installed_location
 from clamm import util
 
-
 class SafeTagFile(taglib.File):
     """ Allow for consistent file tagging.
 
